@@ -67,8 +67,8 @@ end
 
 function love.keypressed(key)
   if key == "1" then
-    gamestate = "server"
     server, server_update = unpack(require("server"))
+    gamestate = "server"
   elseif key == "2" then
     gamestate = "client"
     success = connectToServer()

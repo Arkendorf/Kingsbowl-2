@@ -4,6 +4,10 @@ function connectToServer()
   return success
 end
 
+function client.callbacks.recv(data)
+
+end
+
 function client_update(dt)
   client:update(dt)
 end

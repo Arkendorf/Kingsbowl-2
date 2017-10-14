@@ -1,6 +1,7 @@
 local createServer = function()
-  server = grease.udpServer()
+  local server = grease.udpServer()
   server:listen(25565)
+  return server
 end
 
 local server = createServer()
@@ -14,10 +15,6 @@ function server.callbacks.recv(data, clientid)
 end
 
 function server.callbacks.disconnect(clientid)
-
-end
-
-function client.callbacks.recv(data)
 
 end
 
