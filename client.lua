@@ -1,10 +1,4 @@
-function connectToServer()
-  client = grease.udpClient()
-  local success, err = client:connect("127.0.0.1", 25565)
-  return (success and client or err)
-end
-
-local client = connectToServer()
+local client = grease.udpClient()
 
 function client.callbacks.recv(data)
 
