@@ -14,6 +14,7 @@ end
 
 local create_server = function()
   server, server_update = unpack(require("server"))
+  server:listen(25565)
   gamestate = "server"
   new_gui(menus[2])
 end
