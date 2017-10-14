@@ -26,7 +26,7 @@ function love.load()
   new_gui(menus[1])
 end
 
-function love.update(dt)
+love.update =function(dt)
   if gamestate == "server" then
     server_update(dt)
   elseif gamestate == "client" then
@@ -38,11 +38,11 @@ function love.update(dt)
   gui_update(dt)
 end
 
-function love.draw()
+love.draw = function()
   gui_draw()
 end
 
-function love.keypressed(key)
+love.keypressed = function(key)
   if key == "1" then
     create_server()
   elseif key == "2" then
@@ -52,11 +52,11 @@ function love.keypressed(key)
   gui_keypressed(key)
 end
 
-function love.mousepressed(x, y, button)
+love.mousepressed = function(x, y, button)
   gui_mousepressed(x, y, button)
 end
 
-function love.textinput(t)
+love.textinput = function(t)
   gui_textinput(t)
 end
 
