@@ -9,8 +9,7 @@ require("grease.protocol")
 require("grease.tcp")
 require("grease.udp")
 
-require("Binary")
-require("server")
+local server, server_update
 require("client")
 
 function love.load()
@@ -69,25 +68,9 @@ end
 function love.keypressed(key)
   if key == "1" then
     gamestate = "server"
-    createServer()
+    server, server_update = unpack(require("server"))
   elseif key == "2" then
     gamestate = "client"
     success = connectToServer()
   end
 end
-
--- function server.callbacks.connect(clientid)
---   success = true
--- end
---
--- function server.callbacks.recv(data, clientid)
---
--- end
---
--- function server.callbacks.disconnect(clientid)
---
--- end
---
--- function client.callbacks.recv(data)
---
--- end
