@@ -10,14 +10,13 @@ require("grease.tcp")
 require("grease.udp")
 
 local server, server_update
-require("client")
+local client, client_update
 
 function love.load()
   chars = {{speed = 60}}
   players = {{x = 0, y = 0, xV = 0, yV = 0, char = chars[1]}}
   currentPlayer = 1
   qb = {num = 1, target = {x = 0, y = 0}}
-  success = false
   gamestate = "neither"
 end
 
@@ -62,7 +61,6 @@ function love.draw()
 
   -- draw target
   love.graphics.circle("fill", qb.target.x, qb.target.y, 5, 10)
-  love.graphics.print(gamestate.." "..tostring(success))
 end
 
 function love.keypressed(key)
@@ -71,6 +69,6 @@ function love.keypressed(key)
     gamestate = "server"
   elseif key == "2" then
     gamestate = "client"
-    success = connectToServer()
+    client, client_update = unpack(require("client"))
   end
 end
