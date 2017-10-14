@@ -1,4 +1,4 @@
-local menu_update function()
+local menu_update =  function()
 
 end
 
