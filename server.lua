@@ -1,5 +1,5 @@
 function createServer()
-  server = lube.udpServer()
+  server = grease.udpServer()
   server:listen(25565)
 end
 

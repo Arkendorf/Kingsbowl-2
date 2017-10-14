@@ -1,6 +1,14 @@
-require("middleclass")
-require("middleclass-commons")
-require("LUBE")
+-- require("middleclass")
+-- require("middleclass-commons")
+
+grease = require("grease.init")
+require("grease.core")
+require("grease.enet")
+require("grease.lightning")
+require("grease.protocol")
+require("grease.tcp")
+require("grease.udp")
+
 require("Binary")
 require("server")
 require("client")
@@ -68,18 +76,18 @@ function love.keypressed(key)
   end
 end
 
-function onConnect(clientid)
-  success = true
-end
-
-function onServerReceive(data, clientid)
-
-end
-
-function onDisconnect(clientid)
-
-end
-
-function onClientReceive(data)
-
-end
+-- function server.callbacks.connect(clientid)
+--   success = true
+-- end
+--
+-- function server.callbacks.recv(data, clientid)
+--
+-- end
+--
+-- function server.callbacks.disconnect(clientid)
+--
+-- end
+--
+-- function client.callbacks.recv(data)
+--
+-- end
