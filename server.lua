@@ -1,20 +1,14 @@
-local createServer = function()
-  local server = grease.udpServer()
-  server:listen(25565)
-  return server
-end
+local server = grease.udpServer()
 
-local server = createServer()
-
-function server.callbacks.connect(clientid)
+server.callbacks.connect = function(clientid)
   success = true
 end
 
-function server.callbacks.recv(data, clientid)
+server.callbacks.recv = function(data, clientid)
 
 end
 
-function server.callbacks.disconnect(clientid)
+server.callbacks.disconnect = function(clientid)
 
 end
 

@@ -3,15 +3,11 @@ grease = require("grease.init")
 local server, server_update
 local client, client_update
 
-function love.load()
-  chars = {{speed = 60}}
-  players = {{x = 0, y = 0, xV = 0, yV = 0, char = chars[1]}}
-  currentPlayer = 1
-  qb = {num = 1, target = {x = 0, y = 0}}
+love.load = function()
   gamestate = "neither"
 end
 
-function love.update(dt)
+love.update =function(dt)
   if gamestate == "server" then
     server_update(dt)
   elseif gamestate == "client" then
@@ -21,13 +17,14 @@ function love.update(dt)
   end
 end
 
-function love.draw()
+love.draw = function()
 end
 
 function love.keypressed(key)
   if key == "1" then
-    server, server_update = unpack(require("server"))
     gamestate = "server"
+    server, server_update = unpack(require("server"))
+    server:listen(25565)
   elseif key == "2" then
     gamestate = "client"
     client, client_update = unpack(require("client"))
