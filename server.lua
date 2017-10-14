@@ -1,3 +1,5 @@
+local grease = require("grease.init")
+
 local server = grease.udpServer()
 
 server.callbacks.connect = function(clientid)

@@ -1,13 +1,12 @@
-grease = require("grease.init")
-
 local server, server_update
 local client, client_update
+local gamestate
 
 love.load = function()
-  gamestate = "neither"
+  gamestate = "menu"
 end
 
-love.update =function(dt)
+love.update = function(dt)
   if gamestate == "server" then
     server_update(dt)
   elseif gamestate == "client" then

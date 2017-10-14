@@ -1,3 +1,5 @@
+local grease = require("grease.init")
+
 local client = grease.udpClient()
 
 function client.callbacks.recv(data)
