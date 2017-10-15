@@ -1,9 +1,9 @@
 love.keyboard.setKeyRepeat(true)
-gui = {}
+local gui = {}
 
 local item = {type = 0, num = 0}
 
-local gui_update = function (dt) -- love.update()
+gui.update = function (gui, dt) -- love.update()
   if item.type == 3 and item.num > 0 then
     if love.mouse.isDown(1) == false then
       item.type = 0
@@ -25,7 +25,7 @@ local gui_update = function (dt) -- love.update()
   end
 end
 
-local gui_draw = function () -- love.draw()
+gui.draw = function (gui) -- love.draw()
   if gui.buttons ~= nil then
     for i, v in ipairs(gui.buttons) do
       love.graphics.setColor(100, 100, 100)
@@ -85,7 +85,7 @@ local gui_draw = function () -- love.draw()
   end
 end
 
-local gui_mousepressed = function (x, y, button) -- love.mousepressed
+gui.mousepressed = function (gui, x, y, button) -- love.mousepressed
   local clickUsed = false
   if gui.buttons ~= nil then
     for i, v in ipairs(gui.buttons) do
@@ -156,20 +156,22 @@ local gui_mousepressed = function (x, y, button) -- love.mousepressed
   end
 end
 
-local gui_textinput = function (t) -- love.textinput
+gui.textinput = function (gui, t) -- love.textinput
   if item.type == 2 and item.num > 0 and font:getWidth(gui.textboxes[item.num].txt..t) <= gui.textboxes[item.num].w then
     gui.textboxes[item.num].txt = gui.textboxes[item.num].txt..t
   end
 end
 
-local gui_keypressed = function (key) -- love.keypressed
+gui.keypressed = function (gui, key) -- love.keypressed
   if item.type == 2 and item.num > 0 and key == "backspace" then
     gui.textboxes[item.num].txt = string.sub(gui.textboxes[item.num].txt, 1, -2)
   end
 end
 
-function new_gui(l)
-  gui = l
+gui.new = function(l)
+  return setmetatable(l, {
+    __index = gui
+  })
 end
 
-return {gui_update, gui_draw, gui_mousepressed, gui_textinput, gui_keypressed, gui}
+return gui
