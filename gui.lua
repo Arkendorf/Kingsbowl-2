@@ -157,13 +157,13 @@ gui.mousepressed = function (gui, x, y, button) -- love.mousepressed
 end
 
 gui.textinput = function (gui, t) -- love.textinput
-  if item.type == 2 and item.num > 0 and font:getWidth(gui.textboxes[item.num].txt..t) <= gui.textboxes[item.num].w then
+  if gui.textboxes ~= nil and item.type == 2 and item.num > 0 and font:getWidth(gui.textboxes[item.num].txt..t) <= gui.textboxes[item.num].w then
     gui.textboxes[item.num].txt = gui.textboxes[item.num].txt..t
   end
 end
 
 gui.keypressed = function (gui, key) -- love.keypressed
-  if item.type == 2 and item.num > 0 and key == "backspace" then
+  if gui.textboxes ~= nil and item.type == 2 and item.num > 0 and key == "backspace" then
     gui.textboxes[item.num].txt = string.sub(gui.textboxes[item.num].txt, 1, -2)
   end
 end

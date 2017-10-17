@@ -6,13 +6,6 @@ local menu_update = require "menu"
 local gui = require "gui"
 local menus, current_gui
 
-keydowntable['1'] = function()
-  create_server()
-end
-keydowntable['2'] = function()
-  create_client()
-end
-
 local create_server = function()
   server, server_update = unpack(require("server"))
   server:listen(25565)
@@ -28,6 +21,13 @@ local create_client = function()
   if success then
       current_gui = gui.new(menus[3])
   end
+end
+
+keydowntable['1'] = function()
+  create_server()
+end
+keydowntable['2'] = function()
+  create_client()
 end
 
 love.load = function()
