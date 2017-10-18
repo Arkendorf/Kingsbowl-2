@@ -2,7 +2,6 @@ require "globals"
 local state = require "state"
 local server = require "server"
 local client = require "client"
-local keydowntable, keyuptable = unpack(require "keytable")
 local menu_update = require "menu"
 local gui = require "gui"
 local menus = require "menus"
