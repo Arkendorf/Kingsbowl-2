@@ -1,13 +1,20 @@
 local grease = require("grease.init")
+local state = require "state"
+local gui = require "gui"
+local client = {}
 
-local client = grease.udpClient()
-
-function client.callbacks.recv(data)
-
+client.init = function(t)
+  state.game = "client"
+  client.grease = grease.udpClient()
+  local success, err = client.grease:connect("127.0.0.1", 25565)
+  print(success, err)
+  if success then
+      state.gui = gui.new(menus[3])
+  end
 end
 
-function client_update(dt)
-  client:update(dt)
+function client.update(dt)
+  client.grease:update(dt)
 end
 
-return {client, client_update}
+return client

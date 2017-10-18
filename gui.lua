@@ -92,9 +92,8 @@ gui.mousepressed = function (gui, x, y, button) -- love.mousepressed
       if button == 1 and x >= v.x and x <= v.x+v.w and y >= v.y and y <= v.y+v.h then
         item.type = 2
         item.num = i
-        v.func(unpack(v.args))
         clickUsed = true
-        break
+        v.func(unpack(v.args))
       end
     end
   end
@@ -168,8 +167,8 @@ gui.keypressed = function (gui, key) -- love.keypressed
   end
 end
 
-gui.new = function(l)
-  return setmetatable(l, {
+gui.new = function(t)
+  return setmetatable(t, {
     __index = gui
   })
 end

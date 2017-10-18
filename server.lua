@@ -1,21 +1,15 @@
-local grease = require("grease.init")
+local grease = require "grease.init"
+local gui = require "gui"
+local server = {}
 
-local server = grease.udpServer()
-
-server.callbacks.connect = function(clientid)
-  success = true
+server.init = function()
+  server.grease = grease.udpServer()
+  server.grease:listen(25565)
+  state.gui = gui.new(menus[2])
 end
 
-server.callbacks.recv = function(data, clientid)
-
-end
-
-server.callbacks.disconnect = function(clientid)
-
-end
-
-local server_update = function(dt)
+server.update = function(dt)
   server:update(dt)
 end
 
-return {server, server_update}
+return server
