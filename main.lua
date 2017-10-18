@@ -9,6 +9,15 @@ local menus
 keydowntable['1'] = server.init
 keydowntable['2'] = client.init
 
+local ip = {ip = "127.0.0.1", port = "25565"}
+
+keydowntable['1'] = function()
+  create_server()
+end
+keydowntable['2'] = function()
+  create_client()
+end
+
 love.load = function()
   font = love.graphics.newImageFont("font.png",
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
@@ -16,9 +25,6 @@ love.load = function()
     "0123456789!?.:", 1)
   love.graphics.setFont(font)
   state.game = "menu"
-
-  menus = require "menus"
-
   state.gui = gui.new(menus[1])
 end
 
@@ -35,6 +41,7 @@ end
 
 love.draw = function()
   state.gui:draw()
+  love.graphics.print(ip.ip..":"..ip.port)
 end
 
 love.mousepressed = function(x, y, button)
