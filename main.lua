@@ -1,15 +1,14 @@
+require "globals"
 local state = require "state"
 local server = require "server"
 local client = require "client"
 local keydowntable, keyuptable = unpack(require "keytable")
 local menu_update = require "menu"
 local gui = require "gui"
-local menus
+local menus = require "menus"
 
 keydowntable['1'] = server.init
 keydowntable['2'] = client.init
-
-local ip = {ip = "127.0.0.1", port = "25565"}
 
 keydowntable['1'] = function()
   create_server()
