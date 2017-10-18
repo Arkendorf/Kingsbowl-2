@@ -2,7 +2,6 @@ require "globals"
 local state = require "state"
 local server = require "server"
 local client = require "client"
-local menu_update = require "menu"
 local gui = require "gui"
 local menus = require "menus"
 
@@ -25,7 +24,6 @@ love.update = function(dt)
   elseif state.game == "client" then
     client.update(dt)
   elseif state.game == "menu" then
-    --menu.update(dt)
   end
   state.gui:update(dt)
 end
