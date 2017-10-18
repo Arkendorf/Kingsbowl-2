@@ -1,7 +1,7 @@
 love.keyboard.setKeyRepeat(true)
 local gui = {}
 
-local item = {type = 0, num = 0}
+local item = {type = 0, num = 0, info = {}}
 
 gui.update = function (gui, dt) -- love.update()
   if item.type == 3 and item.num > 0 then
@@ -12,14 +12,14 @@ gui.update = function (gui, dt) -- love.update()
     else
       local x, y = love.mouse.getPosition()
       if gui.sliders[item.num].alignment == 1 then
-        gui.sliders[item.num].num = (x - item.info.offset - gui.sliders[item.num].x)/(gui.sliders[item.num].w-gui.sliders[item.num].barw)*(gui.sliders[item.num].numMax-gui.sliders[item.num].numMin)
+        gui.sliders[item.num].table[gui.sliders[item.num].index] = (x - item.info.offset - gui.sliders[item.num].x)/(gui.sliders[item.num].w-gui.sliders[item.num].barw)*(gui.sliders[item.num].numMax-gui.sliders[item.num].numMin)
       elseif gui.sliders[item.num].alignment == 2 then
-        gui.sliders[item.num].num = (y - item.info.offset - gui.sliders[item.num].y)/(gui.sliders[item.num].w-gui.sliders[item.num].barw)*(gui.sliders[item.num].numMax-gui.sliders[item.num].numMin)
+        gui.sliders[item.num].table[gui.sliders[item.num].index] = (y - item.info.offset - gui.sliders[item.num].y)/(gui.sliders[item.num].w-gui.sliders[item.num].barw)*(gui.sliders[item.num].numMax-gui.sliders[item.num].numMin)
       end
-      if gui.sliders[item.num].num > gui.sliders[item.num].numMax then
-        gui.sliders[item.num].num = gui.sliders[item.num].numMax
-      elseif gui.sliders[item.num].num < gui.sliders[item.num].numMin then
-        gui.sliders[item.num].num = gui.sliders[item.num].numMin
+      if gui.sliders[item.num].table[gui.sliders[item.num].index] > gui.sliders[item.num].numMax then
+        gui.sliders[item.num].table[gui.sliders[item.num].index] = gui.sliders[item.num].numMax
+      elseif gui.sliders[item.num].table[gui.sliders[item.num].index] < gui.sliders[item.num].numMin then
+        gui.sliders[item.num].table[gui.sliders[item.num].index] = gui.sliders[item.num].numMin
       end
     end
   end
@@ -40,8 +40,8 @@ gui.draw = function (gui) -- love.draw()
       love.graphics.setColor(100, 100, 100)
       love.graphics.rectangle("fill", v.x, v.y, v.w, v.h)
       love.graphics.setColor(255, 255, 255)
-      if string.len(v.txt) > 0 then
-        love.graphics.print(v.txt, v.x, math.floor(v.y+(v.h-font:getHeight())/2))
+      if string.len(v.table[v.index]) > 0 then
+        love.graphics.print(v.table[v.index], v.x, math.floor(v.y+(v.h-font:getHeight())/2))
       else
         love.graphics.print(v.sampletxt, v.x, math.floor(v.y+(v.h-font:getHeight())/2))
       end
@@ -54,12 +54,12 @@ gui.draw = function (gui) -- love.draw()
         love.graphics.setColor(100, 100, 100)
         love.graphics.rectangle("fill", v.x, v.y, v.w, v.h)
         love.graphics.setColor(255, 255, 255)
-        love.graphics.rectangle("fill", v.x+v.num/v.numMax*(v.w-v.barw), v.y, v.barw, v.h)
+        love.graphics.rectangle("fill", v.x+v.table[v.index]/v.numMax*(v.w-v.barw), v.y, v.barw, v.h)
       elseif v.alignment == 2 then
         love.graphics.setColor(100, 100, 100)
         love.graphics.rectangle("fill", v.x, v.y, v.h, v.w)
         love.graphics.setColor(255, 255, 255)
-        love.graphics.rectangle("fill", v.x, v.y+v.num/v.numMax*(v.w-v.barw), v.h, v.barw)
+        love.graphics.rectangle("fill", v.x, v.y+v.table[v.index]/v.numMax*(v.w-v.barw), v.h, v.barw)
       end
     end
   end
@@ -70,7 +70,7 @@ gui.draw = function (gui) -- love.draw()
       love.graphics.rectangle("fill", v.x, v.y, v.w-v.h, v.h)
       love.graphics.setColor(255, 255, 255)
       love.graphics.rectangle("fill", v.x+v.w-v.h, v.y, v.h, v.h)
-      love.graphics.print(tostring(v.options[v.current]), v.x, math.floor(v.y+(v.h-font:getHeight())/2))
+      love.graphics.print(tostring(v.table[v.index]), v.x, math.floor(v.y+(v.h-font:getHeight())/2))
       love.graphics.setColor(100, 100, 100)
       love.graphics.polygon("fill", v.x+v.w-v.h*.25, v.y+v.h*.25, v.x+v.w-v.h*.25, v.y+v.h*.75, v.x+v.w-v.h*.75, v.y+v.h*.75)
       if item.type == 4 and item.num == i then
@@ -112,16 +112,16 @@ gui.mousepressed = function (gui, x, y, button) -- love.mousepressed
 
   if clickUsed == false and gui.sliders ~= nil then
     for i, v in ipairs(gui.sliders) do
-      if v.alignment == 1 and button == 1 and x >= v.x+v.num/v.numMax*(v.w-v.barw) and x <= v.x+v.num/v.numMax*(v.w-v.barw)+v.barw and y >= v.y and y <= v.y+v.h then
+      if v.alignment == 1 and button == 1 and x >= v.x+v.table[v.index]/v.numMax*(v.w-v.barw) and x <= v.x+v.table[v.index]/v.numMax*(v.w-v.barw)+v.barw and y >= v.y and y <= v.y+v.h then
         item.type = 3
         item.num = i
-        item.info.offset = x-(v.x+v.num/v.numMax*(v.w-v.barw))
+        item.info.offset = x-(v.x+v.table[v.index]/v.numMax*(v.w-v.barw))
         clickUsed = true
         break
-      elseif v.alignment == 2 and button == 1 and x >= v.x and x <= v.x+v.h and y >= v.y+v.num/v.numMax*(v.w-v.barw) and y <= v.y+v.num/v.numMax*(v.w-v.barw)+v.barw then
+      elseif v.alignment == 2 and button == 1 and x >= v.x and x <= v.x+v.h and y >= v.y+v.table[v.index]/v.numMax*(v.w-v.barw) and y <= v.y+v.table[v.index]/v.numMax*(v.w-v.barw)+v.barw then
         item.type = 3
         item.num = i
-        item.info.offset = y-(v.y+v.num/v.numMax*(v.w-v.barw))
+        item.info.offset = y-(v.y+v.table[v.index]/v.numMax*(v.w-v.barw))
         clickUsed = true
         break
       end
@@ -138,7 +138,7 @@ gui.mousepressed = function (gui, x, y, button) -- love.mousepressed
       elseif item.type == 4 and item.num == i and button == 1 then
         for j = 1, #v.options do
           if x >= v.x and x <= v.x+v.w and y >= v.y+j*v.h and y <= v.y+(j+1)*v.h then
-            v.current = j
+            v.table[v.index] = v.options[j]
             item.type = 0
             item.num = 0
             clickUsed = true
@@ -157,14 +157,14 @@ gui.mousepressed = function (gui, x, y, button) -- love.mousepressed
 end
 
 gui.textinput = function (gui, t) -- love.textinput
-  if gui.textboxes ~= nil and item.type == 2 and item.num > 0 and font:getWidth(gui.textboxes[item.num].txt..t) <= gui.textboxes[item.num].w then
-    gui.textboxes[item.num].txt = gui.textboxes[item.num].txt..t
+  if gui.textboxes ~= nil and item.type == 2 and item.num > 0 and font:getWidth(gui.textboxes[item.num].table[gui.textboxes[item.num].index]..t) <= gui.textboxes[item.num].w and (gui.textboxes[item.num].num == nil or gui.textboxes[item.num].num == false or (gui.textboxes[item.num].num == true and string.find("0123456789.", t) ~= nil)) then
+    gui.textboxes[item.num].table[gui.textboxes[item.num].index] = gui.textboxes[item.num].table[gui.textboxes[item.num].index]..t
   end
 end
 
 gui.keypressed = function (gui, key) -- love.keypressed
   if gui.textboxes ~= nil and item.type == 2 and item.num > 0 and key == "backspace" then
-    gui.textboxes[item.num].txt = string.sub(gui.textboxes[item.num].txt, 1, -2)
+    gui.textboxes[item.num].table[gui.textboxes[item.num].index] = string.sub(gui.textboxes[item.num].table[gui.textboxes[item.num].index], 1, -2)
   end
 end
 

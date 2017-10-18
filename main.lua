@@ -5,10 +5,13 @@ local keydowntable, keyuptable = unpack(require "keytable")
 local menu_update = require "menu"
 local gui = require "gui"
 local menus, current_gui
+local ip = {ip = "127.0.0.1", port = "25565"}
+
+
 
 local create_server = function()
   server, server_update = unpack(require("server"))
-  server:listen(25565)
+  server:listen(tonumber(ip.port))
   gamestate = "server"
   current_gui = gui.new(menus[2])
 end
@@ -16,7 +19,7 @@ end
 local create_client = function()
   gamestate = "client"
   client, client_update = unpack(require("client"))
-  local success, err = client:connect("127.0.0.1", 25565)
+  local success, err = client:connect(ip.ip, tonumber(ip.port))
   print(success, err)
   if success then
       current_gui = gui.new(menus[3])
@@ -39,7 +42,8 @@ love.load = function()
   gamestate = "menu"
 
   menus = {}
-  menus[1] = {buttons = {{x = 200, y = 275, w = 100, h = 50, txt = "server", func = create_server, args = {}}, {x = 500, y = 275, w = 100, h = 50, txt = "client", func = create_client, args = {}}}}
+  menus[1] = {buttons = {{x = 352, y = 275, w = 96, h = 36, txt = "server", func = create_server, args = {}}, {x = 452, y = 275, w = 96, h = 36, txt = "client", func = create_client, args = {}}},
+              textboxes = {{x = 252, y = 275, w = 96, h = 16, table = ip, index = "ip", sampletxt = "I.P."}, {x = 252, y = 295, w = 96, h = 16, table = ip, index = "port", sampletxt = "Port", num = true}}}
   menus[2] = {}
   menus[3] = {}
 
@@ -59,6 +63,7 @@ end
 
 love.draw = function()
   current_gui:draw()
+  love.graphics.print(ip.ip..":"..ip.port)
 end
 
 love.mousepressed = function(x, y, button)
