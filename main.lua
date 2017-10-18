@@ -10,13 +10,6 @@ local menus = require "menus"
 keydowntable['1'] = server.init
 keydowntable['2'] = client.init
 
-keydowntable['1'] = function()
-  create_server()
-end
-keydowntable['2'] = function()
-  create_client()
-end
-
 love.load = function()
   font = love.graphics.newImageFont("font.png",
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
