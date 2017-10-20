@@ -19,11 +19,22 @@ local dot = function(v1, v2)
   for k,v1_k in pairs(v1) do
     result = result + v1_k * v2[k]
   end
-  return dot
+  return result
+end
+
+local mag_sq = function(v)
+  return dot(v, v)
+end
+
+local norm = function(v)
+  local inv_mag = 1/math.sqrt(mag_sq(v))
+  return scale(inv_mag, v)
 end
 
 return {
   sum = sum,
   scale = scale,
-  dot = dot
+  dot = dot,
+  mag_sq = mag_sq,
+  norm = norm
 }
