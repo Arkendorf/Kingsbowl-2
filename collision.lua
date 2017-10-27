@@ -12,3 +12,7 @@ local circle_vs_circle = function(c1, c2)
   local half_overlap = vector.scale((r - dist)/2, dist_norm)
   return {vector.sum(c1.p, half_overlap), vector.sum(c2.p, vector.scale(-1, half_overlap))}
 end
+
+return {
+  circle_vs_circle = circle_vs_circle
+}
