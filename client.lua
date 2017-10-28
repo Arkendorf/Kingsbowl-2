@@ -1,20 +1,29 @@
-local grease = require("grease.init")
 local state = require "state"
 local gui = require "gui"
-local client = {}
+require "globals"
+client = {}
 
 client.init = function(t)
+  state.networking = {}
+  local networking = state.networking
   state.game = "client"
-  client.grease = grease.udpClient()
-  local success, err = client.grease:connect("127.0.0.1", 25565)
-  print(success, err)
-  if success then
-      state.gui = gui.new(menus[3])
+  networking.host = enet.host_create()
+  networking.server = networking.host:connect(ip.ip .. ':' .. ip.port)
+  state.gui = gui.new(menus[3])
+end
+
+client.update = function(dt)
+  local event = state.networking.host:service(100)
+  if event then
+      if event.type == "connect" then
+        print("Connected to", event.peer)
+    end
   end
 end
 
-function client.update(dt)
-  client.grease:update(dt)
+client.disconnect = function()
+  state.networking.server:disconnect()
+  state.networking.host:flush()
 end
 
 return client
