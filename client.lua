@@ -12,7 +12,7 @@ client.init = function(t)
   state.gui = gui.new(menus[3])
 end
 
-client.update = function(dt)
+client.update = function()
   local event = state.networking.host:service(100)
   if event then
       if event.type == "connect" then
