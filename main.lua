@@ -1,10 +1,10 @@
 require "globals"
-local state = require "state"
 local server = require "server"
 local client = require "client"
 local gui = require "gui"
 local menus = require "menus"
 local game = require "game"
+local state = require "state"
 
 keydowntable['1'] = server.init
 keydowntable['2'] = client.init
@@ -15,39 +15,36 @@ love.load = function()
     "abcdefghijklmnopqrstuvwxyz" ..
     "0123456789!?.:", 1)
   love.graphics.setFont(font)
-  state.game = "menu"
   state.gui = gui.new(menus[1])
-  game.load()
 end
 
 love.update = function(dt)
-  if state.game == "servermenu" or state.game == "server" then
+  if state.network_mode == "server" then
     server.update(dt)
-  elseif state.game == "clientmenu" or state.game == "client" then
+  elseif state.network_mode == "client" then
     client.update(dt)
-  elseif state.game == "menu" then
   end
-  if state.game == "server" or state.game == "client" then
+  if state.game == true then
     game.update(dt)
   end
   state.gui:update(dt)
 end
 
 love.draw = function()
-  if state.game == "client" or state.game == "server" then
+  if state.game == true then
     game.draw()
-  elseif state.game == "servermenu" then
+  elseif state.network_mode == "server" then
     server.draw()
-  elseif state.game == "clientmenu" then
+  elseif state.network_mode == "client" then
     client.draw()
   end
   state.gui:draw()
 end
 
 love.quit = function()
-  if state.game == "servermenu" or state.game == "server" then
+  if state.network_mode == "server" then
     server.quit()
-  elseif state.game == "clientmenu" or state.game == "client" then
+  elseif state.network_mode == "client" then
     client.quit()
   end
 end

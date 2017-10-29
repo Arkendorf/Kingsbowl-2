@@ -1,6 +1,7 @@
 local state = {
-  game = nil,
+  game = false,
   gui = nil,
+  network_mode = nil,
   networking = nil
 }
 
