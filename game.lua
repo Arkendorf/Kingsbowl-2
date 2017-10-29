@@ -67,12 +67,14 @@ game.update = function (dt)
   players[id].p.y = players[id].p.y + players[id].d.y*dt*60
   players[id].d.y = players[id].d.y * 0.9
 
-  for i, v in pairs(players) do
-    if i ~= id then
-      if collision.check_overlap(players[id], players[i]) then
-        local p1, p2 = collision.circle_vs_circle(players[id], players[i]) --
-        players[id].p = p1
-        players[i].p = p2
+  if state.network_mode == "server" then
+    for i, v in pairs(players) do
+      if i ~= id then
+        if collision.check_overlap(players[id], players[i]) then
+          local p1, p2 = collision.circle_vs_circle(players[id], players[i]) --
+          players[id].p = p1
+          players[i].p = p2
+        end
       end
     end
   end

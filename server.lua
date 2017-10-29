@@ -38,13 +38,14 @@ server.init = function()
   networking.host:on("coords", function(data, client)
     local index = client:getIndex()
     players[index].p = data
-    networking.host:sendToAllBut(client, "coords", {info = data, index = index})
   end)
 end
 
 server.update = function(dt)
+  for i, v in pairs(players) do
+    state.networking.host:sendToAll("coords", {info = v.p, index = i})
+  end
   state.networking.host:update()
-  state.networking.host:sendToAll("coords", {info = players[id].p, index = id})
 end
 
 server.draw = function()
