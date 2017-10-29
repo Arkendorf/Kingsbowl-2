@@ -21,23 +21,34 @@ love.load = function()
 end
 
 love.update = function(dt)
-  if state.game == "server" then
+  if state.game == "servermenu" or state.game == "server" then
     server.update(dt)
-    game.update(dt)
-  elseif state.game == "client" then
+  elseif state.game == "clientmenu" or state.game == "client" then
     client.update(dt)
-    game.update(dt)
   elseif state.game == "menu" then
+  end
+  if state.game == "server" or state.game == "client" then
+    game.update(dt)
   end
   state.gui:update(dt)
 end
 
 love.draw = function()
-  if state.game == "menu" then
-    state.gui:draw()
-    love.graphics.print(ip.ip..":"..ip.port)
-  else
+  if state.game == "client" or state.game == "server" then
     game.draw()
+  elseif state.game == "servermenu" then
+    server.draw()
+  elseif state.game == "clientmenu" then
+    client.draw()
+  end
+  state.gui:draw()
+end
+
+love.quit = function()
+  if state.game == "servermenu" or state.game == "server" then
+    server.quit()
+  elseif state.game == "clientmenu" or state.game == "client" then
+    client.quit()
   end
 end
 

@@ -3,20 +3,46 @@ local state = require "state"
 local server = {}
 require "globals"
 
+local players = {}
+
 server.init = function()
   state.networking = {}
   local networking = state.networking
-  state.game = "server"
-  networking.host = enet.host_create(ip.ip .. ':' .. ip.port)
+  state.game = "servermenu"
+  networking.host = sock.newServer(ip.ip, tonumber(ip.port))
   state.gui = gui.new(menus[2])
+
+  -- important functions
+  networking.host:on("connect", function(data, client)
+  end)
+
+  networking.host:on("disconnect", function(data, client)
+    local index = client:getIndex()
+    players[index] = nil
+  end)
+
+  networking.host:on("playerinfo", function(data, client)
+    local index = client:getIndex()
+    players[index] = {name = data.name}
+    networking.host:sendToPeer(networking.host:getPeerByIndex(index), "id", index)
+  end)
 end
 
 server.update = function(dt)
-  local event = state.networking.host:service(100)
-  if event and event.type == "receive" then
-    print("Got message: ", event.data, event.peer)
-    event.peer:send(event.data)
+  state.networking.host:update()
+end
+
+server.draw = function()
+  love.graphics.print("Players:", 1, 0)
+  for i, v in pairs(players) do
+    love.graphics.print(v.name, 1, i*16)
   end
+end
+
+server.quit = function()
+  state.networking.host:sendToAll("disconnect", "")
+  state.networking.host:update()
+  state.networking.host:destroy()
 end
 
 return server
