@@ -35,9 +35,9 @@ server.init = function()
     networking.host:sendToAll("newplayer", {info = players[index], index = index})
   end)
 
-  networking.host:on("coords", function(data, client)
+  networking.host:on("diff", function(data, client)
     local index = client:getIndex()
-    players[index].p = data
+    players[index].d = data
   end)
 end
 

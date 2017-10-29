@@ -62,13 +62,13 @@ game.update = function (dt)
     players[id].d.y = players[id].d.y + joystick:getGamepadAxis("leftx")
   end
 
-  players[id].p.x = players[id].p.x + players[id].d.x*dt*60
-  players[id].d.x = players[id].d.x * 0.9
-  players[id].p.y = players[id].p.y + players[id].d.y*dt*60
-  players[id].d.y = players[id].d.y * 0.9
-
   if state.network_mode == "server" then
     for i, v in pairs(players) do
+      players[i].p.x = players[i].p.x + players[i].d.x*dt*60
+      players[i].d.x = players[i].d.x * 0.9
+      players[i].p.y = players[i].p.y + players[i].d.y*dt*60
+      players[i].d.y = players[i].d.y * 0.9
+
       if i ~= id then
         if collision.check_overlap(players[id], players[i]) then
           local p1, p2 = collision.circle_vs_circle(players[id], players[i]) --

@@ -23,6 +23,7 @@ client.init = function(t)
 
   networking.peer:on("disconnect", function(data)
     status = "Disconnected"
+    state.game = false
   end)
 
   networking.peer:on("id", function(data)
@@ -54,7 +55,7 @@ end
 client.update = function(dt)
   state.networking.peer:update()
   if state.game == true then
-    state.networking.peer:send("coords", players[id].p)
+    state.networking.peer:send("diff", players[id].d)
   end
 end
 
