@@ -4,13 +4,17 @@ local server = {}
 require "globals"
 
 local players = {}
+local id = 0
 
 server.init = function()
   state.networking = {}
-  local networking = state.networking
   state.game = "servermenu"
-  networking.host = sock.newServer(ip.ip, tonumber(ip.port))
   state.gui = gui.new(menus[2])
+  local networking = state.networking
+  networking.host = sock.newServer(ip.ip, tonumber(ip.port))
+
+  -- initial variables
+  players[0] = {name = username[1]}
 
   -- important functions
   networking.host:on("connect", function(data, client)
@@ -25,6 +29,8 @@ server.init = function()
     local index = client:getIndex()
     players[index] = {name = data.name}
     networking.host:sendToPeer(networking.host:getPeerByIndex(index), "id", index)
+    networking.host:sendToPeer(networking.host:getPeerByIndex(index), "currentplayers", players)
+    state.networking.host:sendToAll("newplayer", {info = players[index], index = index})
   end)
 end
 
@@ -33,14 +39,23 @@ server.update = function(dt)
 end
 
 server.draw = function()
-  love.graphics.print("Players:", 1, 0)
+  love.graphics.print("Players:", 2, 2)
+  local j = 1
   for i, v in pairs(players) do
-    love.graphics.print(v.name, 1, i*16)
+    if i == id then
+      love.graphics.rectangle("fill", 1, j*13, font:getWidth(v.name)+1, 12)
+      love.graphics.setColor(0, 0, 0)
+      love.graphics.print(v.name, 2, j*13+2)
+      love.graphics.setColor(255, 255, 255)
+    else
+      love.graphics.print(v.name, 2, j*13+2)
+    end
+    j = j + 1
   end
 end
 
 server.quit = function()
-  state.networking.host:sendToAll("disconnect", "")
+  state.networking.host:sendToAll("disconnect")
   state.networking.host:update()
   state.networking.host:destroy()
 end
