@@ -65,9 +65,7 @@ game.update = function (dt)
   if state.network_mode == "server" then
     for i, v in pairs(players) do
       players[i].p.x = players[i].p.x + players[i].d.x*dt*60
-      players[i].d.x = players[i].d.x * 0.9
       players[i].p.y = players[i].p.y + players[i].d.y*dt*60
-      players[i].d.y = players[i].d.y * 0.9
 
       if i ~= id then
         if collision.check_overlap(players[id], players[i]) then
@@ -78,6 +76,8 @@ game.update = function (dt)
       end
     end
   end
+  players[id].d.x = players[id].d.x * 0.9
+  players[id].d.y = players[id].d.y * 0.9
 end
 
 game.draw = function ()
