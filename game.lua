@@ -15,33 +15,33 @@ game.update = function (dt)
   local facing = 2
   local facing_to_dp = {
     function() -- facing 1
-      players[char].d.x = players[char].d.x - 1
+      players[id].d.x = players[id].d.x - 1
     end,
     function() end, -- facing 2
     function() -- facing 3
-      players[char].d.x = players[char].d.x + 1
+      players[id].d.x = players[id].d.x + 1
     end,
     function() -- facing 4
-      players[char].d.x = players[char].d.x - 0.70710678118
-      players[char].d.y = players[char].d.y - 0.70710678118
+      players[id].d.x = players[id].d.x - 0.70710678118
+      players[id].d.y = players[id].d.y - 0.70710678118
     end,
     function() -- facing 5
-      players[char].d.y = players[char].d.y - 1
+      players[id].d.y = players[id].d.y - 1
     end,
     function() -- facing 6
-      players[char].d.x = players[char].d.x + 0.70710678118
-      players[char].d.y = players[char].d.y - 1
+      players[id].d.x = players[id].d.x + 0.70710678118
+      players[id].d.y = players[id].d.y - 1
     end,
     function() -- facing 7
-      players[char].d.x = players[char].d.x - 0.70710678118
-      players[char].d.y = players[char].d.y + 0.70710678118
+      players[id].d.x = players[id].d.x - 0.70710678118
+      players[id].d.y = players[id].d.y + 0.70710678118
     end,
     function() -- facing 8
-      players[char].d.y = players[char].d.y + 1
+      players[id].d.y = players[id].d.y + 1
     end,
     function() -- facing 9
-      players[char].d.x = players[char].d.x + 0.70710678118
-      players[char].d.y = players[char].d.y + 0.70710678118
+      players[id].d.x = players[id].d.x + 0.70710678118
+      players[id].d.y = players[id].d.y + 0.70710678118
     end,
   }
   if love.keyboard.isDown("w") then
