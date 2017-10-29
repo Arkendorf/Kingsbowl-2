@@ -83,6 +83,11 @@ end
 game.draw = function ()
   love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
   for i, v in pairs(players) do
+    if v.team == 1 then
+      love.graphics.setColor(255, 200, 200)
+    else
+      love.graphics.setColor(200, 200, 255)
+    end
     love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
   end
 end

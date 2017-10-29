@@ -38,6 +38,10 @@ client.init = function(t)
     players[data.index] = data.info
   end)
 
+  networking.peer:on("teamswap", function(data)
+    players[data.index].team = data.info
+  end)
+
   networking.peer:on("startgame", function(data)
     state.gui = gui.new(menus[4])
     players = data
@@ -64,11 +68,15 @@ client.draw = function()
     love.graphics.print("Players:", 42, 2)
     local j = 1
     for i, v in pairs(players) do
+      if v.team == 1 then
+        love.graphics.setColor(255, 200, 200)
+      else
+        love.graphics.setColor(200, 200, 255)
+      end
       if i == id then
         love.graphics.rectangle("fill", 41, j*13, font:getWidth(v.name)+1, 12)
         love.graphics.setColor(0, 0, 0)
         love.graphics.print(v.name, 42, j*13+2)
-        love.graphics.setColor(255, 255, 255)
       else
         love.graphics.print(v.name, 42, j*13+2)
       end
