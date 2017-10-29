@@ -5,3 +5,4 @@ joystick = nil
 username = {"Sir Placeholder"}
 players = {}
 id = nil
+win_width, win_height = love.graphics.getDimensions( )
