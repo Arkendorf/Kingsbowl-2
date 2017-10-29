@@ -6,9 +6,6 @@ local menus = require "menus"
 local game = require "game"
 local state = require "state"
 
-keydowntable['1'] = server.init
-keydowntable['2'] = client.init
-
 love.load = function()
   font = love.graphics.newImageFont("font.png",
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
