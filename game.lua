@@ -1,9 +1,14 @@
 local game = {}
-local players = {{p = {x = 0, y = 0}, d = {x = 0, y = 0}, r = 10}, {p = {x = 100, y = 100}, d = {x = 0, y = 0}, r = 50}}
-local char = 1
 local collision = require "collision"
+local state = require "state"
 
-game.load = function ()
+game.init = function ()
+  state.game = true
+  for i, v in pairs(players) do
+    v.p = {x = i*32, y = i*32}
+    v.d = {x = 0, y = 0}
+    v.r = 16
+  end
 end
 
 game.update = function (dt)
@@ -53,20 +58,20 @@ game.update = function (dt)
   facing_to_dp[facing]()
 
   if joystick ~= nil then
-    players[char].d.x = players[char].d.x + joystick:getGamepadAxis("leftx")
-    players[char].d.y = players[char].d.y + joystick:getGamepadAxis("leftx")
+    players[id].d.x = players[id].d.x + joystick:getGamepadAxis("leftx")
+    players[id].d.y = players[id].d.y + joystick:getGamepadAxis("leftx")
   end
 
-  players[char].p.x = players[char].p.x + players[char].d.x*dt*60
-  players[char].d.x = players[char].d.x * 0.9
-  players[char].p.y = players[char].p.y + players[char].d.y*dt*60
-  players[char].d.y = players[char].d.y * 0.9
+  players[id].p.x = players[id].p.x + players[id].d.x*dt*60
+  players[id].d.x = players[id].d.x * 0.9
+  players[id].p.y = players[id].p.y + players[id].d.y*dt*60
+  players[id].d.y = players[id].d.y * 0.9
 
-  for i, v in ipairs(players) do
-    if i ~= char then
-      if collision.check_overlap(players[char], players[i]) then
-        local p1, p2 = collision.circle_vs_circle(players[char], players[i]) --
-        players[char].p = p1
+  for i, v in pairs(players) do
+    if i ~= id then
+      if collision.check_overlap(players[id], players[i]) then
+        local p1, p2 = collision.circle_vs_circle(players[id], players[i]) --
+        players[id].p = p1
         players[i].p = p2
       end
     end
@@ -74,10 +79,9 @@ game.update = function (dt)
 end
 
 game.draw = function ()
-  for i, v in ipairs(players) do
+  for i, v in pairs(players) do
     love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
   end
-  love.graphics.print(tostring(collision.check_overlap(players[1], players[2])))
 end
 
 return game
