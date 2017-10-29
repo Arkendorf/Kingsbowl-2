@@ -59,7 +59,7 @@ game.update = function (dt)
 
   if joystick ~= nil then
     players[id].d.x = players[id].d.x + joystick:getGamepadAxis("leftx")
-    players[id].d.y = players[id].d.y + joystick:getGamepadAxis("leftx")
+    players[id].d.y = players[id].d.y + joystick:getGamepadAxis("lefty")
   end
 
   if state.network_mode == "server" then
