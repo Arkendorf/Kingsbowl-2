@@ -12,7 +12,7 @@ server.init = function()
   state.network_mode = "server"
   state.gui = gui.new(menus[2])
   local networking = state.networking
-  networking.host = sock.newServer(ip.ip, tonumber(ip.port))
+  networking.host = sock.newServer("*", tonumber(ip.port))
 
   -- initial variables
   id = 0
@@ -106,6 +106,8 @@ server.start_game = function()
   if #teams[1] > 0 and #teams[2] > 0 then -- only start game if there is at least one person per team
     state.gui = gui.new(menus[4])
     state.networking.host:sendToAll("startgame", players)
+    state.networking.host:sendToAll("qb", teams[1][1])
+    qb = teams[1][1]
     game.init()
   end
 end

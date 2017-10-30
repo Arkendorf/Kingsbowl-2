@@ -52,6 +52,10 @@ client.init = function(t)
     players[data.index].p = data.info
   end)
 
+  networking.peer:on("qb", function(data)
+    qb = data
+  end)
+
   networking.peer:connect()
   status = "Connecting"
 end

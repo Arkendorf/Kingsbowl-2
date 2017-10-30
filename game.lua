@@ -1,7 +1,6 @@
 local game = {}
 local collision = require "collision"
 local state = require "state"
-local qb = nil
 local field_canvas = nil
 
 
@@ -11,6 +10,7 @@ game.init = function ()
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
     v.r = 16
+    v.speed = 30
   end
 
   field_canvas = game.draw_field(2000, 1000)
@@ -69,8 +69,8 @@ game.update = function (dt)
 
   if state.network_mode == "server" then
     for i, v in pairs(players) do
-      players[i].p.x = players[i].p.x + players[i].d.x*dt*60
-      players[i].p.y = players[i].p.y + players[i].d.y*dt*60
+      players[i].p.x = players[i].p.x + players[i].d.x*players[i].speed*dt
+      players[i].p.y = players[i].p.y + players[i].d.y*players[i].speed*dt
 
       if i ~= id then
         if collision.check_overlap(players[id], players[i]) then
