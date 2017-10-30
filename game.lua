@@ -68,6 +68,8 @@ game.update = function (dt)
   end
 
   if state.network_mode == "server" then
+    players[id].d.x = players[id].d.x * 0.9
+    players[id].d.y = players[id].d.y * 0.9
     for i, v in pairs(players) do
       players[i].p.x = players[i].p.x + players[i].d.x*players[i].speed*dt
       players[i].p.y = players[i].p.y + players[i].d.y*players[i].speed*dt
@@ -80,9 +82,11 @@ game.update = function (dt)
         end
       end
     end
+  else
+    players[id].d.x = players[id].d.x * 0.9
+    players[id].d.y = players[id].d.y * 0.9
   end
-  players[id].d.x = players[id].d.x * 0.9
-  players[id].d.y = players[id].d.y * 0.9
+
 end
 
 game.draw = function ()
