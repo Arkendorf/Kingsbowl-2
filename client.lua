@@ -22,6 +22,7 @@ client.init = function(t)
   end)
 
   networking.peer:on("disconnect", function(data)
+    state.networking.peer:disconnectNow()
     status = "Disconnected"
     state.game = false
     state.gui = gui.new(menus[3])

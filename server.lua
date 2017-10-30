@@ -29,10 +29,14 @@ server.init = function()
 
   networking.host:on("playerinfo", function(data, client)
     local index = client:getIndex()
-    players[index] = {name = data.name, team = math.floor(math.random()+1.5)}
-    networking.host:sendToPeer(networking.host:getPeerByIndex(index), "id", index)
-    networking.host:sendToPeer(networking.host:getPeerByIndex(index), "currentplayers", players)
-    networking.host:sendToAll("newplayer", {info = players[index], index = index})
+    if state.game == true then
+      networking.host:sendToPeer(networking.host:getPeerByIndex(index), "disconnect")
+    else
+      players[index] = {name = data.name, team = math.floor(math.random()+1.5)}
+      networking.host:sendToPeer(networking.host:getPeerByIndex(index), "id", index)
+      networking.host:sendToPeer(networking.host:getPeerByIndex(index), "currentplayers", players)
+      networking.host:sendToAll("newplayer", {info = players[index], index = index})
+    end
   end)
 
   networking.host:on("diff", function(data, client)
