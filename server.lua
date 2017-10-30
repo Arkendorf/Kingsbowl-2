@@ -98,9 +98,16 @@ server.back_to_main = function()
 end
 
 server.start_game = function()
-  state.gui = gui.new(menus[4])
-  state.networking.host:sendToAll("startgame", players)
-  game.init()
+  teams = {{}, {}}
+  for i, v in pairs(players) do
+    teams[v.team][#teams[v.team]+1] = i
+  end
+
+  if #teams[1] > 0 and #teams[2] > 0 then -- only start game if there is at least one person per team
+    state.gui = gui.new(menus[4])
+    state.networking.host:sendToAll("startgame", players)
+    game.init()
+  end
 end
 
 return server

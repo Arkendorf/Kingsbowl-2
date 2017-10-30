@@ -1,6 +1,9 @@
 local game = {}
 local collision = require "collision"
 local state = require "state"
+local qb = nil
+local field_canvas = nil
+
 
 game.init = function ()
   state.game = true
@@ -9,6 +12,8 @@ game.init = function ()
     v.d = {x = 0, y = 0}
     v.r = 16
   end
+
+  field_canvas = game.draw_field(2000, 1000)
 end
 
 game.update = function (dt)
@@ -82,6 +87,8 @@ end
 
 game.draw = function ()
   love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.draw(field_canvas)
   for i, v in pairs(players) do
     if v.team == 1 then
       love.graphics.setColor(255, 200, 200)
@@ -90,6 +97,22 @@ game.draw = function ()
     end
     love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
   end
+end
+
+game.draw_field = function (w, h)
+  local c = love.graphics.newCanvas(w, h)
+  local line_w = w/140
+  love.graphics.setCanvas(c)
+  love.graphics.rectangle("fill", -line_w/2, 0, line_w, h)
+  love.graphics.rectangle("fill", w-line_w/2, 0, line_w, h)
+  for i = 2, 12 do
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.rectangle("fill", (w/14)*i-line_w/2, 0, line_w, h)
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.print(tostring((5-math.abs(i-7))*10), (w/14)*i-line_w/2, 0)
+  end
+  love.graphics.setCanvas()
+  return c
 end
 
 return game
