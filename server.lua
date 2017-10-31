@@ -51,14 +51,30 @@ server.init = function()
 
   networking.host:on("sword", function(data, client)
     local index = client:getIndex()
-    players[index].sword = {active = data, t = 0}
+    players[index].sword = {active = data.active, d = data.d, t = 0}
+    if data.active == true then
+      players[index].speed = 0
+    else
+      players[index].speed = 30
+    end
     networking.host:sendToAll("sword", {info = data, index = index})
   end)
 
   networking.host:on("shield", function(data, client)
     local index = client:getIndex()
-    players[index].shield = {active = data, t = 0}
+    players[index].shield = {active = data.active, d = data.d, t = 0}
+    if data.active == true then
+      players[index].speed = 26
+    else
+      players[index].speed = 30
+    end
     networking.host:sendToAll("shield", {info = data, index = index})
+  end)
+
+  networking.host:on("shieldpos", function(data, client)
+    local index = client:getIndex()
+    players[index].shield.d = data
+    networking.host:sendToAll("shieldpos", {info = data, index = index})
   end)
 end
 
@@ -66,7 +82,7 @@ server.update = function(dt)
   state.networking.host:update()
 
   if state.game == true then
-    -- colllide players
+    -- collide players
     for i, v in pairs(players) do
       players[i].p.x = players[i].p.x + players[i].d.x*players[i].speed*dt
       players[i].p.y = players[i].p.y + players[i].d.y*players[i].speed*dt

@@ -69,11 +69,15 @@ client.init = function(t)
   end)
 
   networking.peer:on("sword", function(data)
-    players[data.index].sword = {active = data.info, t = 0}
+    players[data.index].sword = {active = data.info.active, d = data.info.d, t = 0}
   end)
 
   networking.peer:on("shield", function(data)
-    players[data.index].shield = {active = data.info, t = 0}
+    players[data.index].shield = {active = data.info.active, d = data.info.d, t = 0}
+  end)
+
+  networking.peer:on("shieldpos", function(data)
+    players[data.index].shield.d = data.info
   end)
 
   networking.peer:connect()
