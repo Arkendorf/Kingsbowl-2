@@ -119,7 +119,7 @@ server.start_game = function()
     state.networking.host:sendToAll("qb", teams[1][1])
     qb = teams[1][1]
     game.init()
-    game.ball.baller = id
+    game.ball.baller = qb
   end
 end
 

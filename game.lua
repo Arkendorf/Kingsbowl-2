@@ -5,7 +5,7 @@ local field_canvas = nil
 
 
 game.init = function ()
-  game.ball = {baller = nil, circle = {r = 32, p = {}}}
+  game.ball = {baller = nil, circle = {r = 32, p = {}}, thrown = false}
   state.game = true
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
@@ -65,9 +65,7 @@ game.update = function (dt)
   if love.keyboard.isDown("d") then
     facing = facing + 1
   end
-  if love.keyboard.isDown("space") then
-    game.ball.baller = nil
-  end
+
   facing_to_dp[facing]()
 
   if joystick ~= nil then
@@ -93,7 +91,7 @@ game.update = function (dt)
     players[id].d.x = players[id].d.x * 0.9
     players[id].d.y = players[id].d.y * 0.9
   end
-  
+
   players[id].d.x = players[id].d.x * 0.9
   players[id].d.y = players[id].d.y * 0.9
   if not game.ball.baller then
@@ -111,7 +109,7 @@ game.draw = function ()
   love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(field_canvas)
-  
+
   if game.ball.circle.p.x then love.graphics.circle("fill", game.ball.circle.p.x, game.ball.circle.p.y, game.ball.circle.r) end
   for i, v in pairs(players) do
     if game.ball.baller == i then
@@ -125,6 +123,13 @@ game.draw = function ()
       love.graphics.setColor(0, 0, 255)
     end
     love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
+  end
+end
+
+game.mousepressed = function (x, y, button)
+  if button == 1 and game.ball.baller == id and game.ball.thrown == false then
+    game.ball.thrown = true
+    game.ball.baller = nil
   end
 end
 
