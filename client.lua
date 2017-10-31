@@ -58,14 +58,22 @@ client.init = function(t)
     qb = data
   end)
 
-  networking.peer:on("ballpos", function(data, client)
+  networking.peer:on("ballpos", function(data)
     if data then game.ball.circle.p = {x = data.x, y = data.y} end
   end)
 
-  networking.peer:on("baller", function(data, client)
+  networking.peer:on("baller", function(data)
     if data then
       game.ball.baller = data
     end
+  end)
+
+  networking.peer:on("sword", function(data)
+    players[data.index].sword = {active = data.info, t = 0}
+  end)
+
+  networking.peer:on("shield", function(data)
+    players[data.index].shield = {active = data.info, t = 0}
   end)
 
   networking.peer:connect()

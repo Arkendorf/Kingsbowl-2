@@ -48,6 +48,18 @@ server.init = function()
   networking.host:on("ballpos", function(data, client)
     game.ball.pos = {x = data.x, y = data.y}
   end)
+
+  networking.host:on("sword", function(data, client)
+    local index = client:getIndex()
+    players[index].sword = {active = data, t = 0}
+    networking.host:sendToAll("sword", {info = data, index = index})
+  end)
+
+  networking.host:on("shield", function(data, client)
+    local index = client:getIndex()
+    players[index].shield = {active = data, t = 0}
+    networking.host:sendToAll("shield", {info = data, index = index})
+  end)
 end
 
 server.update = function(dt)
@@ -58,11 +70,13 @@ server.update = function(dt)
     for i, v in pairs(players) do
       players[i].p.x = players[i].p.x + players[i].d.x*players[i].speed*dt
       players[i].p.y = players[i].p.y + players[i].d.y*players[i].speed*dt
-      if i ~= id then
-        if collision.check_overlap(players[id], players[i]) then
-          local p1, p2 = collision.circle_vs_circle(players[id], players[i]) --
-          players[id].p = p1
-          players[i].p = p2
+      for j, w in ipairs(players) do
+        if i ~= j then
+          if collision.check_overlap(players[j], players[i]) then
+            local p1, p2 = collision.circle_vs_circle(players[j], players[i]) --
+            players[j].p = p1
+            players[i].p = p2
+          end
         end
       end
     end

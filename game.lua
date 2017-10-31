@@ -2,6 +2,7 @@ local game = {}
 local collision = require "collision"
 local state = require "state"
 local field_canvas = nil
+local mouse = {x = 0, y = 0}
 local facing_to_dp = {
   function() -- facing 1
     players[id].d.x = players[id].d.x - 1
@@ -42,6 +43,8 @@ game.init = function ()
     v.d = {x = 0, y = 0}
     v.r = 16
     v.speed = 30
+    v.shield = {active = false, t = 0}
+    v.sword = {active = false, t = 0}
   end
 
   field_canvas = game.draw_field(2000, 1000)
@@ -76,6 +79,9 @@ game.update = function (dt)
     players[id].d.y = players[id].d.y + joystick:getGamepadAxis("lefty")
   end
 
+  mouse.x = love.mouse.getX()-win_width/2
+  mouse.y = love.mouse.getY()-win_height/2
+
   if not game.ball.baller then
     for k,v in pairs(players) do
       if collision.check_overlap(v, game.ball.circle) then
@@ -84,6 +90,18 @@ game.update = function (dt)
     end
   elseif game.ball.baller == id then
     game.ball.circle.p.x, game.ball.circle.p.y = draw_p_to_game_p(love.mouse.getPosition())
+  end
+
+  for i, v in pairs(players) do
+    if v.shield.active == true then v.shield.t = v.shield.t + dt end
+    if v.sword.active == true then v.sword.t = v.sword.t + dt end
+    if v.sword.t > 1 then
+      v.sword.active = false
+      v.sword.t = 0
+      if state.network_mode == "server" then
+        networking.host:sendToAll("sword", {info = false, index = i})
+      end
+    end
   end
 end
 
@@ -105,6 +123,14 @@ game.draw = function ()
       love.graphics.setColor(0, 0, 255)
     end
     love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
+    if v.shield.active == true then
+      love.graphics.setColor(255, 0, 0)
+      love.graphics.circle("line", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
+    end
+    if v.sword.active == true then
+      local x, y = vector.scale(10, vector.norm(v.d))
+      love.graphics.circle("line", v.p.x + x, v.p.y + y, 10, 20*math.pi)
+    end
   end
 end
 
@@ -112,6 +138,22 @@ game.mousepressed = function (x, y, button)
   if button == 1 and game.ball.baller == id and game.ball.thrown == false then
     game.ball.thrown = true
     game.ball.baller = nil
+  elseif button == 1 and game.ball.baller ~= id and players[id].team == players[game.ball.baller].team then
+    if state.network_mode == "client" then
+      state.networking.peer:send("shield", true)
+    end
+  elseif button == 1 and players[id].team ~= players[game.ball.baller].team then
+    if state.network_mode == "client" then
+      state.networking.peer:send("sword", true)
+    end
+  end
+end
+
+game.mousereleased = function (x, y, button)
+  if button == 1 and players[id].shield == true then
+    if state.network_mode == "client" then
+      state.networking.peer:send("shield", false)
+    end
   end
 end
 

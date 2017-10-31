@@ -57,6 +57,12 @@ love.mousepressed = function(x, y, button)
   state.gui:mousepressed(x, y, button)
 end
 
+love.mousereleased = function(x, y, button)
+  if state.game == true then
+    game.mousereleased(x, y, button)
+  end
+end
+
 love.textinput = function(t)
   state.gui:textinput(t)
 end
