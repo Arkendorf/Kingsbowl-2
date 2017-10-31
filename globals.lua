@@ -7,3 +7,5 @@ players = {}
 id = nil
 qb = nil
 win_width, win_height = love.graphics.getDimensions( )
+sword = {dist = 10, r = 10}
+shield = {dist = 10, r = 12}

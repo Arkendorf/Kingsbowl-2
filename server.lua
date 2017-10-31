@@ -110,13 +110,33 @@ server.update = function(dt)
     -- adjust sword and shield info
     for i, v in pairs(players) do
       if v.shield.active == true then v.shield.t = v.shield.t + dt end
-      if v.sword.active == true then v.sword.t = v.sword.t + dt end
-      if v.sword.t > 1 then
-        v.sword.active = false
-        v.sword.t = 0
-        v.speed = game.speed_table.defense
-        if state.network_mode == "server" then
+      if v.sword.active == true then
+        v.sword.t = v.sword.t + dt
+        if v.sword.t > 1 then
+          v.sword.active = false
+          v.sword.t = 0
+          v.speed = game.speed_table.defense
           state.networking.host:sendToAll("sword", {info = {active = false}, index = i})
+        end
+
+        local strike = true
+        local sword_pos = vector.sum(v.p, v.sword.d)
+        for j, w in pairs(players) do -- check if sword hits shield
+          local shield_pos = vector.sum(w.p, w.shield.d)
+          if j ~= i and w.shield.active == true and w.dead == false and vector.mag_sq(collision.get_distance(v.p, w.p)) > vector.mag_sq(collision.get_distance(v.p, shield_pos)) and collision.check_overlap({r = shield.r, p = shield_pos}, {r = sword.r, p = sword_pos}) then
+            strike = false
+          end
+        end
+
+        if strike == true then -- if sword didn't hit shield, check if it hit people
+          for j, w in pairs(players) do
+            if j ~= i and w.dead == false and collision.check_overlap({r = sword.r, p = sword_pos}, w) then
+              w.dead = true
+              state.networking.host:sendToAll("dead", j)
+              w.sword.active = false
+              w.shield.active = false
+            end
+          end
         end
       end
     end
@@ -162,10 +182,10 @@ server.mousepressed = function(x, y, button)
       end
       j = j + 1
     end
-  elseif button == 1 and state.game == true and qb ~= id and players[id].team == players[qb].team then
+  elseif button == 1 and state.game == true and players[id].dead == false and qb ~= id and players[id].team == players[qb].team then
     players[id].shield = {active = true, d = game.shield_pos(), t = 0}
     players[id].speed = game.speed_table.shield
-  elseif button == 1 and state.game == true and players[id].team ~= players[qb].team then
+  elseif button == 1 and state.game == true and players[id].dead == false and players[id].team ~= players[qb].team then
     players[id].sword = {active = true, d = game.sword_pos(), t = 0}
     players[id].speed = game.speed_table.sword
   end

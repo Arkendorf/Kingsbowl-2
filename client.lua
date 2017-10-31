@@ -82,6 +82,12 @@ client.init = function(t)
     players[data.index].shield.d = data.info
   end)
 
+  networking.peer:on("dead", function(data)
+    players[data].dead = true
+    players[data].sword.active = false
+    players[data].shield.active = false
+  end)
+
   networking.peer:connect()
   status = "Connecting"
 end
@@ -121,9 +127,9 @@ client.draw = function()
 end
 
 client.mousepressed = function (x, y, button)
-  if button == 1 and state.game == true and qb ~= id and players[id].team == players[qb].team then
+  if button == 1 and state.game == true and players[id].dead == false and qb ~= id and players[id].team == players[qb].team then
     state.networking.peer:send("shield", {active = true, d = game.shield_pos()})
-  elseif button == 1 and state.game == true and players[id].team ~= players[qb].team then
+  elseif button == 1 and state.game == true and players[id].dead == false and players[id].team ~= players[qb].team then
     state.networking.peer:send("sword", {active = true, d = game.sword_pos()})
   end
 end

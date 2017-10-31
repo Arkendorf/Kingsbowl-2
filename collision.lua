@@ -19,5 +19,5 @@ local circle_vs_circle = function(c1, c2)
 end
 
 return {
-  circle_vs_circle = circle_vs_circle, check_overlap = check_overlap
+  circle_vs_circle = circle_vs_circle, check_overlap = check_overlap, get_distance = get_distance
 }

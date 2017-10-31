@@ -4,7 +4,6 @@ local state = require "state"
 local vector = require "vector"
 
 local mouse = {x = 0, y = 0}
-local sword_dist, shield_dist = 10, 5
 local field_canvas = nil
 local facing_to_dp = {
   function() -- facing 1
@@ -60,8 +59,9 @@ game.init = function ()
     else
       v.speed = game.speed_table.defense
     end
-    v.shield = {active = false, p = {1, 0}, t = 0}
-    v.sword = {active = false, p = {1, 0}, t = 0}
+    v.shield = {active = false, d = {x = 0, y = 0}, t = 0}
+    v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
+    v.dead = false
   end
 
   field_canvas = game.draw_field(2000, 1000)
@@ -89,11 +89,13 @@ game.update = function (dt)
     facing = facing + 1
   end
 
-  if joystick == nil then
-    facing_to_dp[facing]()
-  else
-    players[id].d.x = players[id].d.x + joystick:getGamepadAxis("leftx")
-    players[id].d.y = players[id].d.y + joystick:getGamepadAxis("lefty")
+  if players[id].dead == false then
+    if joystick == nil then
+      facing_to_dp[facing]()
+    else
+      players[id].d.x = players[id].d.x + joystick:getGamepadAxis("leftx")
+      players[id].d.y = players[id].d.y + joystick:getGamepadAxis("lefty")
+    end
   end
 
   mouse.x = love.mouse.getX()-win_width/2
@@ -129,14 +131,20 @@ game.draw = function ()
     if game.ball.baller == i then
       love.graphics.setColor(0, 0, 255)
     end
-    love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
+
+    if v.dead == false then
+      love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
+    else
+      love.graphics.circle("line", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
+    end
+
     if v.shield.active == true then
       love.graphics.setColor(255, 0, 0)
-      love.graphics.circle("fill", v.p.x+v.shield.d.x, v.p.y+v.shield.d.y, 10, 20*math.pi)
+      love.graphics.circle("fill", v.p.x+v.shield.d.x, v.p.y+v.shield.d.y, shield.r, 20*math.pi*shield.r)
     end
     if v.sword.active == true then
       love.graphics.setColor(255, 0, 0)
-      love.graphics.circle("fill", v.p.x+v.sword.d.x, v.p.y+v.sword.d.y, 10, 20*math.pi)
+      love.graphics.circle("fill", v.p.x+v.sword.d.x, v.p.y+v.sword.d.y, sword.r, 20*math.pi*sword.r)
     end
   end
 end
@@ -149,11 +157,11 @@ game.mousepressed = function (x, y, button)
 end
 
 game.shield_pos = function()
-  return vector.scale(shield_dist, vector.norm(mouse))
+  return vector.scale(shield.dist, vector.norm(mouse))
 end
 
 game.sword_pos = function()
-  return vector.scale(sword_dist, vector.norm(mouse))
+  return vector.scale(sword.dist, vector.norm(mouse))
 end
 
 game.draw_field = function (w, h)
