@@ -48,6 +48,16 @@ client.init = function(t)
     players[data.index].p = data.info
   end)
 
+  networking.peer:on("ballpos", function(data, client)
+    if data then game.ball.circle.p = {x = data.x, y = data.y} end
+  end)
+
+  networking.peer:on("baller", function(data, client)
+    if data then
+      game.ball.baller = data
+    end
+  end)
+
   networking.peer:connect()
   status = "Connecting"
 end

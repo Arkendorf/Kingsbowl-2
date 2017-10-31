@@ -3,12 +3,17 @@ local collision = require "collision"
 local state = require "state"
 
 game.init = function ()
+  game.ball = {baller = nil, circle = {r = 32, p = {}}}
   state.game = true
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
     v.r = 16
   end
+end
+
+local draw_p_to_game_p = function(x, y)
+  return x - win_width/2+players[id].p.x, y - win_height/2+players[id].p.y
 end
 
 game.update = function (dt)
@@ -55,6 +60,9 @@ game.update = function (dt)
   if love.keyboard.isDown("d") then
     facing = facing + 1
   end
+  if love.keyboard.isDown("space") then
+    game.ball.baller = nil
+  end
   facing_to_dp[facing]()
 
   if joystick ~= nil then
@@ -64,8 +72,8 @@ game.update = function (dt)
 
   if state.network_mode == "server" then
     for i, v in pairs(players) do
-      players[i].p.x = players[i].p.x + players[i].d.x*dt*60
-      players[i].p.y = players[i].p.y + players[i].d.y*dt*60
+      players[i].p.x = players[i].p.x + players[i].d.x*dt*30
+      players[i].p.y = players[i].p.y + players[i].d.y*dt*30
 
       if i ~= id then
         if collision.check_overlap(players[id], players[i]) then
@@ -78,11 +86,26 @@ game.update = function (dt)
   end
   players[id].d.x = players[id].d.x * 0.9
   players[id].d.y = players[id].d.y * 0.9
+  if not game.ball.baller then
+    for k,v in pairs(players) do
+      if collision.check_overlap(v, game.ball.circle) then
+        game.ball.baller = k
+      end
+    end
+  elseif game.ball.baller == id then
+    game.ball.circle.p.x, game.ball.circle.p.y = draw_p_to_game_p(love.mouse.getPosition())
+  end
 end
 
 game.draw = function ()
   love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
+  if game.ball.circle.p.x then love.graphics.circle("fill", game.ball.circle.p.x, game.ball.circle.p.y, game.ball.circle.r) end
   for i, v in pairs(players) do
+    if game.ball.baller == i then
+      love.graphics.setColor(0, 0, 255)
+    else
+      love.graphics.setColor(255, 255, 255)
+    end
     love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
   end
 end
