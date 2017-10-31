@@ -57,7 +57,7 @@ client.init = function(t)
   networking.peer:on("qb", function(data)
     qb = data
   end)
-  
+
   networking.peer:on("ballpos", function(data, client)
     if data then game.ball.circle.p = {x = data.x, y = data.y} end
   end)
