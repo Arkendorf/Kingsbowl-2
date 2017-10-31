@@ -64,7 +64,7 @@ love.keyreleased = function(key)
 end
 
 love.joystickadded = function(x)
-  if joystick == nil and joystick:isGamepad() then
+  if joystick == nil and x:isGamepad() then
     joystick = x
   end
 end
