@@ -1,6 +1,8 @@
 local game = {}
 local collision = require "collision"
 local state = require "state"
+local field_canvas = nil
+
 
 game.init = function ()
   game.ball = {baller = nil, circle = {r = 32, p = {}}}
@@ -9,7 +11,10 @@ game.init = function ()
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
     v.r = 16
+    v.speed = 30
   end
+
+  field_canvas = game.draw_field(2000, 1000)
 end
 
 local draw_p_to_game_p = function(x, y)
@@ -71,10 +76,11 @@ game.update = function (dt)
   end
 
   if state.network_mode == "server" then
+    players[id].d.x = players[id].d.x * 0.9
+    players[id].d.y = players[id].d.y * 0.9
     for i, v in pairs(players) do
-      players[i].p.x = players[i].p.x + players[i].d.x*dt*30
-      players[i].p.y = players[i].p.y + players[i].d.y*dt*30
-
+      players[i].p.x = players[i].p.x + players[i].d.x*players[i].speed*dt
+      players[i].p.y = players[i].p.y + players[i].d.y*players[i].speed*dt
       if i ~= id then
         if collision.check_overlap(players[id], players[i]) then
           local p1, p2 = collision.circle_vs_circle(players[id], players[i]) --
@@ -83,7 +89,11 @@ game.update = function (dt)
         end
       end
     end
+  else
+    players[id].d.x = players[id].d.x * 0.9
+    players[id].d.y = players[id].d.y * 0.9
   end
+  
   players[id].d.x = players[id].d.x * 0.9
   players[id].d.y = players[id].d.y * 0.9
   if not game.ball.baller then
@@ -99,15 +109,39 @@ end
 
 game.draw = function ()
   love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.draw(field_canvas)
+  
   if game.ball.circle.p.x then love.graphics.circle("fill", game.ball.circle.p.x, game.ball.circle.p.y, game.ball.circle.r) end
   for i, v in pairs(players) do
     if game.ball.baller == i then
       love.graphics.setColor(0, 0, 255)
+    elseif v.team == 1 then
+      love.graphics.setColor(255, 200, 200)
     else
-      love.graphics.setColor(255, 255, 255)
+      love.graphics.setColor(200, 200, 255)
+      end
+    if game.ball.baller == i then
+      love.graphics.setColor(0, 0, 255)
     end
     love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
   end
+end
+
+game.draw_field = function (w, h)
+  local c = love.graphics.newCanvas(w, h)
+  local line_w = w/140
+  love.graphics.setCanvas(c)
+  love.graphics.rectangle("fill", -line_w/2, 0, line_w, h)
+  love.graphics.rectangle("fill", w-line_w/2, 0, line_w, h)
+  for i = 2, 12 do
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.rectangle("fill", (w/14)*i-line_w/2, 0, line_w, h)
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.print(tostring((5-math.abs(i-7))*10), (w/14)*i-line_w/2, 0)
+  end
+  love.graphics.setCanvas()
+  return c
 end
 
 return game

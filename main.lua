@@ -13,6 +13,7 @@ love.load = function()
     "0123456789!?.:", 1)
   love.graphics.setFont(font)
   state.gui = gui.new(menus[1])
+  math.randomseed(os.time())
 end
 
 love.update = function(dt)
@@ -47,6 +48,9 @@ love.quit = function()
 end
 
 love.mousepressed = function(x, y, button)
+  if state.network_mode == "server" then
+    server.mousepressed(x, y, button)
+  end
   state.gui:mousepressed(x, y, button)
 end
 
