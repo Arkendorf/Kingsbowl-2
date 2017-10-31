@@ -50,6 +50,8 @@ end
 love.mousepressed = function(x, y, button)
   if state.network_mode == "server" then
     server.mousepressed(x, y, button)
+  elseif state.network_mode == "client" then
+    client.mousepressed(x, y, button)
   end
   if state.game == true then
     game.mousepressed(x, y, button)
@@ -58,8 +60,10 @@ love.mousepressed = function(x, y, button)
 end
 
 love.mousereleased = function(x, y, button)
-  if state.game == true then
-    game.mousereleased(x, y, button)
+  if state.network_mode == "server" then
+    server.mousereleased(x, y, button)
+  elseif state.network_mode == "client" then
+    client.mousereleased(x, y, button)
   end
 end
 

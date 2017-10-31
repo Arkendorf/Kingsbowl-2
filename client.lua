@@ -1,8 +1,9 @@
 local state = require "state"
 local gui = require "gui"
 local game = require "game"
+local vector = require "vector"
 require "globals"
-client = {}
+local client = {}
 
 local status = "Disconnected"
 
@@ -65,6 +66,7 @@ client.init = function(t)
   networking.peer:on("baller", function(data)
     if data then
       game.ball.baller = data
+      players[data].speed = game.speed_table.with_ball
     end
   end)
 
@@ -88,6 +90,9 @@ client.update = function(dt)
   state.networking.peer:update()
   if state.game == true then
     state.networking.peer:send("diff", players[id].d)
+    if players[id].shield.active == true then
+      state.networking.peer:send("shieldpos", game.shield_pos())
+    end
   end
 end
 
@@ -112,6 +117,20 @@ client.draw = function()
     end
   else
     love.graphics.print(status, 41, 2)
+  end
+end
+
+client.mousepressed = function (x, y, button)
+  if button == 1 and state.game == true and qb ~= id and players[id].team == players[qb].team then
+    state.networking.peer:send("shield", {active = true, d = game.shield_pos()})
+  elseif button == 1 and state.game == true and players[id].team ~= players[qb].team then
+    state.networking.peer:send("sword", {active = true, d = game.sword_pos()})
+  end
+end
+
+client.mousereleased = function (x, y, button)
+  if button == 1 and state.game == true and players[id].shield.active == true then
+    state.networking.peer:send("shield", {active = false})
   end
 end
 

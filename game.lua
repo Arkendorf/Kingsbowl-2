@@ -3,9 +3,9 @@ local collision = require "collision"
 local state = require "state"
 local vector = require "vector"
 
+local mouse = {x = 0, y = 0}
 local sword_dist, shield_dist = 10, 5
 local field_canvas = nil
-local mouse = {x = 0, y = 0}
 local facing_to_dp = {
   function() -- facing 1
     players[id].d.x = players[id].d.x - 1
@@ -38,6 +38,14 @@ local facing_to_dp = {
   end,
 }
 
+game.speed_table = {
+  with_ball = 24,
+  offense = 32,
+  defense = 30,
+  shield = 20,
+  sword = 4,
+}
+
 game.init = function ()
   game.ball = {baller = nil, circle = {r = 32, p = {}}, thrown = false}
   state.game = true
@@ -45,7 +53,13 @@ game.init = function ()
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
     v.r = 16
-    v.speed = 30
+    if i == qb then
+      v.speed = game.speed_table.with_ball
+    elseif v.team == players[qb].team then
+      v.speed = game.speed_table.offense
+    else
+      v.speed = game.speed_table.defense
+    end
     v.shield = {active = false, p = {1, 0}, t = 0}
     v.sword = {active = false, p = {1, 0}, t = 0}
   end
@@ -89,32 +103,12 @@ game.update = function (dt)
     for k,v in pairs(players) do
       if collision.check_overlap(v, game.ball.circle) then
         game.ball.baller = k
+        players[k].speed = game.speed_table.with_ball
       end
     end
   elseif game.ball.baller == id then
     game.ball.circle.p.x = mouse.x+players[id].p.x
     game.ball.circle.p.y = mouse.y+players[id].p.y
-  end
-
-  for i, v in pairs(players) do
-    if v.shield.active == true then v.shield.t = v.shield.t + dt end
-    if v.sword.active == true then v.sword.t = v.sword.t + dt end
-    if v.sword.t > 1 then
-      v.sword.active = false
-      v.sword.t = 0
-      v.speed = 30
-      if state.network_mode == "server" then
-        state.networking.host:sendToAll("sword", {info = {active = false}, index = i})
-      end
-    end
-  end
-
-  if players[id].shield.active == true then
-    if state.network_mode == "client" then
-      state.networking.peer:send("shieldpos", vector.scale(shield_dist, vector.norm(mouse)))
-    else
-      players[id].shield.d = vector.scale(shield_dist, vector.norm(mouse))
-    end
   end
 end
 
@@ -151,32 +145,15 @@ game.mousepressed = function (x, y, button)
   if button == 1 and game.ball.baller == id and game.ball.thrown == false then
     game.ball.thrown = true
     game.ball.baller = nil
-  elseif button == 1 and game.ball.baller ~= id and players[id].team == players[game.ball.baller].team then
-    if state.network_mode == "client" then
-      state.networking.peer:send("shield", {active = true, d = vector.scale(shield_dist, vector.norm(mouse))})
-    else
-      players[id].shield = {active = true, d = vector.scale(shield_dist, vector.norm(mouse)), t = 0}
-      players[id].speed = 26
-    end
-  elseif button == 1 and players[id].team ~= players[game.ball.baller].team then
-    if state.network_mode == "client" then
-      state.networking.peer:send("sword", {active = true, d = vector.scale(sword_dist, vector.norm(mouse))})
-    else
-      players[id].sword = {active = true, d = vector.scale(sword_dist, vector.norm(mouse)), t = 0}
-      players[id].speed = 0
-    end
   end
 end
 
-game.mousereleased = function (x, y, button)
-  if button == 1 and players[id].shield.active == true then
-    if state.network_mode == "client" then
-      state.networking.peer:send("shield", {active = false})
-    else
-      players[id].shield = {active = false, t = 0}
-      players[id].speed = 30
-    end
-  end
+game.shield_pos = function()
+  return vector.scale(shield_dist, vector.norm(mouse))
+end
+
+game.sword_pos = function()
+  return vector.scale(sword_dist, vector.norm(mouse))
 end
 
 game.draw_field = function (w, h)
