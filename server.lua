@@ -43,12 +43,18 @@ server.init = function()
     local index = client:getIndex()
     players[index].d = data
   end)
+
+  networking.host:on("ballpos", function(data, client)
+    game.ball.pos = {x = data.x, y = data.y}
+  end)
 end
 
 server.update = function(dt)
   for i, v in pairs(players) do
     state.networking.host:sendToAll("coords", {info = v.p, index = i})
   end
+  if game.ball then state.networking.host:sendToAll("ballpos", game.ball.circle.p) end
+  if game.ball then state.networking.host:sendToAll("baller", game.ball.baller) end
   state.networking.host:update()
 end
 
@@ -113,6 +119,7 @@ server.start_game = function()
     state.networking.host:sendToAll("qb", teams[1][1])
     qb = teams[1][1]
     game.init()
+    game.ball.baller = id
   end
 end
 

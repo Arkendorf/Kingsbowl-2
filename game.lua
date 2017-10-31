@@ -5,6 +5,7 @@ local field_canvas = nil
 
 
 game.init = function ()
+  game.ball = {baller = nil, circle = {r = 32, p = {}}}
   state.game = true
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
@@ -14,6 +15,10 @@ game.init = function ()
   end
 
   field_canvas = game.draw_field(2000, 1000)
+end
+
+local draw_p_to_game_p = function(x, y)
+  return x - win_width/2+players[id].p.x, y - win_height/2+players[id].p.y
 end
 
 game.update = function (dt)
@@ -60,6 +65,9 @@ game.update = function (dt)
   if love.keyboard.isDown("d") then
     facing = facing + 1
   end
+  if love.keyboard.isDown("space") then
+    game.ball.baller = nil
+  end
   facing_to_dp[facing]()
 
   if joystick ~= nil then
@@ -73,7 +81,6 @@ game.update = function (dt)
     for i, v in pairs(players) do
       players[i].p.x = players[i].p.x + players[i].d.x*players[i].speed*dt
       players[i].p.y = players[i].p.y + players[i].d.y*players[i].speed*dt
-
       if i ~= id then
         if collision.check_overlap(players[id], players[i]) then
           local p1, p2 = collision.circle_vs_circle(players[id], players[i]) --
@@ -86,18 +93,36 @@ game.update = function (dt)
     players[id].d.x = players[id].d.x * 0.9
     players[id].d.y = players[id].d.y * 0.9
   end
-
+  
+  players[id].d.x = players[id].d.x * 0.9
+  players[id].d.y = players[id].d.y * 0.9
+  if not game.ball.baller then
+    for k,v in pairs(players) do
+      if collision.check_overlap(v, game.ball.circle) then
+        game.ball.baller = k
+      end
+    end
+  elseif game.ball.baller == id then
+    game.ball.circle.p.x, game.ball.circle.p.y = draw_p_to_game_p(love.mouse.getPosition())
+  end
 end
 
 game.draw = function ()
   love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(field_canvas)
+  
+  if game.ball.circle.p.x then love.graphics.circle("fill", game.ball.circle.p.x, game.ball.circle.p.y, game.ball.circle.r) end
   for i, v in pairs(players) do
-    if v.team == 1 then
+    if game.ball.baller == i then
+      love.graphics.setColor(0, 0, 255)
+    elseif v.team == 1 then
       love.graphics.setColor(255, 200, 200)
     else
       love.graphics.setColor(200, 200, 255)
+      end
+    if game.ball.baller == i then
+      love.graphics.setColor(0, 0, 255)
     end
     love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
   end
