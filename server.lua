@@ -1,6 +1,7 @@
 local gui = require "gui"
 local state = require "state"
 local game = require "game"
+local collision = require "collision"
 local server = {}
 require "globals"
 
@@ -62,6 +63,30 @@ server.update = function(dt)
     state.networking.host:sendToAll("ballpos", game.ball.circle.p)
   end
   state.networking.host:update()
+
+  if state.game == true then
+    -- colllide players
+    for i, v in pairs(players) do
+      players[i].p.x = players[i].p.x + players[i].d.x*players[i].speed*dt
+      players[i].p.y = players[i].p.y + players[i].d.y*players[i].speed*dt
+      if i ~= id then
+        if collision.check_overlap(players[id], players[i]) then
+          local p1, p2 = collision.circle_vs_circle(players[id], players[i]) --
+          players[id].p = p1
+          players[i].p = p2
+        end
+      end
+    end
+
+    -- send positions
+    for i, v in pairs(players) do
+      state.networking.host:sendToAll("coords", {info = v.p, index = i})
+    end
+
+    -- send ball info
+    if game.ball then state.networking.host:sendToAll("ballpos", game.ball.circle.p) end
+    if game.ball then state.networking.host:sendToAll("baller", game.ball.baller) end
+  end
 end
 
 server.draw = function()
@@ -125,6 +150,7 @@ server.start_game = function()
     state.networking.host:sendToAll("qb", teams[1][1])
     qb = teams[1][1]
     game.init()
+    game.ball.baller = qb
   end
 end
 

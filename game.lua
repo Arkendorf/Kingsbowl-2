@@ -2,7 +2,6 @@ local game = {}
 local collision = require "collision"
 local state = require "state"
 local field_canvas = nil
-
 local common_send = function (k, v)
   if state.network_mode == "server" then
     state.networking.host:sendToAll(k, v)
@@ -12,6 +11,38 @@ local common_send = function (k, v)
 end
 
 game.ball = {baller = qb, circle = {r = 32, p = {x=0,y=0}}}
+
+local facing_to_dp = {
+  function() -- facing 1
+    players[id].d.x = players[id].d.x - 1
+  end,
+  function() end, -- facing 2
+  function() -- facing 3
+    players[id].d.x = players[id].d.x + 1
+  end,
+  function() -- facing 4
+    players[id].d.x = players[id].d.x - 0.70710678118
+    players[id].d.y = players[id].d.y - 0.70710678118
+  end,
+  function() -- facing 5
+    players[id].d.y = players[id].d.y - 1
+  end,
+  function() -- facing 6
+    players[id].d.x = players[id].d.x + 0.70710678118
+    players[id].d.y = players[id].d.y - 1
+  end,
+  function() -- facing 7
+    players[id].d.x = players[id].d.x - 0.70710678118
+    players[id].d.y = players[id].d.y + 0.70710678118
+  end,
+  function() -- facing 8
+    players[id].d.y = players[id].d.y + 1
+  end,
+  function() -- facing 9
+    players[id].d.x = players[id].d.x + 0.70710678118
+    players[id].d.y = players[id].d.y + 0.70710678118
+  end,
+}
 
 game.init = function ()
   state.game = true
@@ -30,38 +61,11 @@ local draw_p_to_game_p = function(x, y)
 end
 
 game.update = function (dt)
+  -- reduce velocity
+  players[id].d.x = players[id].d.x * 0.9
+  players[id].d.y = players[id].d.y * 0.9
+
   local facing = 2
-  local facing_to_dp = {
-    function() -- facing 1
-      players[id].d.x = players[id].d.x - 1
-    end,
-    function() end, -- facing 2
-    function() -- facing 3
-      players[id].d.x = players[id].d.x + 1
-    end,
-    function() -- facing 4
-      players[id].d.x = players[id].d.x - 0.70710678118
-      players[id].d.y = players[id].d.y - 0.70710678118
-    end,
-    function() -- facing 5
-      players[id].d.y = players[id].d.y - 1
-    end,
-    function() -- facing 6
-      players[id].d.x = players[id].d.x + 0.70710678118
-      players[id].d.y = players[id].d.y - 1
-    end,
-    function() -- facing 7
-      players[id].d.x = players[id].d.x - 0.70710678118
-      players[id].d.y = players[id].d.y + 0.70710678118
-    end,
-    function() -- facing 8
-      players[id].d.y = players[id].d.y + 1
-    end,
-    function() -- facing 9
-      players[id].d.x = players[id].d.x + 0.70710678118
-      players[id].d.y = players[id].d.y + 0.70710678118
-    end,
-  }
   if love.keyboard.isDown("w") then
     facing = 5
   elseif love.keyboard.isDown("s") then
@@ -79,7 +83,9 @@ game.update = function (dt)
   end
   facing_to_dp[facing]()
 
-  if joystick ~= nil then
+  if joystick == nil then
+    facing_to_dp[facing]()
+  else
     players[id].d.x = players[id].d.x + joystick:getGamepadAxis("leftx")
     players[id].d.y = players[id].d.y + joystick:getGamepadAxis("lefty")
   end
@@ -121,6 +127,7 @@ game.draw = function ()
   love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(field_canvas)
+
   if game.ball.circle.p.x then love.graphics.circle("fill", game.ball.circle.p.x, game.ball.circle.p.y, game.ball.circle.r) end
   for i, v in pairs(players) do
     if game.ball.baller == i then
@@ -134,6 +141,13 @@ game.draw = function ()
       love.graphics.setColor(0, 0, 255)
     end
     love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
+  end
+end
+
+game.mousepressed = function (x, y, button)
+  if button == 1 and game.ball.baller == id and game.ball.thrown == false then
+    game.ball.thrown = true
+    game.ball.baller = nil
   end
 end
 
