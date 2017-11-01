@@ -118,6 +118,10 @@ client.init = function(t)
     game.ball.thrown = data
   end)
 
+  networking.peer:on("touchdown", function(data)
+    score[data] = score[data] + 7
+  end)
+
   networking.peer:connect()
   status = "Connecting"
 end

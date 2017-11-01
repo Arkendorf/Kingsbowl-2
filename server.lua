@@ -202,8 +202,18 @@ server.update = function(dt)
       end
     end
 
-    if game.ball.baller and players[game.ball.baller].team ~= players[qb].team then
-      server.turnover()
+    if game.ball.baller then
+      local baller_team = players[game.ball.baller].team
+      if baller_team ~= players[qb].team then
+        server.turnover()
+      end
+
+      if (baller_team == 1 and players[game.ball.baller].p.x > field.w/12*11) or (baller_team == 2 and players[game.ball.baller].p.x < field.w/12) then
+        score[baller_team] = score[baller_team] + 7
+        server.turnover()
+        server.new_down(field.w/12*7)
+        state.networking.host:sendToAll("touchdown", baller_team)
+      end
     end
 
     if #teams[1].members <= 0 or #teams[2].members <= 0 then
@@ -281,7 +291,7 @@ server.back_to_main = function()
 end
 
 server.start_game = function()
-  teams = {{members = {}, qb = 2}, {members = {}, qb = 1}}
+  teams = {{members = {}, qb = 1}, {members = {}, qb = 1}}
   for i, v in pairs(players) do
     teams[v.team].members[#teams[v.team].members+1] = i
   end
@@ -298,13 +308,18 @@ end
 
 server.new_down = function (x)
   local down = game.down
-  local dir = 1
-  if down.goal ~= nil and down.goal - down.start > 0 then dir = 1
-  else dir = -1 end
   down.start = x
-  if down.goal ~= nil and down.start*dir - down.goal*dir > 0 then
+  if down.dir == 1 and players[qb].team == 2 then
+    down.dir = -1
     down.num = 1
-    down.goal = down.start + field.w/12*dir
+    down.goal = down.start - field.w/12
+  elseif down.dir == -1 and players[qb].team == 1 then
+    down.dir = 1
+    down.num = 1
+    down.goal = down.start + field.w/12
+  elseif down.goal ~= nil and down.start*down.dir - down.goal*down.dir > 0 then
+    down.num = 1
+    down.goal = down.start + field.w/12*down.dir
     if down.goal > field.w/12*11 or down.goal < field.w/12 then
       down.goal = nil
     end
@@ -312,9 +327,7 @@ server.new_down = function (x)
     down.num = down.num + 1
     if down.num > 4 then
       game.down.num = 1
-      if down.goal ~= nil and down.goal - down.start > 0 then dir = 1
-      else dir = -1 end
-      down.goal = down.start - field.w/12*dir
+      down.goal = down.start - field.w/12*down.dir
       server.turnover()
     end
   end

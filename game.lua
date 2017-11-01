@@ -46,7 +46,7 @@ local facing_to_dp = {
 }
 
 game.init = function ()
-  game.down = {num = 1, start = field.w/12*7, goal = field.w/3*2, t = 0}
+  game.down = {num = 1, start = field.w/12*7, goal = field.w/3*2, t = 0, dir = 1}
   game.ball.baller = qb
   state.game = true
   for i, v in pairs(players) do
@@ -107,7 +107,7 @@ end
 
 game.draw = function ()
   love.graphics.push()
-  love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
+  love.graphics.translate(math.floor(win_width/2-players[id].p.x), math.floor(win_height/2-players[id].p.y))
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(field.canvas)
   love.graphics.setColor(255, 255, 0)
@@ -137,6 +137,7 @@ game.draw = function ()
     else
       love.graphics.circle("line", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
     end
+    love.graphics.print(v.name, math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), math.floor(v.p.y)-math.floor(v.r+font:getHeight()))
 
     if v.shield.active == true then
       love.graphics.setColor(255, 0, 0)
@@ -155,7 +156,7 @@ game.draw = function ()
   else
     love.graphics.print(tostring(game.down.num).." and goal. Time: "..tostring(math.floor(game.down.t*10)/10), 1, 1)
   end
-  love.graphics.print(tostring(game.ball.thrown), 1, 14)
+  love.graphics.print("Score: "..tostring(score[1]).." to "..tostring(score[2]), 1, 14)
 end
 
 game.mousepressed = function (x, y, button)
@@ -185,7 +186,7 @@ end
 game.reset_players = function ()
   game.ball.baller = qb
   game.ball.thrown = false
-  
+
   local team_pos = {0, 0}
   for i, v in pairs(players) do
     v.sword.active = false
@@ -197,7 +198,8 @@ game.reset_players = function ()
     else
       v.p.x = game.down.start + 32
     end
-    v.p.y = (field.h-#teams[v.team].members*32)/2+team_pos[v.team]*32
+    v.p.y = (field.h-#teams[v.team].members*48)/2+team_pos[v.team]*48
+    v.d.x, v.d.y = 0, 0
     team_pos[v.team] = team_pos[v.team] + 1
   end
 end
