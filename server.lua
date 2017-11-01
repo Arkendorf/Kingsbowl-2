@@ -100,6 +100,10 @@ server.init = function()
     players[index].shield.d = data
     networking.host:sendToAll("shieldpos", {info = data, index = index})
   end)
+
+  networking.host:on("throw", function(data, client)
+    game.ball.thrown = data
+  end)
 end
 
 server.update = function(dt)
@@ -303,7 +307,7 @@ server.new_down = function (x)
       game.down.num = 1
       if down.goal ~= nil and down.goal - down.start > 0 then dir = 1
       else dir = -1 end
-      down.goal = down.start + field.w/12*dir
+      down.goal = down.start - field.w/12*dir
       server.turnover()
     end
   end

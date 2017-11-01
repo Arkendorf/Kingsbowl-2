@@ -156,12 +156,13 @@ game.draw = function ()
   else
     love.graphics.print(tostring(game.down.num).." and goal. Time: "..tostring(math.floor(game.down.t*10)/10), 1, 1)
   end
-  love.graphics.print(tostring(#teams[1].members), 1, 14)
+  love.graphics.print(tostring(game.ball.thrown), 1, 14)
 end
 
 game.mousepressed = function (x, y, button)
   if button == 1 and game.ball.baller == id and game.ball.thrown == false and game.down.t > grace_time then
     game.ball.thrown = true
+    common_send("throw", game.ball.thrown)
     players[game.ball.baller].speed = speed_table.offense
     game.ball.baller = false
     common_send("newballer", game.ball.baller)
