@@ -119,7 +119,6 @@ server.update = function(dt)
 
     -- send ball info
     if game.ball then state.networking.host:sendToAll("ballpos", game.ball.circle.p) end
-    if game.ball then state.networking.host:sendToAll("baller", game.ball.baller) end
 
     -- adjust sword and shield info
     for i, v in pairs(players) do
