@@ -12,7 +12,7 @@ local common_send = function (k, v)
   end
 end
 
-game.ball = {baller = qb, circle = {r = 32, p = {x=0,y=0}}}
+game.ball = {baller = false, circle = {r = 32, p = {x=0,y=0}}, thrown = false}
 
 local facing_to_dp = {
   function() -- facing 1
@@ -48,7 +48,7 @@ local facing_to_dp = {
 
 game.init = function ()
   game.down = {num = 1, start = field.w/12*7, goal = field.w/3*2, t = 0}
-  game.ball = {baller = qb, circle = {r = 32, p = {}}, thrown = false}
+  game.ball.baller = qb
   state.game = true
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
@@ -97,15 +97,8 @@ game.update = function (dt)
   mouse.x = love.mouse.getX()-win_width/2
   mouse.y = love.mouse.getY()-win_height/2
 
-  if not game.ball.baller then
-    for k,v in pairs(players) do
-      if collision.check_overlap(v, game.ball.circle) then
-        game.ball.baller = k
-        players[k].speed = speed_table.with_ball
-        common_send("newballer", k)
-      end
-    end
-  elseif game.ball.baller == id then
+
+  if game.ball.baller == id then
     game.ball.circle.p.x = mouse.x+players[id].p.x
     game.ball.circle.p.y = mouse.y+players[id].p.y
   end
@@ -168,6 +161,7 @@ end
 game.mousepressed = function (x, y, button)
   if button == 1 and game.ball.baller == id and game.ball.thrown == false and game.down.t > grace_time then
     game.ball.thrown = true
+    players[game.ball.baller].speed = speed_table.offense
     game.ball.baller = false
     common_send("newballer", game.ball.baller)
   end

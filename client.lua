@@ -29,6 +29,16 @@ client.init = function(t)
     state.gui = gui.new(menus[3])
   end)
 
+  networking.peer:on("playerleft", function(data)
+    for i, v in ipairs(teams[players[index].team].members) do
+      if v == index then
+        table.remove(teams[players[index].team].members, i)
+        break
+      end
+    end
+    players[data] = nil
+  end)
+
   networking.peer:on("id", function(data)
     id = data
   end)
@@ -75,8 +85,12 @@ client.init = function(t)
   end)
 
   networking.peer:on("newballer", function(data, client)
+    if not data then
+      players[game.ball.baller].speed = speed_table.offense
+    else
+      players[data].speed = speed_table.with_ball
+    end
     game.ball.baller = data
-    players[data].speed = speed_table.with_ball
   end)
 
   networking.peer:on("sword", function(data)
