@@ -84,14 +84,9 @@ game.update = function (dt)
   if love.keyboard.isDown("d") then
     facing = facing + 1
   end
-  if game.ball.baller == id and love.keyboard.isDown("space") then
-    game.ball.baller = false
-    common_send("newballer", game.ball.baller)
-  end
-  facing_to_dp[facing]()
 
   if players[id].dead == false then
-    if joystick == nil then
+    if not joystick then
       facing_to_dp[facing]()
     else
       players[id].d.x = players[id].d.x + joystick:getGamepadAxis("leftx")
@@ -120,7 +115,6 @@ end
 
 game.draw = function ()
   love.graphics.push()
-  love.graphics.translate(win_width/2-players[id].p.x, win_height/2-players[id].p.y )
   love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(field.canvas)
@@ -174,7 +168,8 @@ end
 game.mousepressed = function (x, y, button)
   if button == 1 and game.ball.baller == id and game.ball.thrown == false and game.down.t > grace_time then
     game.ball.thrown = true
-    game.ball.baller = nil
+    game.ball.baller = false
+    common_send("newballer", game.ball.baller)
   end
 end
 
