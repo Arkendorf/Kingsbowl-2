@@ -38,7 +38,7 @@ local facing_to_dp = {
 }
 
 game.init = function ()
-  game.down = {num = 1, start = field.w/12*7, goal = field.w/3*2}
+  game.down = {num = 1, start = field.w/12*7, goal = field.w/3*2, t = 0}
   game.ball = {baller = qb, circle = {r = 32, p = {}}, thrown = false}
   state.game = true
   for i, v in pairs(players) do
@@ -99,6 +99,8 @@ game.update = function (dt)
     game.ball.circle.p.x = mouse.x+players[id].p.x
     game.ball.circle.p.y = mouse.y+players[id].p.y
   end
+
+  game.down.t = game.down.t + dt
 end
 
 game.draw = function ()
@@ -148,15 +150,14 @@ game.draw = function ()
   love.graphics.pop()
   love.graphics.setColor(255, 255, 255)
   if game.down.goal ~= nil then
-    love.graphics.print(tostring(game.down.num).." and "..tostring(math.floor(math.abs(game.down.start-game.down.goal)/field.w*120)))
+    love.graphics.print(tostring(game.down.num).." and "..tostring(math.floor(math.abs(game.down.start-game.down.goal)/field.w*120))..". Time: "..tostring(math.floor(game.down.t*10)/10), 1, 1)
   else
-    love.graphics.print(tostring(game.down.num).." and goal")
+    love.graphics.print(tostring(game.down.num).." and goal. Time: "..tostring(math.floor(game.down.t*10)/10), 1, 1)
   end
-  love.graphics.print(tostring(qb), 0, 13)
 end
 
 game.mousepressed = function (x, y, button)
-  if button == 1 and game.ball.baller == id and game.ball.thrown == false then
+  if button == 1 and game.ball.baller == id and game.ball.thrown == false and game.down.t > grace_time then
     game.ball.thrown = true
     game.ball.baller = nil
   end

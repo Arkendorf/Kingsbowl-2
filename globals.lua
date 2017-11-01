@@ -16,3 +16,4 @@ speed_table = {
   shield = 20,
   sword = 4,
 }
+grace_time = 3

@@ -77,8 +77,18 @@ server.update = function(dt)
   if state.game == true then
     -- collide players
     for i, v in pairs(players) do
-      players[i].p.x = players[i].p.x + players[i].d.x*players[i].speed*dt
-      players[i].p.y = players[i].p.y + players[i].d.y*players[i].speed*dt
+      v.p.x = v.p.x + v.d.x*v.speed*dt
+      v.p.y = v.p.y + v.d.y*v.speed*dt
+
+      -- collide with line of scrimmage if down has hardly started
+      if game.down.t <= grace_time and v.team == 1 and v.p.x+v.r > game.down.start then
+        v.d.x = 0
+        v.p.x = game.down.start-v.r
+      elseif game.down.t <= grace_time and v.team == 2 and v.p.x-v.r < game.down.start then
+        v.d.x = 0
+        v.p.x = game.down.start+v.r
+      end
+
       for j, w in ipairs(players) do
         if i ~= j then
           if collision.check_overlap(players[j], players[i]) then
@@ -175,12 +185,14 @@ server.mousepressed = function(x, y, button)
       end
       j = j + 1
     end
-  elseif button == 1 and state.game == true and players[id].dead == false and qb ~= id and players[id].team == players[qb].team then
-    players[id].shield = {active = true, d = game.shield_pos(), t = 0}
-    players[id].speed = speed_table.shield
-  elseif button == 1 and state.game == true and players[id].dead == false and players[id].team ~= players[qb].team then
-    players[id].sword = {active = true, d = game.sword_pos(), t = 0}
-    players[id].speed = speed_table.sword
+  elseif button == 1 and state.game == true and players[id].dead == false and game.down.t > grace_time then
+    if qb ~= id and players[id].team == players[qb].team then
+      players[id].shield = {active = true, d = game.shield_pos(), t = 0}
+      players[id].speed = speed_table.shield
+    elseif players[id].team ~= players[qb].team then
+      players[id].sword = {active = true, d = game.sword_pos(), t = 0}
+      players[id].speed = speed_table.sword
+    end
   end
 end
 
@@ -238,6 +250,7 @@ server.new_down = function (x)
       server.turnover()
     end
   end
+  down.t = 0
   state.networking.host:sendToAll("newdown", game.down)
   game.reset_players()
 end
