@@ -2,8 +2,9 @@ local gui = require "gui"
 local state = require "state"
 local game = require "game"
 local collision = require "collision"
-local server = {}
+local vector = require "vector"
 require "globals"
+local server = {}
 
 players = {}
 id = 0
@@ -52,6 +53,26 @@ server.init = function()
   networking.host:on("newballer", function(data, client)
     game.ball.baller = data
   end)
+
+  networking.host:on("sword", function(data, client)
+    local index = client:getIndex()
+    players[index].sword = {active = data.active, d = data.d, t = 0}
+    game.set_speed(index)
+    networking.host:sendToAll("sword", {info = data, index = index})
+  end)
+
+  networking.host:on("shield", function(data, client)
+    local index = client:getIndex()
+    players[index].shield = {active = data.active, d = data.d, t = 0}
+    game.set_speed(index)
+    networking.host:sendToAll("shield", {info = data, index = index})
+  end)
+
+  networking.host:on("shieldpos", function(data, client)
+    local index = client:getIndex()
+    players[index].shield.d = data
+    networking.host:sendToAll("shieldpos", {info = data, index = index})
+  end)
 end
 
 server.update = function(dt)
@@ -64,15 +85,29 @@ server.update = function(dt)
   state.networking.host:update()
 
   if state.game == true then
-    -- colllide players
+    for i, v in pairs(players) do -- move players
+      v.p.x = v.p.x + v.d.x*v.speed*dt
+      v.p.y = v.p.y + v.d.y*v.speed*dt
+
+      -- collide with line of scrimmage if down has hardly started
+      if game.down.t <= grace_time and v.team == 1 and v.p.x+v.r > game.down.start then
+        v.d.x = 0
+        v.p.x = game.down.start-v.r
+      elseif game.down.t <= grace_time and v.team == 2 and v.p.x-v.r < game.down.start then
+        v.d.x = 0
+        v.p.x = game.down.start+v.r
+      end
+    end
+
+    --collision between players
     for i, v in pairs(players) do
-      players[i].p.x = players[i].p.x + players[i].d.x*players[i].speed*dt
-      players[i].p.y = players[i].p.y + players[i].d.y*players[i].speed*dt
-      if i ~= id then
-        if collision.check_overlap(players[id], players[i]) then
-          local p1, p2 = collision.circle_vs_circle(players[id], players[i]) --
-          players[id].p = p1
-          players[i].p = p2
+      for j, w in ipairs(players) do
+        if i ~= j then
+          if collision.check_overlap(players[j], players[i]) then
+            local p1, p2 = collision.circle_vs_circle(players[j], players[i]) --
+            players[j].p = p1
+            players[i].p = p2
+          end
         end
       end
     end
@@ -84,6 +119,47 @@ server.update = function(dt)
 
     -- send ball info
     if game.ball then state.networking.host:sendToAll("ballpos", game.ball.circle.p) end
+    if game.ball then state.networking.host:sendToAll("baller", game.ball.baller) end
+
+    -- adjust sword and shield info
+    for i, v in pairs(players) do
+      if v.shield.active == true then v.shield.t = v.shield.t + dt end
+      if v.sword.active == true then
+        v.sword.t = v.sword.t + dt
+        if v.sword.t > sword.t then
+          v.sword.active = false
+          v.sword.t = 0
+          v.speed = speed_table.defense
+          state.networking.host:sendToAll("sword", {info = {active = false}, index = i})
+        end
+
+        local strike = true
+        local sword_pos = vector.sum(v.p, v.sword.d)
+        for j, w in pairs(players) do -- check if sword hits shield
+          local shield_pos = vector.sum(w.p, w.shield.d)
+          if j ~= i and w.shield.active == true and w.dead == false and vector.mag_sq(collision.get_distance(v.p, w.p)) > vector.mag_sq(collision.get_distance(v.p, shield_pos)) and collision.check_overlap({r = shield.r, p = shield_pos}, {r = sword.r, p = sword_pos}) then
+            strike = false
+          end
+        end
+
+        if strike == true then -- if sword didn't hit shield, check if it hit people
+          for j, w in pairs(players) do
+            if j ~= i and w.dead == false and collision.check_overlap({r = sword.r, p = sword_pos}, w) then
+              state.networking.host:sendToAll("dead", j)
+              game.kill(j)
+              if j == game.ball.baller then
+                server.new_down(players[j].p.x)
+              end
+            end
+          end
+        end
+      end
+    end
+
+    -- adjust shield pos
+    if players[id].shield.active == true then
+      players[id].shield.d = vector.scale(shield_dist, vector.norm(mouse))
+    end
   end
 end
 
@@ -121,6 +197,21 @@ server.mousepressed = function(x, y, button)
       end
       j = j + 1
     end
+  elseif button == 1 and state.game == true and players[id].dead == false and game.down.t > grace_time then
+    if qb ~= id and players[id].team == players[qb].team then
+      players[id].shield = {active = true, d = game.shield_pos(), t = 0}
+      players[id].speed = speed_table.shield
+    elseif players[id].team ~= players[qb].team then
+      players[id].sword = {active = true, d = game.sword_pos(), t = 0}
+      players[id].speed = speed_table.sword
+    end
+  end
+end
+
+server.mousereleased = function (x, y, button)
+  if button == 1 and state.game == true and players[id].shield.active == true then
+    players[id].shield = {active = false, t = 0}
+    players[id].speed = speed_table.offense
   end
 end
 
@@ -137,18 +228,63 @@ server.back_to_main = function()
 end
 
 server.start_game = function()
-  teams = {{}, {}}
+  teams = {{members = {}, qb = 1}, {members = {}, qb = 1}}
   for i, v in pairs(players) do
-    teams[v.team][#teams[v.team]+1] = i
+    teams[v.team].members[#teams[v.team]+1] = i
   end
 
-  if #teams[1] > 0 and #teams[2] > 0 then -- only start game if there is at least one person per team
+  if #teams[1].members > 0 and #teams[2].members > 0 then -- only start game if there is at least one person per team
     state.gui = gui.new(menus[4])
+    qb = teams[1].members[1]
+    state.networking.host:sendToAll("qb", qb)
     state.networking.host:sendToAll("startgame", players)
-    state.networking.host:sendToAll("qb", teams[1][1])
-    qb = teams[1][1]
     game.init()
     game.ball.baller = qb
+  end
+end
+
+server.new_down = function (x)
+  local down = game.down
+  local dir = 1
+  if down.goal ~= nil and down.goal - down.start > 0 then dir = 1
+  else dir = -1 end
+  down.start = x
+  if down.goal ~= nil and down.start*dir - down.goal*dir > 0 then
+    down.num = 1
+    down.goal = down.start + field.w/12*dir
+    if down.goal > field.w/12*11 or down.goal < field.w/12 then
+      down.goal = nil
+    end
+  else
+    down.num = down.num + 1
+    if down.num > 4 then
+      game.down.num = 1
+      if down.goal ~= nil and down.goal - down.start > 0 then dir = 1
+      else dir = -1 end
+      down.goal = down.start + field.w/12*dir
+      server.turnover()
+    end
+  end
+  down.t = 0
+  state.networking.host:sendToAll("newdown", game.down)
+  game.reset_players()
+end
+
+server.turnover = function ()
+  local new_team = 1
+  if players[qb].team == 1 then
+    new_team = 2
+  end
+  qb = teams[new_team].members[teams[new_team].qb]
+  teams[new_team].qb = teams[new_team].qb + 1
+  if teams[new_team].qb > #teams[new_team].members then
+    teams[new_team].qb = 1
+  end
+  state.networking.host:sendToAll("qb", qb)
+  for i, v in pairs(players) do
+    v.sword.active = false
+    v.shield.active = false
+    game.set_speed(i)
   end
 end
 

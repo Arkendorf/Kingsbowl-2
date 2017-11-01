@@ -1,8 +1,9 @@
 local state = require "state"
 local gui = require "gui"
 local game = require "game"
+local vector = require "vector"
 require "globals"
-client = {}
+local client = {}
 
 local status = "Disconnected"
 
@@ -47,6 +48,10 @@ client.init = function(t)
   networking.peer:on("startgame", function(data)
     state.gui = gui.new(menus[4])
     players = data
+    teams = {{members = {}}, {members = {}}}
+    for i, v in pairs(players) do
+      teams[v.team].members[#teams[v.team]+1] = i
+    end
     game.init()
   end)
 
@@ -56,6 +61,13 @@ client.init = function(t)
 
   networking.peer:on("qb", function(data)
     qb = data
+    for i, v in pairs(players) do
+      if v.sword ~= nil and v.shield ~= nil then
+        v.sword.active = false
+        v.shield.active = false
+        game.set_speed(i)
+      end
+    end
   end)
 
   networking.peer:on("ballpos", function(data, client)
@@ -64,6 +76,28 @@ client.init = function(t)
 
   networking.peer:on("newballer", function(data, client)
     game.ball.baller = data
+    players[data].speed = speed_table.with_ball
+  end)
+
+  networking.peer:on("sword", function(data)
+    players[data.index].sword = {active = data.info.active, d = data.info.d, t = 0}
+  end)
+
+  networking.peer:on("shield", function(data)
+    players[data.index].shield = {active = data.info.active, d = data.info.d, t = 0}
+  end)
+
+  networking.peer:on("shieldpos", function(data)
+    players[data.index].shield.d = data.info
+  end)
+
+  networking.peer:on("dead", function(data)
+    game.kill(data)
+  end)
+
+  networking.peer:on("newdown", function(data)
+    game.down = data
+    game.reset_players()
   end)
 
   networking.peer:connect()
@@ -74,6 +108,9 @@ client.update = function(dt)
   state.networking.peer:update()
   if state.game == true then
     state.networking.peer:send("diff", players[id].d)
+    if players[id].shield.active == true then
+      state.networking.peer:send("shieldpos", game.shield_pos())
+    end
     if game.ball.baller == id then state.networking.peer:send("ballpos", game.ball.circle.p) end
   end
 end
@@ -99,6 +136,22 @@ client.draw = function()
     end
   else
     love.graphics.print(status, 41, 2)
+  end
+end
+
+client.mousepressed = function (x, y, button)
+  if button == 1 and state.game == true and players[id].dead == false and game.down.t > grace_time then
+    if qb ~= id and players[id].team == players[qb].team then
+      state.networking.peer:send("shield", {active = true, d = game.shield_pos()})
+    elseif players[id].team ~= players[qb].team then
+      state.networking.peer:send("sword", {active = true, d = game.sword_pos()})
+    end
+  end
+end
+
+client.mousereleased = function (x, y, button)
+  if button == 1 and state.game == true and players[id].shield.active == true then
+    state.networking.peer:send("shield", {active = false})
   end
 end
 
