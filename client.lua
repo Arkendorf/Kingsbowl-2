@@ -30,9 +30,9 @@ client.init = function(t)
   end)
 
   networking.peer:on("playerleft", function(data)
-    for i, v in ipairs(teams[players[index].team].members) do
-      if v == index then
-        table.remove(teams[players[index].team].members, i)
+    for i, v in ipairs(teams[players[data].team].members) do
+      if v == data then
+        table.remove(teams[players[data].team].members, i)
         break
       end
     end
@@ -60,7 +60,7 @@ client.init = function(t)
     players = data
     teams = {{members = {}}, {members = {}}}
     for i, v in pairs(players) do
-      teams[v.team].members[#teams[v.team]+1] = i
+      teams[v.team].members[#teams[v.team].members+1] = i
     end
     game.init()
   end)
@@ -72,7 +72,7 @@ client.init = function(t)
   networking.peer:on("qb", function(data)
     qb = data
     for i, v in pairs(players) do
-      if v.sword ~= nil and v.shield ~= nil then
+      if v.sword and v.shield and qb then
         v.sword.active = false
         v.shield.active = false
         game.set_speed(i)

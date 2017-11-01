@@ -156,6 +156,7 @@ game.draw = function ()
   else
     love.graphics.print(tostring(game.down.num).." and goal. Time: "..tostring(math.floor(game.down.t*10)/10), 1, 1)
   end
+  love.graphics.print(tostring(#teams[1].members), 1, 14)
 end
 
 game.mousepressed = function (x, y, button)
