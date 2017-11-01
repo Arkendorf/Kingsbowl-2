@@ -4,7 +4,6 @@ local state = require "state"
 local vector = require "vector"
 
 local mouse = {x = 0, y = 0}
-local field = {canvas = nil, w = 2000, h = 1000}
 local facing_to_dp = {
   function() -- facing 1
     players[id].d.x = players[id].d.x - 1

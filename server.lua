@@ -75,8 +75,7 @@ server.update = function(dt)
   state.networking.host:update()
 
   if state.game == true then
-    -- collide players
-    for i, v in pairs(players) do
+    for i, v in pairs(players) do -- move players
       v.p.x = v.p.x + v.d.x*v.speed*dt
       v.p.y = v.p.y + v.d.y*v.speed*dt
 
@@ -88,7 +87,10 @@ server.update = function(dt)
         v.d.x = 0
         v.p.x = game.down.start+v.r
       end
+    end
 
+    --collision between players
+    for i, v in pairs(players) do
       for j, w in ipairs(players) do
         if i ~= j then
           if collision.check_overlap(players[j], players[i]) then
@@ -247,6 +249,9 @@ server.new_down = function (x)
     down.num = down.num + 1
     if down.num > 4 then
       game.down.num = 1
+      if down.goal ~= nil and down.goal - down.start > 0 then dir = 1
+      else dir = -1 end
+      down.goal = down.start + field.w/12*dir
       server.turnover()
     end
   end

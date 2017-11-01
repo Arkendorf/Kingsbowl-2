@@ -17,3 +17,4 @@ speed_table = {
   sword = 4,
 }
 grace_time = 3
+field = {canvas = nil, w = 2000, h = 1000}
