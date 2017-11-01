@@ -18,3 +18,4 @@ speed_table = {
 }
 grace_time = 3
 field = {canvas = nil, w = 2000, h = 1000}
+mouse = {x = 0, y = 0}

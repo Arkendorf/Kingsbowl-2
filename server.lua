@@ -163,7 +163,10 @@ server.update = function(dt)
         local strike = true
         local sword_pos = vector.sum(v.p, v.sword.d)
         for j, w in pairs(players) do -- check if sword hits shield
-          local shield_pos = vector.sum(w.p, w.shield.d)
+          local shield_pos = {x = 0, y = 0}
+          if w.shield.d then
+            shield_pos = vector.sum(w.p, w.shield.d)
+          end
           if j ~= i and w.shield.active == true and w.dead == false and vector.mag_sq(collision.get_distance(v.p, w.p)) > vector.mag_sq(collision.get_distance(v.p, shield_pos)) and collision.check_overlap({r = shield.r, p = shield_pos}, {r = sword.r, p = sword_pos}) then
             strike = false
           end
@@ -185,7 +188,8 @@ server.update = function(dt)
 
     -- adjust shield pos
     if players[id].shield.active == true then
-      players[id].shield.d = vector.scale(shield_dist, vector.norm(mouse))
+      players[id].shield.d = vector.scale(shield.dist, vector.norm(mouse))
+      state.networking.host:sendToAll("shieldpos", {info = players[id].shield.d, index = id})
     end
 
     if not game.ball.baller then
@@ -243,12 +247,14 @@ server.mousepressed = function(x, y, button)
       j = j + 1
     end
   elseif button == 1 and state.game == true and players[id].dead == false and game.down.t > grace_time then
-    if qb ~= id and players[id].team == players[qb].team then
+    if game.ball.baller ~= id and players[id].team == players[qb].team then
       players[id].shield = {active = true, d = game.shield_pos(), t = 0}
       players[id].speed = speed_table.shield
+      state.networking.host:sendToAll("shield", {info = {active = players[id].shield.active, d = players[id].shield.d}, index = id})
     elseif players[id].team ~= players[qb].team then
       players[id].sword = {active = true, d = game.sword_pos(), t = 0}
       players[id].speed = speed_table.sword
+      state.networking.host:sendToAll("sword", {info = {active = players[id].sword.active, d = players[id].sword.d}, index = id})
     end
   end
 end
@@ -257,6 +263,7 @@ server.mousereleased = function (x, y, button)
   if button == 1 and state.game == true and players[id].shield.active == true then
     players[id].shield = {active = false, t = 0}
     players[id].speed = speed_table.offense
+  state.networking.host:sendToAll("shield", {info = {active = players[id].shield.act}, index = id})
   end
 end
 

@@ -2,7 +2,6 @@ local game = {}
 local collision = require "collision"
 local state = require "state"
 local vector = require "vector"
-local mouse = {x = 0, y = 0}
 
 local common_send = function (k, v)
   if state.network_mode == "server" then
@@ -184,6 +183,9 @@ game.kill = function (i)
 end
 
 game.reset_players = function ()
+  game.ball.baller = qb
+  game.ball.thrown = false
+  
   local team_pos = {0, 0}
   for i, v in pairs(players) do
     v.sword.active = false
@@ -198,9 +200,6 @@ game.reset_players = function ()
     v.p.y = (field.h-#teams[v.team].members*32)/2+team_pos[v.team]*32
     team_pos[v.team] = team_pos[v.team] + 1
   end
-
-  game.ball.baller = qb
-  game.ball.thrown = false
 end
 
 game.set_speed = function (i)
