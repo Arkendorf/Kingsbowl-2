@@ -48,6 +48,10 @@ client.init = function(t)
   networking.peer:on("startgame", function(data)
     state.gui = gui.new(menus[4])
     players = data
+    teams = {{members = {}}, {members = {}}}
+    for i, v in pairs(players) do
+      teams[v.team].members[#teams[v.team]+1] = i
+    end
     game.init()
   end)
 
@@ -57,6 +61,13 @@ client.init = function(t)
 
   networking.peer:on("qb", function(data)
     qb = data
+    for i, v in pairs(players) do
+      if v.sword ~= nil and v.shield ~= nil then
+        v.sword.active = false
+        v.shield.active = false
+        game.set_speed(i)
+      end
+    end
   end)
 
   networking.peer:on("ballpos", function(data)
@@ -66,7 +77,7 @@ client.init = function(t)
   networking.peer:on("baller", function(data)
     if data then
       game.ball.baller = data
-      players[data].speed = game.speed_table.with_ball
+      players[data].speed = speed_table.with_ball
     end
   end)
 
@@ -83,9 +94,12 @@ client.init = function(t)
   end)
 
   networking.peer:on("dead", function(data)
-    players[data].dead = true
-    players[data].sword.active = false
-    players[data].shield.active = false
+    game.kill(data)
+  end)
+
+  networking.peer:on("newdown", function(data)
+    game.down = data
+    game.reset_players()
   end)
 
   networking.peer:connect()

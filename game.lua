@@ -4,7 +4,7 @@ local state = require "state"
 local vector = require "vector"
 
 local mouse = {x = 0, y = 0}
-local field_canvas = nil
+local field = {canvas = nil, w = 2000, h = 1000}
 local facing_to_dp = {
   function() -- facing 1
     players[id].d.x = players[id].d.x - 1
@@ -37,34 +37,21 @@ local facing_to_dp = {
   end,
 }
 
-game.speed_table = {
-  with_ball = 24,
-  offense = 32,
-  defense = 30,
-  shield = 20,
-  sword = 4,
-}
-
 game.init = function ()
-  game.ball = {baller = nil, circle = {r = 32, p = {}}, thrown = false}
+  game.down = {num = 1, start = field.w/12*7, goal = field.w/3*2}
+  game.ball = {baller = qb, circle = {r = 32, p = {}}, thrown = false}
   state.game = true
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
     v.r = 16
-    if i == qb then
-      v.speed = game.speed_table.with_ball
-    elseif v.team == players[qb].team then
-      v.speed = game.speed_table.offense
-    else
-      v.speed = game.speed_table.defense
-    end
     v.shield = {active = false, d = {x = 0, y = 0}, t = 0}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
-    v.dead = false
+    game.set_speed(i)
   end
+  game.reset_players()
 
-  field_canvas = game.draw_field(2000, 1000)
+  field.canvas = game.draw_field(field.w, field.h)
 end
 
 local draw_p_to_game_p = function(x, y)
@@ -105,7 +92,7 @@ game.update = function (dt)
     for k,v in pairs(players) do
       if collision.check_overlap(v, game.ball.circle) then
         game.ball.baller = k
-        players[k].speed = game.speed_table.with_ball
+        players[k].speed = speed_table.with_ball
       end
     end
   elseif game.ball.baller == id then
@@ -115,10 +102,20 @@ game.update = function (dt)
 end
 
 game.draw = function ()
-  love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
-  love.graphics.setColor(255, 255, 255)
-  love.graphics.draw(field_canvas)
+  love.graphics.push()
+  love.graphics.translate(win_width/2-players[id].p.x, win_height/2-players[id].p.y )
 
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.draw(field.canvas)
+  love.graphics.setColor(255, 255, 0)
+  love.graphics.rectangle("fill", game.down.start-2, 0, 4, field.h)
+
+  if game.down.goal ~= nil then
+    love.graphics.setColor(0, 0, 255)
+    love.graphics.rectangle("fill", game.down.goal-2, 0, 4, field.h)
+  end
+
+  love.graphics.setColor(255, 255, 255)
   if game.ball.circle.p.x then love.graphics.circle("fill", game.ball.circle.p.x, game.ball.circle.p.y, game.ball.circle.r) end
   for i, v in pairs(players) do
     if game.ball.baller == i then
@@ -147,6 +144,15 @@ game.draw = function ()
       love.graphics.circle("fill", v.p.x+v.sword.d.x, v.p.y+v.sword.d.y, sword.r, 20*math.pi*sword.r)
     end
   end
+
+  love.graphics.pop()
+  love.graphics.setColor(255, 255, 255)
+  if game.down.goal ~= nil then
+    love.graphics.print(tostring(game.down.num).." and "..tostring(math.floor(math.abs(game.down.start-game.down.goal)/field.w*120)))
+  else
+    love.graphics.print(tostring(game.down.num).." and goal")
+  end
+  love.graphics.print(tostring(qb), 0, 13)
 end
 
 game.mousepressed = function (x, y, button)
@@ -164,17 +170,55 @@ game.sword_pos = function()
   return vector.scale(sword.dist, vector.norm(mouse))
 end
 
+game.kill = function (i)
+  players[i].dead = true
+  players[i].sword.active = false
+  players[i].shield.active = false
+end
+
+game.reset_players = function ()
+  local team_pos = {0, 0}
+  for i, v in pairs(players) do
+    v.sword.active = false
+    v.shield.active = false
+    game.set_speed(i)
+    v.dead = false
+    if v.team == 1 then
+      v.p.x = game.down.start - 32
+    else
+      v.p.x = game.down.start + 32
+    end
+    v.p.y = (field.h-#teams[v.team].members*32)/2+team_pos[v.team]*32
+    team_pos[v.team] = team_pos[v.team] + 1
+  end
+
+  game.ball.baller = qb
+  game.ball.thrown = false
+end
+
+game.set_speed = function (i)
+  if i == game.ball.baller then
+    players[i].speed = speed_table.with_ball
+  elseif players[i].shield.active == true then
+    players[i].speed = speed_table.shield
+  elseif players[i].sword.active == true then
+    players[i].speed = speed_table.sword
+  elseif players[i].team == players[qb].team then
+    players[i].speed = speed_table.offense
+  else
+    players[i].speed = speed_table.defense
+  end
+end
+
 game.draw_field = function (w, h)
   local c = love.graphics.newCanvas(w, h)
   local line_w = w/140
   love.graphics.setCanvas(c)
-  love.graphics.rectangle("fill", -line_w/2, 0, line_w, h)
-  love.graphics.rectangle("fill", w-line_w/2, 0, line_w, h)
-  for i = 2, 12 do
+  for i = 0, 12 do
     love.graphics.setColor(255, 255, 255)
-    love.graphics.rectangle("fill", (w/14)*i-line_w/2, 0, line_w, h)
+    love.graphics.rectangle("fill", (w/12)*i-line_w/2, 0, line_w, h)
     love.graphics.setColor(0, 0, 0)
-    love.graphics.print(tostring((5-math.abs(i-7))*10), (w/14)*i-line_w/2, 0)
+    love.graphics.print(tostring((5-math.abs(i-7))*10), (w/12)*i-line_w/2, 0)
   end
   love.graphics.setCanvas()
   return c
