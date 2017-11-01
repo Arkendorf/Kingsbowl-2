@@ -3,9 +3,17 @@ local collision = require "collision"
 local state = require "state"
 local field_canvas = nil
 
+local common_send = function (k, v)
+  if state.network_mode == "server" then
+    state.networking.host:sendToAll(k, v)
+  elseif state.network_mode == "client" then
+    state.networking.peer:send(k, v)
+  end
+end
+
+game.ball = {baller = qb, circle = {r = 32, p = {x=0,y=0}}}
 
 game.init = function ()
-  game.ball = {baller = nil, circle = {r = 32, p = {}}}
   state.game = true
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
@@ -65,8 +73,9 @@ game.update = function (dt)
   if love.keyboard.isDown("d") then
     facing = facing + 1
   end
-  if love.keyboard.isDown("space") then
+  if game.ball.baller == id and love.keyboard.isDown("space") then
     game.ball.baller = nil
+    common_send("newballer", game.ball.baller)
   end
   facing_to_dp[facing]()
 
@@ -93,13 +102,14 @@ game.update = function (dt)
     players[id].d.x = players[id].d.x * 0.9
     players[id].d.y = players[id].d.y * 0.9
   end
-  
+
   players[id].d.x = players[id].d.x * 0.9
   players[id].d.y = players[id].d.y * 0.9
   if not game.ball.baller then
     for k,v in pairs(players) do
       if collision.check_overlap(v, game.ball.circle) then
         game.ball.baller = k
+        common_send("newballer", k)
       end
     end
   elseif game.ball.baller == id then
@@ -111,7 +121,6 @@ game.draw = function ()
   love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(field_canvas)
-  
   if game.ball.circle.p.x then love.graphics.circle("fill", game.ball.circle.p.x, game.ball.circle.p.y, game.ball.circle.r) end
   for i, v in pairs(players) do
     if game.ball.baller == i then

@@ -57,12 +57,12 @@ client.init = function(t)
   networking.peer:on("qb", function(data)
     qb = data
   end)
-  
+
   networking.peer:on("ballpos", function(data, client)
-    if data then game.ball.circle.p = {x = data.x, y = data.y} end
+    if data and not (game.ball.baller == id) then game.ball.circle.p = {x = data.x, y = data.y} end
   end)
 
-  networking.peer:on("baller", function(data, client)
+  networking.peer:on("newballer", function(data, client)
     if data then
       game.ball.baller = data
     end
@@ -76,6 +76,7 @@ client.update = function(dt)
   state.networking.peer:update()
   if state.game == true then
     state.networking.peer:send("diff", players[id].d)
+    if game.ball.baller == id then state.networking.peer:send("ballpos", game.ball.circle.p) end
   end
 end
 
