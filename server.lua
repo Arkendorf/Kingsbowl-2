@@ -47,7 +47,11 @@ server.init = function()
   end)
 
   networking.host:on("ballpos", function(data, client)
-    game.ball.pos = {x = data.x, y = data.y}
+    game.ball.circle.p = data
+  end)
+
+  networking.host:on("newballer", function(data, client)
+    game.ball.baller = data
   end)
 
   networking.host:on("sword", function(data, client)
@@ -72,6 +76,12 @@ server.init = function()
 end
 
 server.update = function(dt)
+  for i, v in pairs(players) do
+    state.networking.host:sendToAll("coords", {info = v.p, index = i})
+  end
+  if game.ball then
+    state.networking.host:sendToAll("ballpos", game.ball.circle.p)
+  end
   state.networking.host:update()
 
   if state.game == true then

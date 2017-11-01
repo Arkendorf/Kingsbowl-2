@@ -70,15 +70,13 @@ client.init = function(t)
     end
   end)
 
-  networking.peer:on("ballpos", function(data)
-    if data then game.ball.circle.p = {x = data.x, y = data.y} end
+  networking.peer:on("ballpos", function(data, client)
+    if data and not (game.ball.baller == id) then game.ball.circle.p = {x = data.x, y = data.y} end
   end)
 
-  networking.peer:on("baller", function(data)
-    if data then
-      game.ball.baller = data
-      players[data].speed = speed_table.with_ball
-    end
+  networking.peer:on("newballer", function(data, client)
+    game.ball.baller = data
+    players[data].speed = speed_table.with_ball
   end)
 
   networking.peer:on("sword", function(data)
@@ -113,6 +111,7 @@ client.update = function(dt)
     if players[id].shield.active == true then
       state.networking.peer:send("shieldpos", game.shield_pos())
     end
+    if game.ball.baller == id then state.networking.peer:send("ballpos", game.ball.circle.p) end
   end
 end
 

@@ -2,8 +2,18 @@ local game = {}
 local collision = require "collision"
 local state = require "state"
 local vector = require "vector"
-
 local mouse = {x = 0, y = 0}
+
+local common_send = function (k, v)
+  if state.network_mode == "server" then
+    state.networking.host:sendToAll(k, v)
+  elseif state.network_mode == "client" then
+    state.networking.peer:send(k, v)
+  end
+end
+
+game.ball = {baller = qb, circle = {r = 32, p = {x=0,y=0}}}
+
 local facing_to_dp = {
   function() -- facing 1
     players[id].d.x = players[id].d.x - 1
@@ -74,6 +84,11 @@ game.update = function (dt)
   if love.keyboard.isDown("d") then
     facing = facing + 1
   end
+  if game.ball.baller == id and love.keyboard.isDown("space") then
+    game.ball.baller = false
+    common_send("newballer", game.ball.baller)
+  end
+  facing_to_dp[facing]()
 
   if players[id].dead == false then
     if joystick == nil then
@@ -92,6 +107,7 @@ game.update = function (dt)
       if collision.check_overlap(v, game.ball.circle) then
         game.ball.baller = k
         players[k].speed = speed_table.with_ball
+        common_send("newballer", k)
       end
     end
   elseif game.ball.baller == id then
@@ -105,7 +121,7 @@ end
 game.draw = function ()
   love.graphics.push()
   love.graphics.translate(win_width/2-players[id].p.x, win_height/2-players[id].p.y )
-
+  love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(field.canvas)
   love.graphics.setColor(255, 255, 0)
