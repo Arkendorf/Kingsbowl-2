@@ -26,9 +26,15 @@ server.init = function()
 
   networking.host:on("disconnect", function(data, client)
     local index = client:getIndex()
+    local team = players[index].team
+    for i, v in ipairs(teams[team].members) do
+      if v == index then
+        table.remove(teams[team].members, i)
+        break
+      end
+    end
     if index == qb then
-      local team = players[index].team
-      qb = teams[team].members[teams[team].qb]
+      qb = teams[team].qb
       teams[team].qb = teams[team].qb + 1
       if teams[team].qb > #teams[team].members then
         teams[team].qb = 1
@@ -37,13 +43,8 @@ server.init = function()
     end
     if index == game.ball.baller then
       game.ball.baller = false
-      game.ball.circle.p = players[index].p
-      state.networking.host:sendToAll("newballer", game.ball.baller)
-    end
-    for i, v in ipairs(teams[players[index].team].members) do
-      if v == index then
-        table.remove(teams[players[index].team].members, i)
-        break
+      if #teams[players[index].team].members > 0 then
+        server.new_down(players[index].p.x)
       end
     end
     players[index] = nil
@@ -127,7 +128,7 @@ server.update = function(dt)
 
     --collision between players
     for i, v in pairs(players) do
-      for j, w in ipairs(players) do
+      for j, w in pairs(players) do
         if i ~= j then
           if collision.check_overlap(players[j], players[i]) then
             local p1, p2 = collision.circle_vs_circle(players[j], players[i]) --
@@ -193,7 +194,7 @@ server.update = function(dt)
       end
     end
 
-    if game.ball.baller and players[game.ball.baller].team ~= 1 then
+    if game.ball.baller and players[game.ball.baller].team ~= players[qb].team then
       server.turnover()
     end
 
@@ -262,16 +263,16 @@ server.quit = function()
 end
 
 server.back_to_main = function()
-  server.quit()
   state.game = false
   state.network_mode = nil
   state.gui = gui.new(menus[1])
+  server.quit()
 end
 
 server.start_game = function()
-  teams = {{members = {}, qb = 1}, {members = {}, qb = 1}}
+  teams = {{members = {}, qb = 2}, {members = {}, qb = 1}}
   for i, v in pairs(players) do
-    teams[v.team].members[#teams[v.team]+1] = i
+    teams[v.team].members[#teams[v.team].members+1] = i
   end
 
   if #teams[1].members > 0 and #teams[2].members > 0 then -- only start game if there is at least one person per team
