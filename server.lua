@@ -59,7 +59,6 @@ server.update = function(dt)
     state.networking.host:sendToAll("coords", {info = v.p, index = i})
   end
   if game.ball then
-    print(game.ball.circle.p.x, game.ball.circle.p.x)
     state.networking.host:sendToAll("ballpos", game.ball.circle.p)
   end
   state.networking.host:update()
@@ -85,7 +84,6 @@ server.update = function(dt)
 
     -- send ball info
     if game.ball then state.networking.host:sendToAll("ballpos", game.ball.circle.p) end
-    if game.ball then state.networking.host:sendToAll("baller", game.ball.baller) end
   end
 end
 

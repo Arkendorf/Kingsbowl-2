@@ -63,9 +63,7 @@ client.init = function(t)
   end)
 
   networking.peer:on("newballer", function(data, client)
-    if data then
-      game.ball.baller = data
-    end
+    game.ball.baller = data
   end)
 
   networking.peer:connect()

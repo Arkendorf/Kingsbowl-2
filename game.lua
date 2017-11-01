@@ -78,7 +78,7 @@ game.update = function (dt)
     facing = facing + 1
   end
   if game.ball.baller == id and love.keyboard.isDown("space") then
-    game.ball.baller = nil
+    game.ball.baller = false
     common_send("newballer", game.ball.baller)
   end
   facing_to_dp[facing]()
@@ -124,6 +124,7 @@ game.update = function (dt)
 end
 
 game.draw = function ()
+  print(game.ball.baller)
   love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(field_canvas)
