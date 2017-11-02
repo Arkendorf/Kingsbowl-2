@@ -186,7 +186,6 @@ game.mousepressed = function (x, y, button)
     game.ball.thrown = true
     common_send("throw", game.ball.thrown)
     players[game.ball.baller].speed = speed_table.offense
-    print("logging")
     game.ball.moving.circle = {p = {}, r = players[game.ball.baller].r}
     game.ball.moving.circle.p = {x = players[game.ball.baller].p.x, y = players[game.ball.baller].p.y}
     game.ball.moving.velocity = vector.norm(mouse)

@@ -223,17 +223,19 @@ server.update = function(dt)
       for k,v in pairs(players) do
         if game.ball.moving.circle and collision.check_overlap(game.ball.moving.circle, game.ball.circle) then
           delete_this_later = true
+          print("1")
           if collision.check_overlap(v, game.ball.circle) then
             game.ball.moving.circle = nil
             state.networking.host:sendToAll("thrown", game.ball.moving)
             game.ball.baller = k
             players[k].speed = speed_table.with_ball
             state.networking.host:sendToAll("newballer", k)
+            delete_this_later = false
           end
         elseif delete_this_later then
+          print("2")
           game.ball.moving.circle = nil
           state.networking.host:sendToAll("thrown", game.ball.moving)
-          delete_this_later = false
           server.new_down(game.down.start)
         end
       end
@@ -344,6 +346,7 @@ server.start_game = function()
 end
 
 server.new_down = function (x)
+  delete_this_later = false
   local down = game.down
   down.start = x
   if down.dir == 1 and players[qb].team == 2 then
