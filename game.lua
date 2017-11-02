@@ -12,7 +12,7 @@ local common_send = function (k, v)
   end
 end
 
-game.ball = {baller = false, circle = {r = 32, p = {x=0,y=0}}, thrown = false}
+game.ball = {baller = false, circle = {r = 32, p = {x=0,y=0}}, thrown = false, moving = {}}
 
 local facing_to_dp = {
   function() -- facing 1
@@ -68,6 +68,7 @@ local draw_p_to_game_p = function(x, y)
 end
 
 game.update = function (dt)
+
   -- reduce velocity
   players[id].d.x = players[id].d.x * 0.9
   players[id].d.y = players[id].d.y * 0.9
@@ -97,10 +98,17 @@ game.update = function (dt)
   mouse.x = love.mouse.getX()-win_width/2
   mouse.y = love.mouse.getY()-win_height/2
 
-
   if game.ball.baller == id then
     game.ball.circle.p.x = mouse.x+players[id].p.x
     game.ball.circle.p.y = mouse.y+players[id].p.y
+  end
+
+  if game.ball.moving.circle then
+    print("logging")
+    print(game.ball.moving.circle.p.x, game.ball.moving.circle.p.y)
+    print(game.ball.moving.velocity.x, game.ball.moving.velocity.y)
+    game.ball.moving.circle.p = vector.sum(game.ball.moving.circle.p, game.ball.moving.velocity)
+    print(game.ball.moving.circle.p.x, game.ball.moving.circle.p.y)
   end
 
   game.down.t = game.down.t + dt
@@ -113,6 +121,9 @@ game.draw = function ()
   love.graphics.draw(field.canvas)
   love.graphics.setColor(255, 255, 0)
   love.graphics.rectangle("fill", game.down.start-2, 0, 4, field.h)
+  if game.ball.moving.circle then
+    love.graphics.circle("fill", game.ball.moving.circle.p.x, game.ball.moving.circle.p.y, game.ball.moving.circle.r)
+  end
 
   if game.down.goal ~= nil then
     love.graphics.setColor(0, 0, 255)
@@ -162,7 +173,12 @@ game.mousepressed = function (x, y, button)
   if button == 1 and game.ball.baller == id and game.ball.thrown == false and game.down.t > grace_time then
     game.ball.thrown = true
     players[game.ball.baller].speed = speed_table.offense
+    print("logging")
+    game.ball.moving.circle = {p = {}, r = players[game.ball.baller].r}
+    game.ball.moving.circle.p = {x = players[game.ball.baller].p.x, y = players[game.ball.baller].p.y}
+    game.ball.moving.velocity = vector.norm(mouse)
     game.ball.baller = false
+    common_send("thrown", game.ball.moving)
     common_send("newballer", game.ball.baller)
   end
 end

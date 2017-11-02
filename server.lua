@@ -99,6 +99,11 @@ server.init = function()
     players[index].shield.d = data
     networking.host:sendToAll("shieldpos", {info = data, index = index})
   end)
+
+  networking.host:on("thrown", function(data)
+    game.ball.moving = data
+    state.networking.host:sendToAll("thrown", data)
+  end)
 end
 
 server.update = function(dt)
@@ -188,7 +193,9 @@ server.update = function(dt)
 
     if not game.ball.baller then
       for k,v in pairs(players) do
-        if collision.check_overlap(v, game.ball.circle) then
+        if collision.check_overlap(v, game.ball.circle) and collision.check_overlap(v, game.ball.moving.circle) then
+          game.ball.moving.circle = nil
+          state.networking.host:sendToAll("thrown", game.ball.moving)
           game.ball.baller = k
           players[k].speed = speed_table.with_ball
           state.networking.host:sendToAll("newballer", k)

@@ -114,6 +114,10 @@ client.init = function(t)
     game.reset_players()
   end)
 
+  networking.peer:on("thrown", function(data)
+    game.ball.moving = data
+  end)
+
   networking.peer:connect()
   status = "Connecting"
 end
