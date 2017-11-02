@@ -234,6 +234,7 @@ server.update = function(dt)
           game.ball.moving.circle = nil
           state.networking.host:sendToAll("thrown", game.ball.moving)
           delete_this_later = false
+          server.new_down(game.down.start)
         end
       end
     end
