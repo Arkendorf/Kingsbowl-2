@@ -102,11 +102,7 @@ game.update = function (dt)
   end
 
   if game.ball.moving.circle then
-    print("logging")
-    print(game.ball.moving.circle.p.x, game.ball.moving.circle.p.y)
-    print(game.ball.moving.velocity.x, game.ball.moving.velocity.y)
     game.ball.moving.circle.p = vector.sum(game.ball.moving.circle.p, game.ball.moving.velocity)
-    print(game.ball.moving.circle.p.x, game.ball.moving.circle.p.y)
   end
 
   game.down.t = game.down.t + dt

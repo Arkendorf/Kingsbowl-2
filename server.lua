@@ -5,7 +5,7 @@ local collision = require "collision"
 local vector = require "vector"
 require "globals"
 local server = {}
-
+local delete_this_later = false
 players = {}
 id = 0
 
@@ -221,12 +221,19 @@ server.update = function(dt)
 
     if not game.ball.baller then
       for k,v in pairs(players) do
-        if collision.check_overlap(v, game.ball.circle) and collision.check_overlap(v, game.ball.moving.circle) then
+        if game.ball.moving.circle and collision.check_overlap(game.ball.moving.circle, game.ball.circle) then
+          delete_this_later = true
+          if collision.check_overlap(v, game.ball.circle) then
+            game.ball.moving.circle = nil
+            state.networking.host:sendToAll("thrown", game.ball.moving)
+            game.ball.baller = k
+            players[k].speed = speed_table.with_ball
+            state.networking.host:sendToAll("newballer", k)
+          end
+        elseif delete_this_later then
           game.ball.moving.circle = nil
           state.networking.host:sendToAll("thrown", game.ball.moving)
-          game.ball.baller = k
-          players[k].speed = speed_table.with_ball
-          state.networking.host:sendToAll("newballer", k)
+          delete_this_later = false
         end
       end
     end
