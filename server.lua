@@ -25,29 +25,33 @@ server.init = function()
   end)
 
   networking.host:on("disconnect", function(data, client)
-    local index = client:getIndex()
-    local team = players[index].team
-    for i, v in ipairs(teams[team].members) do
-      if v == index then
-        table.remove(teams[team].members, i)
-        break
+    if state.game == true then
+      local index = client:getIndex()
+      local team = players[index].team
+      for i, v in ipairs(teams[team].members) do
+        if v == index then
+          table.remove(teams[team].members, i)
+          break
+        end
+      end
+      if index == qb then
+        qb = teams[team].qb
+        teams[team].qb = teams[team].qb + 1
+        if teams[team].qb > #teams[team].members then
+          teams[team].qb = 1
+        end
+        state.networking.host:sendToAll("qb", qb)
+      end
+      if index == game.ball.baller then
+        game.ball.baller = false
+        if #teams[players[index].team].members > 0 then
+          server.new_down(players[index].p.x)
+        end
       end
     end
-    if index == qb then
-      qb = teams[team].qb
-      teams[team].qb = teams[team].qb + 1
-      if teams[team].qb > #teams[team].members then
-        teams[team].qb = 1
-      end
-      state.networking.host:sendToAll("qb", qb)
+    if players[index] then
+      players[index] = nil
     end
-    if index == game.ball.baller then
-      game.ball.baller = false
-      if #teams[players[index].team].members > 0 then
-        server.new_down(players[index].p.x)
-      end
-    end
-    players[index] = nil
     state.networking.host:sendToAll("playerleft", index)
   end)
 
@@ -127,6 +131,22 @@ server.update = function(dt)
       elseif game.down.t <= grace_time and v.team == 2 and v.p.x-v.r < game.down.start then
         v.d.x = 0
         v.p.x = game.down.start+v.r
+      end
+
+      -- collide with field edges
+      if v.p.x-v.r < 0 then -- x
+        v.d.x = 0
+        v.p.x = v.r
+      elseif v.p.x+v.r > field.w then
+        v.d.x = 0
+        v.p.x = field.w-v.r
+      end
+      if v.p.y-v.r < 0 then -- y
+        v.d.y = 0
+        v.p.y = v.r
+      elseif v.p.y+v.r > field.h then
+        v.d.y = 0
+        v.p.y = field.h-v.r
       end
     end
 

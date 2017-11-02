@@ -30,10 +30,12 @@ client.init = function(t)
   end)
 
   networking.peer:on("playerleft", function(data)
-    for i, v in ipairs(teams[players[data].team].members) do
-      if v == data then
-        table.remove(teams[players[data].team].members, i)
-        break
+    if state.game == true then
+      for i, v in ipairs(teams[players[data].team].members) do
+        if v == data then
+          table.remove(teams[players[data].team].members, i)
+          break
+        end
       end
     end
     players[data] = nil
