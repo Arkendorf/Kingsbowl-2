@@ -30,10 +30,12 @@ client.init = function(t)
   end)
 
   networking.peer:on("playerleft", function(data)
-    for i, v in ipairs(teams[players[index].team].members) do
-      if v == index then
-        table.remove(teams[players[index].team].members, i)
-        break
+    if state.game == true then
+      for i, v in ipairs(teams[players[data].team].members) do
+        if v == data then
+          table.remove(teams[players[data].team].members, i)
+          break
+        end
       end
     end
     players[data] = nil
@@ -60,7 +62,7 @@ client.init = function(t)
     players = data
     teams = {{members = {}}, {members = {}}}
     for i, v in pairs(players) do
-      teams[v.team].members[#teams[v.team]+1] = i
+      teams[v.team].members[#teams[v.team].members+1] = i
     end
     game.init()
   end)
@@ -72,7 +74,7 @@ client.init = function(t)
   networking.peer:on("qb", function(data)
     qb = data
     for i, v in pairs(players) do
-      if v.sword ~= nil and v.shield ~= nil then
+      if v.sword and v.shield and qb then
         v.sword.active = false
         v.shield.active = false
         game.set_speed(i)
@@ -114,8 +116,17 @@ client.init = function(t)
     game.reset_players()
   end)
 
+
   networking.peer:on("thrown", function(data)
     game.ball.moving = data
+
+  networking.peer:on("throw", function(data)
+    game.ball.thrown = data
+  end)
+
+  networking.peer:on("touchdown", function(data)
+    score[data] = score[data] + 7
+
   end)
 
   networking.peer:connect()
@@ -159,7 +170,7 @@ end
 
 client.mousepressed = function (x, y, button)
   if button == 1 and state.game == true and players[id].dead == false and game.down.t > grace_time then
-    if qb ~= id and players[id].team == players[qb].team then
+    if game.ball.baller ~= id and players[id].team == players[qb].team then
       state.networking.peer:send("shield", {active = true, d = game.shield_pos()})
     elseif players[id].team ~= players[qb].team then
       state.networking.peer:send("sword", {active = true, d = game.sword_pos()})

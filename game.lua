@@ -2,7 +2,7 @@ local game = {}
 local collision = require "collision"
 local state = require "state"
 local vector = require "vector"
-local mouse = {x = 0, y = 0}
+local img = require "graphics"
 
 local common_send = function (k, v)
   if state.network_mode == "server" then
@@ -47,7 +47,7 @@ local facing_to_dp = {
 }
 
 game.init = function ()
-  game.down = {num = 1, start = field.w/12*7, goal = field.w/3*2, t = 0}
+  game.down = {num = 1, start = field.w/12*7, goal = field.w/3*2, t = 0, dir = 1}
   game.ball.baller = qb
   state.game = true
   for i, v in pairs(players) do
@@ -59,8 +59,6 @@ game.init = function ()
     game.set_speed(i)
   end
   game.reset_players()
-
-  field.canvas = game.draw_field(field.w, field.h)
 end
 
 local draw_p_to_game_p = function(x, y)
@@ -116,10 +114,10 @@ end
 
 game.draw = function ()
   love.graphics.push()
-  love.graphics.translate( win_width/2-players[id].p.x, win_height/2-players[id].p.y )
+  love.graphics.translate(math.floor(win_width/2-players[id].p.x), math.floor(win_height/2-players[id].p.y))
   love.graphics.setColor(255, 255, 255)
-  love.graphics.draw(field.canvas)
-  love.graphics.setColor(255, 255, 0)
+  love.graphics.draw(img.field)
+  love.graphics.setColor(255, 0, 0)
   love.graphics.rectangle("fill", game.down.start-2, 0, 4, field.h)
   if game.ball.moving.circle then
     love.graphics.circle("fill", game.ball.moving.circle.p.x, game.ball.moving.circle.p.y, game.ball.moving.circle.r)
@@ -131,47 +129,60 @@ game.draw = function ()
   end
 
   love.graphics.setColor(255, 255, 255)
-  if game.ball.circle.p.x then love.graphics.circle("fill", game.ball.circle.p.x, game.ball.circle.p.y, game.ball.circle.r) end
+  -- draw target
+  if game.ball.circle.p.x then love.graphics.draw(img.target, math.floor(game.ball.circle.p.x), math.floor(game.ball.circle.p.y), 0, 1, 1, 24, 24) end
+
   for i, v in pairs(players) do
-    if game.ball.baller == i then
-      love.graphics.setColor(0, 0, 255)
-    elseif v.team == 1 then
-      love.graphics.setColor(255, 200, 200)
-    else
-      love.graphics.setColor(200, 200, 255)
-      end
-    if game.ball.baller == i then
-      love.graphics.setColor(0, 0, 255)
+    local char_img = "char"
+    if v.dead == true then
+      char_img = "char_dead"
+    elseif game.ball.baller == i and (i ~= qb or game.ball.thrown == true) then
+      char_img = "char_baller"
+    elseif game.ball.baller == i then
+      char_img = "char_qb"
     end
 
-    if v.dead == false then
-      love.graphics.circle("fill", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
-    else
-      love.graphics.circle("line", v.p.x, v.p.y, v.r, 2*math.pi*v.r)
-    end
+    --draw base sprite
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.draw(img[char_img], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 32, 32)
 
-    if v.shield.active == true then
-      love.graphics.setColor(255, 0, 0)
-      love.graphics.circle("fill", v.p.x+v.shield.d.x, v.p.y+v.shield.d.y, shield.r, 20*math.pi*shield.r)
+    --draw colored overlay
+    if v.team == 1 then love.graphics.setColor(255, 100, 100) else love.graphics.setColor(100, 100, 255) end
+    love.graphics.draw(img[char_img.."_overlay"], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 32, 32)
+
+    --draw username
+    love.graphics.print(v.name, math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), math.floor(v.p.y)-math.floor(v.r+font:getHeight()))
+
+    if v.shield.active == true then -- draw shield
+      love.graphics.setColor(255,  255, 255)
+      love.graphics.draw(img.shield, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
+      if v.team == 1 then love.graphics.setColor(255, 100, 100) else love.graphics.setColor(100, 100, 255) end
+      love.graphics.draw(img.shield_overlay, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
     end
-    if v.sword.active == true then
-      love.graphics.setColor(255, 0, 0)
-      love.graphics.circle("fill", v.p.x+v.sword.d.x, v.p.y+v.sword.d.y, sword.r, 20*math.pi*sword.r)
+    if v.sword.active == true then -- draw sword
+      love.graphics.setColor(255,  255, 255)
+      love.graphics.draw(img.sword, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
+      if v.team == 1 then love.graphics.setColor(255, 100, 100) else love.graphics.setColor(100, 100, 255) end
+      love.graphics.draw(img.sword_overlay, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
     end
   end
 
   love.graphics.pop()
+  love.graphics.setColor(0, 0, 0, 200)
+  love.graphics.rectangle("fill", 0, 0, 112, 28)
   love.graphics.setColor(255, 255, 255)
   if game.down.goal ~= nil then
-    love.graphics.print(tostring(game.down.num).." and "..tostring(math.floor(math.abs(game.down.start-game.down.goal)/field.w*120))..". Time: "..tostring(math.floor(game.down.t*10)/10), 1, 1)
+    love.graphics.print(tostring(game.down.num)..num_suffix[game.down.num].." and "..tostring(math.floor(math.abs(game.down.start-game.down.goal)/field.w*120))..". Time: "..tostring(math.floor(game.down.t*10)/10), 1, 1)
   else
-    love.graphics.print(tostring(game.down.num).." and goal. Time: "..tostring(math.floor(game.down.t*10)/10), 1, 1)
+    love.graphics.print(tostring(game.down.num)..num_suffix[game.down.num].." and goal. Time: "..tostring(math.floor(game.down.t*10)/10), 1, 1)
   end
+  love.graphics.print("Score: "..tostring(score[1]).." to "..tostring(score[2]), 1, 14)
 end
 
 game.mousepressed = function (x, y, button)
   if button == 1 and game.ball.baller == id and game.ball.thrown == false and game.down.t > grace_time then
     game.ball.thrown = true
+    common_send("throw", game.ball.thrown)
     players[game.ball.baller].speed = speed_table.offense
     print("logging")
     game.ball.moving.circle = {p = {}, r = players[game.ball.baller].r}
@@ -198,6 +209,9 @@ game.kill = function (i)
 end
 
 game.reset_players = function ()
+  game.ball.baller = qb
+  game.ball.thrown = false
+
   local team_pos = {0, 0}
   for i, v in pairs(players) do
     v.sword.active = false
@@ -209,12 +223,10 @@ game.reset_players = function ()
     else
       v.p.x = game.down.start + 32
     end
-    v.p.y = (field.h-#teams[v.team].members*32)/2+team_pos[v.team]*32
+    v.p.y = (field.h-#teams[v.team].members*48)/2+team_pos[v.team]*48
+    v.d.x, v.d.y = 0, 0
     team_pos[v.team] = team_pos[v.team] + 1
   end
-
-  game.ball.baller = qb
-  game.ball.thrown = false
 end
 
 game.set_speed = function (i)
@@ -229,20 +241,6 @@ game.set_speed = function (i)
   else
     players[i].speed = speed_table.defense
   end
-end
-
-game.draw_field = function (w, h)
-  local c = love.graphics.newCanvas(w, h)
-  local line_w = w/140
-  love.graphics.setCanvas(c)
-  for i = 0, 12 do
-    love.graphics.setColor(255, 255, 255)
-    love.graphics.rectangle("fill", (w/12)*i-line_w/2, 0, line_w, h)
-    love.graphics.setColor(0, 0, 0)
-    love.graphics.print(tostring((5-math.abs(i-7))*10), (w/12)*i-line_w/2, 0)
-  end
-  love.graphics.setCanvas()
-  return c
 end
 
 return game
