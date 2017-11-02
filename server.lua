@@ -108,7 +108,7 @@ server.init = function()
   networking.host:on("thrown", function(data)
     game.ball.moving = data
     state.networking.host:sendToAll("thrown", data)
-
+  end)
   networking.host:on("throw", function(data, client)
     game.ball.thrown = data
   end)

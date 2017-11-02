@@ -119,6 +119,7 @@ client.init = function(t)
 
   networking.peer:on("thrown", function(data)
     game.ball.moving = data
+  end)
 
   networking.peer:on("throw", function(data)
     game.ball.thrown = data
