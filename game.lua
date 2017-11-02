@@ -244,4 +244,31 @@ game.set_speed = function (i)
   end
 end
 
+game.collide = function (v)
+  -- collide with line of scrimmage if down has hardly started
+  if game.down.t <= grace_time and v.team == 1 and v.p.x+v.r > game.down.start then
+    v.d.x = 0
+    v.p.x = game.down.start-v.r
+  elseif game.down.t <= grace_time and v.team == 2 and v.p.x-v.r < game.down.start then
+    v.d.x = 0
+    v.p.x = game.down.start+v.r
+  end
+
+  -- collide with field edges
+  if v.p.x-v.r < 0 then -- x
+    v.d.x = 0
+    v.p.x = v.r
+  elseif v.p.x+v.r > field.w then
+    v.d.x = 0
+    v.p.x = field.w-v.r
+  end
+  if v.p.y-v.r < 0 then -- y
+    v.d.y = 0
+    v.p.y = v.r
+  elseif v.p.y+v.r > field.h then
+    v.d.y = 0
+    v.p.y = field.h-v.r
+  end
+end
+
 return game

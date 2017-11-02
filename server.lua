@@ -127,31 +127,7 @@ server.update = function(dt)
     for i, v in pairs(players) do -- move players
       v.p.x = v.p.x + v.d.x*v.speed*dt
       v.p.y = v.p.y + v.d.y*v.speed*dt
-
-      -- collide with line of scrimmage if down has hardly started
-      if game.down.t <= grace_time and v.team == 1 and v.p.x+v.r > game.down.start then
-        v.d.x = 0
-        v.p.x = game.down.start-v.r
-      elseif game.down.t <= grace_time and v.team == 2 and v.p.x-v.r < game.down.start then
-        v.d.x = 0
-        v.p.x = game.down.start+v.r
-      end
-
-      -- collide with field edges
-      if v.p.x-v.r < 0 then -- x
-        v.d.x = 0
-        v.p.x = v.r
-      elseif v.p.x+v.r > field.w then
-        v.d.x = 0
-        v.p.x = field.w-v.r
-      end
-      if v.p.y-v.r < 0 then -- y
-        v.d.y = 0
-        v.p.y = v.r
-      elseif v.p.y+v.r > field.h then
-        v.d.y = 0
-        v.p.y = field.h-v.r
-      end
+      game.collide(v)
     end
 
     --collision between players
