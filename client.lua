@@ -148,6 +148,7 @@ client.update = function(dt)
       v.p.x = v.p.x + v.d.x*v.speed*dt
       v.p.y = v.p.y + v.d.y*v.speed*dt
     end
+    game.collide(players[id])
     state.networking.peer:send("diff", players[id].d)
     if players[id].shield.active == true then
       state.networking.peer:send("shieldpos", game.shield_pos())
