@@ -102,11 +102,8 @@ game.update = function (dt)
   end
 
   if game.ball.moving.circle then
-    print("logging")
-    print(game.ball.moving.circle.p.x, game.ball.moving.circle.p.y)
-    print(game.ball.moving.velocity.x, game.ball.moving.velocity.y)
-    game.ball.moving.circle.p = vector.sum(game.ball.moving.circle.p, game.ball.moving.velocity)
-    print(game.ball.moving.circle.p.x, game.ball.moving.circle.p.y)
+    game.ball.moving.circle.d = vector.scale(dt*60*8, game.ball.moving.velocity)
+    game.ball.moving.circle.p = vector.sum(game.ball.moving.circle.p, game.ball.moving.circle.d)
   end
 
   game.down.t = game.down.t + dt
@@ -119,8 +116,10 @@ game.draw = function ()
   love.graphics.draw(img.field)
   love.graphics.setColor(255, 0, 0)
   love.graphics.rectangle("fill", game.down.start-2, 0, 4, field.h)
-  if game.ball.moving.circle then
-    love.graphics.circle("fill", game.ball.moving.circle.p.x, game.ball.moving.circle.p.y, game.ball.moving.circle.r)
+
+  if game.ball.moving.circle then -- draw ball
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.draw(img.arrow, math.floor(game.ball.moving.circle.p.x), math.floor(game.ball.moving.circle.p.y), math.atan2(game.ball.moving.circle.d.y, game.ball.moving.circle.d.x), 1, 1, 16, 16)
   end
 
   if game.down.goal ~= nil then
@@ -130,7 +129,9 @@ game.draw = function ()
 
   love.graphics.setColor(255, 255, 255)
   -- draw target
-  if game.ball.circle.p.x then love.graphics.draw(img.target, math.floor(game.ball.circle.p.x), math.floor(game.ball.circle.p.y), 0, 1, 1, 24, 24) end
+  if game.ball.circle.p.x and (not game.ball.baller or not game.ball.thrown) then
+    love.graphics.draw(img.target, math.floor(game.ball.circle.p.x), math.floor(game.ball.circle.p.y), 0, 1, 1, 24, 24)
+  end
 
   for i, v in pairs(players) do
     local char_img = "char"
