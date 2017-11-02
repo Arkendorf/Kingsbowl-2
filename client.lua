@@ -71,6 +71,12 @@ client.init = function(t)
     players[data.index].p = data.info
   end)
 
+  networking.peer:on("diff", function(data)
+    if data.index ~= id then
+      players[data.index].p = data.info
+    end
+  end)
+
   networking.peer:on("qb", function(data)
     qb = data
     for i, v in pairs(players) do
@@ -137,9 +143,11 @@ end
 client.update = function(dt)
   state.networking.peer:update()
   if state.game == true then
-    game.set_speed(id)
-    players[id].p.x = players[id].p.x + players[id].d.x*players[id].speed*dt
-    players[id].p.y = players[id].p.y + players[id].d.y*players[id].speed*dt
+    for i, v in pairs(players) do
+      game.set_speed(i)
+      v.p.x = v.p.x + v.d.x*v.speed*dt
+      v.p.y = v.p.y + v.d.y*v.speed*dt
+    end
     state.networking.peer:send("diff", players[id].d)
     if players[id].shield.active == true then
       state.networking.peer:send("shieldpos", game.shield_pos())

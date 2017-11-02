@@ -170,6 +170,7 @@ server.update = function(dt)
     -- send positions
     for i, v in pairs(players) do
       state.networking.host:sendToAll("coords", {info = v.p, index = i})
+      state.networking.host:sendToAll("diff", {info = v.d, index = i})
     end
 
     -- send ball info
