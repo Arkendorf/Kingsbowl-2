@@ -137,6 +137,9 @@ end
 client.update = function(dt)
   state.networking.peer:update()
   if state.game == true then
+    game.set_speed(id)
+    players[id].p.x = players[id].p.x + players[id].d.x*players[id].speed*dt
+    players[id].p.y = players[id].p.y + players[id].d.y*players[id].speed*dt
     state.networking.peer:send("diff", players[id].d)
     if players[id].shield.active == true then
       state.networking.peer:send("shieldpos", game.shield_pos())
