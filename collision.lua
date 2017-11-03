@@ -6,12 +6,12 @@ end
 
 local check_overlap = function(c1, c2)
   local radii = c1.r+c2.r
-  return vector.mag_sq(get_distance(c1.p, c2.p)) < radii*radii
+  return vector.mag_sq(vector.sub(c1.p, c2.p)) < radii*radii
 end
 
 local circle_vs_circle = function(c1, c2)
   local r = c1.r+c2.r
-  local dist_v = get_distance(c1.p, c2.p)
+  local dist_v = vector.sub(c1.p, c2.p)
   local dist = math.sqrt(vector.mag_sq(dist_v))
   local dist_norm = vector.norm(dist_v)
   local half_overlap = vector.scale((r - dist)/2, dist_norm)

@@ -72,12 +72,10 @@ love.textinput = function(t)
 end
 
 love.keypressed = function(key)
-  keyuptable[key]()
   state.gui:keypressed(key)
 end
 
 love.keyreleased = function(key)
-  keydowntable[key]()
 end
 
 love.joystickadded = function(x)

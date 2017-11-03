@@ -171,7 +171,7 @@ server.update = function(dt)
           if w.shield.d then
             shield_pos = vector.sum(w.p, w.shield.d)
           end
-          if j ~= i and w.shield.active == true and w.dead == false and vector.mag_sq(collision.get_distance(v.p, w.p)) > vector.mag_sq(collision.get_distance(v.p, shield_pos)) and collision.check_overlap({r = shield.r, p = shield_pos}, {r = sword.r, p = sword_pos}) then
+          if j ~= i and w.shield.active == true and w.dead == false and vector.mag_sq(vetor.sub(v.p, w.p)) > vector.mag_sq(vector.sub(v.p, shield_pos)) and collision.check_overlap({r = shield.r, p = shield_pos}, {r = sword.r, p = sword_pos}) then
             strike = false
           end
         end
