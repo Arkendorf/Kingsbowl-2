@@ -3,12 +3,13 @@ local collision = require "collision"
 local state = require "state"
 local vector = require "vector"
 local img = require "graphics"
+local network = require "network"
 
 local common_send = function (k, v)
-  if state.network_mode == "server" then
-    state.networking.host:sendToAll(k, v)
-  elseif state.network_mode == "client" then
-    state.networking.peer:send(k, v)
+  if network.mode == "server" then
+    network.host:sendToAll(k, v)
+  elseif network.mode == "client" then
+    network.peer:send(k, v)
   end
 end
 

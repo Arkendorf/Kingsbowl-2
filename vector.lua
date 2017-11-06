@@ -6,16 +6,16 @@ local sum = function(v1, v2)
   return result
 end
 
-local sub = function(v1, v2)
-  sum(v1, scale(-1, v2))
-end
-
 local scale = function(s, v)
   local result = {}
   for k,v_k in pairs(v) do
     result[k] = s*v_k
   end
   return result
+end
+
+local sub = function(v1, v2)
+  return sum(v1, scale(-1, v2))
 end
 
 local dot = function(v1, v2)
@@ -40,5 +40,6 @@ return {
   scale = scale,
   dot = dot,
   mag_sq = mag_sq,
-  norm = norm
+  norm = norm,
+  sub = sub
 }

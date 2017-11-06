@@ -2,34 +2,33 @@ local state = require "state"
 local gui = require "gui"
 local game = require "game"
 local vector = require "vector"
+local network = require "network"
 require "globals"
 local client = {}
 
 local status = "Disconnected"
 
 client.init = function(t)
-  state.networking = {}
-  state.network_mode = "client"
+  network.mode = "client"
   state.gui = gui.new(menus[3])
-  local networking = state.networking
-  networking.peer = sock.newClient(ip.ip, tonumber(ip.port))
+  network.peer = sock.newClient(ip.ip, tonumber(ip.port))
 
   -- initial variables
 
   -- important functions
-  networking.peer:on("connect", function(data)
+  network.peer:on("connect", function(data)
     status = "Connected"
-    networking.peer:send("playerinfo", {name = username[1]})
+    network.peer:send("playerinfo", {name = username[1]})
   end)
 
-  networking.peer:on("disconnect", function(data)
-    state.networking.peer:disconnectNow()
+  network.peer:on("disconnect", function(data)
+    network.peer:disconnectNow()
     status = "Disconnected"
     state.game = false
     state.gui = gui.new(menus[3])
   end)
 
-  networking.peer:on("playerleft", function(data)
+  network.peer:on("playerleft", function(data)
     if state.game == true then
       for i, v in ipairs(teams[players[data].team].members) do
         if v == data then
@@ -41,23 +40,23 @@ client.init = function(t)
     players[data] = nil
   end)
 
-  networking.peer:on("id", function(data)
+  network.peer:on("id", function(data)
     id = data
   end)
 
-  networking.peer:on("currentplayers", function(data)
+  network.peer:on("currentplayers", function(data)
     players = data
   end)
 
-  networking.peer:on("newplayer", function(data)
+  network.peer:on("newplayer", function(data)
     players[data.index] = data.info
   end)
 
-  networking.peer:on("teamswap", function(data)
+  network.peer:on("teamswap", function(data)
     players[data.index].team = data.info
   end)
 
-  networking.peer:on("startgame", function(data)
+  network.peer:on("startgame", function(data)
     state.gui = gui.new(menus[4])
     players = data
     teams = {{members = {}}, {members = {}}}
@@ -67,17 +66,17 @@ client.init = function(t)
     game.init()
   end)
 
-  networking.peer:on("coords", function(data)
+  network.peer:on("coords", function(data)
     players[data.index].p = data.info
   end)
 
-  networking.peer:on("diff", function(data)
+  network.peer:on("diff", function(data)
     if data.index ~= id then
       players[data.index].p = data.info
     end
   end)
 
-  networking.peer:on("qb", function(data)
+  network.peer:on("qb", function(data)
     qb = data
     for i, v in pairs(players) do
       if v.sword and v.shield and qb then
@@ -88,11 +87,11 @@ client.init = function(t)
     end
   end)
 
-  networking.peer:on("ballpos", function(data, client)
+  network.peer:on("ballpos", function(data, client)
     if data and not (game.ball.baller == id) then game.ball.circle.p = {x = data.x, y = data.y} end
   end)
 
-  networking.peer:on("newballer", function(data, client)
+  network.peer:on("newballer", function(data, client)
     if not data then
       players[game.ball.baller].speed = speed_table.offense
     else
@@ -101,47 +100,47 @@ client.init = function(t)
     game.ball.baller = data
   end)
 
-  networking.peer:on("sword", function(data)
+  network.peer:on("sword", function(data)
     players[data.index].sword = {active = data.info.active, d = data.info.d, t = 0}
   end)
 
-  networking.peer:on("shield", function(data)
+  network.peer:on("shield", function(data)
     players[data.index].shield = {active = data.info.active, d = data.info.d, t = 0}
   end)
 
-  networking.peer:on("shieldpos", function(data)
+  network.peer:on("shieldpos", function(data)
     players[data.index].shield.d = data.info
   end)
 
-  networking.peer:on("dead", function(data)
+  network.peer:on("dead", function(data)
     game.kill(data)
   end)
 
-  networking.peer:on("newdown", function(data)
+  network.peer:on("newdown", function(data)
     game.down = data
     game.reset_players()
   end)
 
 
-  networking.peer:on("thrown", function(data)
+  network.peer:on("thrown", function(data)
     game.ball.moving = data
   end)
 
-  networking.peer:on("throw", function(data)
+  network.peer:on("throw", function(data)
     game.ball.thrown = data
   end)
 
-  networking.peer:on("touchdown", function(data)
+  network.peer:on("touchdown", function(data)
     score[data] = score[data] + 7
 
   end)
 
-  networking.peer:connect()
+  network.peer:connect()
   status = "Connecting"
 end
 
 client.update = function(dt)
-  state.networking.peer:update()
+  network.peer:update()
   if state.game == true then
     for i, v in pairs(players) do
       game.set_speed(i)
@@ -149,11 +148,11 @@ client.update = function(dt)
       v.p.y = v.p.y + v.d.y*v.speed*dt
     end
     game.collide(players[id])
-    state.networking.peer:send("diff", players[id].d)
+    network.peer:send("diff", players[id].d)
     if players[id].shield.active == true then
-      state.networking.peer:send("shieldpos", game.shield_pos())
+      network.peer:send("shieldpos", game.shield_pos())
     end
-    if game.ball.baller == id then state.networking.peer:send("ballpos", game.ball.circle.p) end
+    if game.ball.baller == id then network.peer:send("ballpos", game.ball.circle.p) end
   end
 end
 
@@ -184,26 +183,26 @@ end
 client.mousepressed = function (x, y, button)
   if button == 1 and state.game == true and players[id].dead == false and game.down.t > grace_time then
     if game.ball.baller ~= id and players[id].team == players[qb].team then
-      state.networking.peer:send("shield", {active = true, d = game.shield_pos()})
+      network.peer:send("shield", {active = true, d = game.shield_pos()})
     elseif players[id].team ~= players[qb].team then
-      state.networking.peer:send("sword", {active = true, d = game.sword_pos()})
+      network.peer:send("sword", {active = true, d = game.sword_pos()})
     end
   end
 end
 
 client.mousereleased = function (x, y, button)
   if button == 1 and state.game == true and players[id].shield.active == true then
-    state.networking.peer:send("shield", {active = false})
+    network.peer:send("shield", {active = false})
   end
 end
 
 client.quit = function()
-  state.networking.peer:disconnectNow()
+  network.peer:disconnectNow()
 end
 
 client.back_to_main = function()
   client.quit()
-  state.network_mode = nil
+  network.mode = nil
   state.gui = gui.new(menus[1])
 end
 

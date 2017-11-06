@@ -17,9 +17,9 @@ love.load = function()
 end
 
 love.update = function(dt)
-  if state.network_mode == "server" then
+  if network.mode == "server" then
     server.update(dt)
-  elseif state.network_mode == "client" then
+  elseif network.mode == "client" then
     client.update(dt)
   end
   if state.game == true then
@@ -31,26 +31,26 @@ end
 love.draw = function()
   if state.game == true then
     game.draw()
-  elseif state.network_mode == "server" then
+  elseif network.mode == "server" then
     server.draw()
-  elseif state.network_mode == "client" then
+  elseif network.mode == "client" then
     client.draw()
   end
   state.gui:draw()
 end
 
 love.quit = function()
-  if state.network_mode == "server" then
+  if network.mode == "server" then
     server.quit()
-  elseif state.network_mode == "client" then
+  elseif network.mode == "client" then
     client.quit()
   end
 end
 
 love.mousepressed = function(x, y, button)
-  if state.network_mode == "server" then
+  if network.mode == "server" then
     server.mousepressed(x, y, button)
-  elseif state.network_mode == "client" then
+  elseif network.mode == "client" then
     client.mousepressed(x, y, button)
   end
   if state.game == true then
@@ -60,9 +60,9 @@ love.mousepressed = function(x, y, button)
 end
 
 love.mousereleased = function(x, y, button)
-  if state.network_mode == "server" then
+  if network.mode == "server" then
     server.mousereleased(x, y, button)
-  elseif state.network_mode == "client" then
+  elseif network.mode == "client" then
     client.mousereleased(x, y, button)
   end
 end
