@@ -8,27 +8,18 @@ local client = {}
 
 local status = "Disconnected"
 
-client.init = function(t)
-  network.mode = "client"
-  state.gui = gui.new(menus[3])
-  network.peer = sock.newClient(ip.ip, tonumber(ip.port))
-
-  -- initial variables
-
-  -- important functions
-  network.peer:on("connect", function(data)
+local client_hooks = {
+  connect = function(data)
     status = "Connected"
     network.peer:send("playerinfo", {name = username[1]})
-  end)
-
-  network.peer:on("disconnect", function(data)
+  end,
+  disconnect = function(data)
     network.peer:disconnectNow()
     status = "Disconnected"
     state.game = false
     state.gui = gui.new(menus[3])
-  end)
-
-  network.peer:on("playerleft", function(data)
+  end,
+  playerleft = function(data)
     if state.game == true then
       for i, v in ipairs(teams[players[data].team].members) do
         if v == data then
@@ -38,25 +29,20 @@ client.init = function(t)
       end
     end
     players[data] = nil
-  end)
-
-  network.peer:on("id", function(data)
+  end,
+  id = function(data)
     id = data
-  end)
-
-  network.peer:on("currentplayers", function(data)
+  end,
+  currentplayers = function(data)
     players = data
-  end)
-
-  network.peer:on("newplayer", function(data)
+  end,
+  newplayer = function(data)
     players[data.index] = data.info
-  end)
-
-  network.peer:on("teamswap", function(data)
+  end,
+  teamswap = function(data)
     players[data.index].team = data.info
-  end)
-
-  network.peer:on("startgame", function(data)
+  end,
+  startgame = function(data)
     state.gui = gui.new(menus[4])
     players = data
     teams = {{members = {}}, {members = {}}}
@@ -64,19 +50,16 @@ client.init = function(t)
       teams[v.team].members[#teams[v.team].members+1] = i
     end
     game.init()
-  end)
-
-  network.peer:on("coords", function(data)
+  end,
+  coords = function(data)
     players[data.index].p = data.info
-  end)
-
-  network.peer:on("diff", function(data)
+  end,
+  diff = function(data)
     if data.index ~= id then
       players[data.index].p = data.info
     end
-  end)
-
-  network.peer:on("qb", function(data)
+  end,
+  qb = function(data)
     qb = data
     for i, v in pairs(players) do
       if v.sword and v.shield and qb then
@@ -85,55 +68,58 @@ client.init = function(t)
         game.set_speed(i)
       end
     end
-  end)
-
-  network.peer:on("ballpos", function(data, client)
+  end,
+  ballpos = function(data, client)
     if data and not (game.ball.baller == id) then game.ball.circle.p = {x = data.x, y = data.y} end
-  end)
-
-  network.peer:on("newballer", function(data, client)
+  end,
+  newballer = function(data, client)
     if not data then
       players[game.ball.baller].speed = speed_table.offense
     else
       players[data].speed = speed_table.with_ball
     end
     game.ball.baller = data
-  end)
-
-  network.peer:on("sword", function(data)
+  end,
+  sword = function(data)
     players[data.index].sword = {active = data.info.active, d = data.info.d, t = 0}
-  end)
-
-  network.peer:on("shield", function(data)
+  end,
+  sheild = function(data)
     players[data.index].shield = {active = data.info.active, d = data.info.d, t = 0}
-  end)
-
-  network.peer:on("shieldpos", function(data)
+  end,
+  sheildpos = function(data)
     players[data.index].shield.d = data.info
-  end)
-
-  network.peer:on("dead", function(data)
+  end,
+  dead = function(data)
     game.kill(data)
-  end)
-
-  network.peer:on("newdown", function(data)
+  end,
+  newdown = function(data)
     game.down = data
     game.reset_players()
-  end)
-
-
-  network.peer:on("thrown", function(data)
+  end,
+  thrown = function(data)
     game.ball.moving = data
-  end)
-
-  network.peer:on("throw", function(data)
+  end,
+  throw = function(data)
     game.ball.thrown = data
-  end)
+  end,
+  touchdown = function(data)
+    score[data] = score[data] + 7  
+  end
+}
 
-  network.peer:on("touchdown", function(data)
-    score[data] = score[data] + 7
 
-  end)
+client.init = function(t)
+  network.mode = "client"
+  state.gui = gui.new(menus[3])
+  network.peer = sock.newClient(ip.ip, tonumber(ip.port))
+
+  -- initial variables
+
+  -- important functions
+
+  for k,v in pairs(client_hooks) do
+    network.peer:on(k, v)
+  end
 
   network.peer:connect()
   status = "Connecting"

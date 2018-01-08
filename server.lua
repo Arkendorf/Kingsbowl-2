@@ -10,21 +10,10 @@ local delete_this_later = false
 players = {}
 id = 0
 
-server.init = function()
-  network.mode = "server"
-  state.gui = gui.new(menus[2])
-  local networking = network
-  networking.host = sock.newServer("*", tonumber(ip.port))
-
-  -- initial variables
-  id = 0
-  players[0] = {name = username[1], team = math.floor(math.random()+1.5)}
-
-  -- important functions
-  networking.host:on("connect", function(data, client)
-  end)
-
-  networking.host:on("disconnect", function(data, client)
+local server_hooks = {
+  connect = function(data, client)
+  end,
+  disconnect = function(data, client)
     if state.game == true then
       local index = client:getIndex()
       local team = players[index].team
@@ -53,65 +42,72 @@ server.init = function()
       players[index] = nil
     end
     network.host:sendToAll("playerleft", index)
-  end)
-
-  networking.host:on("playerinfo", function(data, client)
+  end,
+  playerinfo = function(data, client)
     local index = client:getIndex()
     if state.game == true then
-      networking.host:sendToPeer(networking.host:getPeerByIndex(index), "disconnect")
+      network.host:sendToPeer(network.host:getPeerByIndex(index), "disconnect")
     else
       players[index] = {name = data.name, team = math.floor(math.random()+1.5)}
-      networking.host:sendToPeer(networking.host:getPeerByIndex(index), "id", index)
-      networking.host:sendToPeer(networking.host:getPeerByIndex(index), "currentplayers", players)
-      networking.host:sendToAll("newplayer", {info = players[index], index = index})
+      network.host:sendToPeer(network.host:getPeerByIndex(index), "id", index)
+      network.host:sendToPeer(network.host:getPeerByIndex(index), "currentplayers", players)
+      network.host:sendToAll("newplayer", {info = players[index], index = index})
     end
-  end)
-
-  networking.host:on("diff", function(data, client)
+  end,
+  diff = function(data, client)
     local index = client:getIndex()
     players[index].d = data
-  end)
-
-  networking.host:on("ballpos", function(data, client)
+  end,
+  ballpos = function(data, client)
     game.ball.circle.p = data
-  end)
-
-  networking.host:on("newballer", function(data, client)
+  end,
+  newballer = function(data, client)
     if not data then
       players[game.ball.baller].speed = speed_table.offense
     else
       players[data].speed = speed_table.with_ball
     end
     game.ball.baller = data
-  end)
-
-  networking.host:on("sword", function(data, client)
+  end,
+  sword = function(data, client)
     local index = client:getIndex()
     players[index].sword = {active = data.active, d = data.d, t = 0}
     game.set_speed(index)
-    networking.host:sendToAll("sword", {info = data, index = index})
-  end)
-
-  networking.host:on("shield", function(data, client)
+    network.host:sendToAll("sword", {info = data, index = index})
+  end,
+  shield = function(data, client)
     local index = client:getIndex()
     players[index].shield = {active = data.active, d = data.d, t = 0}
     game.set_speed(index)
-    networking.host:sendToAll("shield", {info = data, index = index})
-  end)
-
-  networking.host:on("shieldpos", function(data, client)
+    network.host:sendToAll("shield", {info = data, index = index})
+  end,
+  shieldpos = function(data, client)
     local index = client:getIndex()
     players[index].shield.d = data
-    networking.host:sendToAll("shieldpos", {info = data, index = index})
-  end)
-
-  networking.host:on("thrown", function(data)
+    network.host:sendToAll("shieldpos", {info = data, index = index})
+  end,
+  thrown = function(data)
     game.ball.moving = data
     network.host:sendToAll("thrown", data)
-  end)
-  networking.host:on("throw", function(data, client)
+  end,
+  throw = function(data, client)
     game.ball.thrown = data
-  end)
+  end
+
+}
+
+server.init = function()
+  network.mode = "server"
+  state.gui = gui.new(menus[2])
+  network.host = sock.newServer("*", tonumber(ip.port))
+
+  for k,v in pairs(server_hooks) do
+    network.host:on(k, v)
+  end
+
+  -- initial variables
+  id = 0
+  players[0] = {name = username[1], team = math.floor(math.random()+1.5)}
 end
 
 server.update = function(dt)
