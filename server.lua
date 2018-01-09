@@ -4,6 +4,7 @@ local game = require "game"
 local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
+local join_menu = require "joinmenu"
 require "globals"
 local server = {}
 local delete_this_later = false
@@ -250,6 +251,9 @@ server.draw = function()
     end
     j = j + 1
   end
+
+  -- temporary
+  join_menu.draw()
 end
 
 server.mousepressed = function(x, y, button)
