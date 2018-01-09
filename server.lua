@@ -4,97 +4,12 @@ local game = require "game"
 local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
+local server_hooks = require "server_hooks"
 require "globals"
 local server = {}
 local delete_this_later = false
 players = {}
 id = 0
-
-local server_hooks = {
-  connect = function(data, client)
-  end,
-  disconnect = function(data, client)
-    if state.game == true then
-      local index = client:getIndex()
-      local team = players[index].team
-      for i, v in ipairs(teams[team].members) do
-        if v == index then
-          table.remove(teams[team].members, i)
-          break
-        end
-      end
-      if index == qb then
-        qb = teams[team].qb
-        teams[team].qb = teams[team].qb + 1
-        if teams[team].qb > #teams[team].members then
-          teams[team].qb = 1
-        end
-        network.host:sendToAll("qb", qb)
-      end
-      if index == game.ball.baller then
-        game.ball.baller = false
-        if #teams[players[index].team].members > 0 then
-          server.new_down(players[index].p.x)
-        end
-      end
-    end
-    if players[index] then
-      players[index] = nil
-    end
-    network.host:sendToAll("playerleft", index)
-  end,
-  playerinfo = function(data, client)
-    local index = client:getIndex()
-    if state.game == true then
-      network.host:sendToPeer(network.host:getPeerByIndex(index), "disconnect")
-    else
-      players[index] = {name = data.name, team = math.floor(math.random()+1.5)}
-      network.host:sendToPeer(network.host:getPeerByIndex(index), "id", index)
-      network.host:sendToPeer(network.host:getPeerByIndex(index), "currentplayers", players)
-      network.host:sendToAll("newplayer", {info = players[index], index = index})
-    end
-  end,
-  diff = function(data, client)
-    local index = client:getIndex()
-    players[index].d = data
-  end,
-  ballpos = function(data, client)
-    game.ball.circle.p = data
-  end,
-  newballer = function(data, client)
-    if not data then
-      players[game.ball.baller].speed = speed_table.offense
-    else
-      players[data].speed = speed_table.with_ball
-    end
-    game.ball.baller = data
-  end,
-  sword = function(data, client)
-    local index = client:getIndex()
-    players[index].sword = {active = data.active, d = data.d, t = 0}
-    game.set_speed(index)
-    network.host:sendToAll("sword", {info = data, index = index})
-  end,
-  shield = function(data, client)
-    local index = client:getIndex()
-    players[index].shield = {active = data.active, d = data.d, t = 0}
-    game.set_speed(index)
-    network.host:sendToAll("shield", {info = data, index = index})
-  end,
-  shieldpos = function(data, client)
-    local index = client:getIndex()
-    players[index].shield.d = data
-    network.host:sendToAll("shieldpos", {info = data, index = index})
-  end,
-  thrown = function(data)
-    game.ball.moving = data
-    network.host:sendToAll("thrown", data)
-  end,
-  throw = function(data, client)
-    game.ball.thrown = data
-  end
-
-}
 
 server.init = function()
   network.mode = "server"
@@ -119,7 +34,7 @@ server.update = function(dt)
   end
   network.host:update()
 
-  if state.game == true then
+  if state.game then
     for i, v in pairs(players) do -- move players
       v.p.x = v.p.x + v.d.x*v.speed*dt
       v.p.y = v.p.y + v.d.y*v.speed*dt

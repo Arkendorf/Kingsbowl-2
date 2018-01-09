@@ -3,114 +3,16 @@ local gui = require "gui"
 local game = require "game"
 local vector = require "vector"
 local network = require "network"
+local client_hooks = require "client_hooks"
 require "globals"
 local client = {}
 
-local status = "Disconnected"
-
-local client_hooks = {
-  connect = function(data)
-    status = "Connected"
-    network.peer:send("playerinfo", {name = username[1]})
-  end,
-  disconnect = function(data)
-    network.peer:disconnectNow()
-    status = "Disconnected"
-    state.game = false
-    state.gui = gui.new(menus[3])
-  end,
-  playerleft = function(data)
-    if state.game == true then
-      for i, v in ipairs(teams[players[data].team].members) do
-        if v == data then
-          table.remove(teams[players[data].team].members, i)
-          break
-        end
-      end
-    end
-    players[data] = nil
-  end,
-  id = function(data)
-    id = data
-  end,
-  currentplayers = function(data)
-    players = data
-  end,
-  newplayer = function(data)
-    players[data.index] = data.info
-  end,
-  teamswap = function(data)
-    players[data.index].team = data.info
-  end,
-  startgame = function(data)
-    state.gui = gui.new(menus[4])
-    players = data
-    teams = {{members = {}}, {members = {}}}
-    for i, v in pairs(players) do
-      teams[v.team].members[#teams[v.team].members+1] = i
-    end
-    game.init()
-  end,
-  coords = function(data)
-    players[data.index].p = data.info
-  end,
-  diff = function(data)
-    if data.index ~= id then
-      players[data.index].p = data.info
-    end
-  end,
-  qb = function(data)
-    qb = data
-    for i, v in pairs(players) do
-      if v.sword and v.shield and qb then
-        v.sword.active = false
-        v.shield.active = false
-        game.set_speed(i)
-      end
-    end
-  end,
-  ballpos = function(data, client)
-    if data and not (game.ball.baller == id) then game.ball.circle.p = {x = data.x, y = data.y} end
-  end,
-  newballer = function(data, client)
-    if not data then
-      players[game.ball.baller].speed = speed_table.offense
-    else
-      players[data].speed = speed_table.with_ball
-    end
-    game.ball.baller = data
-  end,
-  sword = function(data)
-    players[data.index].sword = {active = data.info.active, d = data.info.d, t = 0}
-  end,
-  sheild = function(data)
-    players[data.index].shield = {active = data.info.active, d = data.info.d, t = 0}
-  end,
-  sheildpos = function(data)
-    players[data.index].shield.d = data.info
-  end,
-  dead = function(data)
-    game.kill(data)
-  end,
-  newdown = function(data)
-    game.down = data
-    game.reset_players()
-  end,
-  thrown = function(data)
-    game.ball.moving = data
-  end,
-  throw = function(data)
-    game.ball.thrown = data
-  end,
-  touchdown = function(data)
-    score[data] = score[data] + 7  
-  end
-}
-
+status = "Disconnected"
 
 client.init = function(t)
   network.mode = "client"
   state.gui = gui.new(menus[3])
+  print(state.gui)
   network.peer = sock.newClient(ip.ip, tonumber(ip.port))
 
   -- initial variables
