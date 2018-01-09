@@ -173,4 +173,42 @@ gui.new = function(t)
   })
 end
 
+gui.add = function(t)
+  if t.buttons and gui.buttons then
+    for i, v in ipairs(t.buttons) do
+      gui.buttons[#gui.buttons+1] = v
+    end
+  elseif t.buttons then
+    gui.buttons = t.buttons
+  end
+  if t.textboxes and gui.textboxes then
+    for i, v in ipairs(t.textboxes) do
+      gui.textboxes[#gui.textboxes+1] = v
+    end
+  elseif t.textboxes then
+    gui.textboxes = t.textboxes
+  end
+  if t.sliders and gui.sliders then
+    for i, v in ipairs(t.sliders) do
+      gui.sliders[#gui.sliders+1] = v
+    end
+  elseif t.sliders then
+    gui.sliders = t.sliders
+  end
+  if t.dropdowns and gui.dropdowns then
+    for i, v in ipairs(t.dropdowns) do
+      gui.dropdowns[#gui.dropdowns+1] = v
+    end
+  elseif t.dropdowns then
+    gui.dropdowns = t.dropdowns
+  end
+end
+
+gui.clear = function()
+  gui.buttons = {}
+  gui.textboxes = {}
+  gui.sliders = {}
+  gui.dropdowns = {}
+end
+
 return gui

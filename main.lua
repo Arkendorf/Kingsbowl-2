@@ -29,6 +29,8 @@ love.update = function(dt)
 end
 
 love.draw = function()
+
+  state.gui:draw()
   if state.game == true then
     game.draw()
   elseif network.mode == "server" then
@@ -36,7 +38,6 @@ love.draw = function()
   elseif network.mode == "client" then
     client.draw()
   end
-  state.gui:draw()
 end
 
 love.quit = function()
