@@ -231,6 +231,9 @@ server.update = function(dt)
       server.back_to_main()
     end
   end
+  if state.game == false then
+    join_menu.update(dt)
+  end
 end
 
 server.draw = function()
@@ -253,7 +256,10 @@ server.draw = function()
   end
 
   -- temporary
-  join_menu.draw()
+  if state.game == false then
+    join_menu.draw()
+  end
+
 end
 
 server.mousepressed = function(x, y, button)
@@ -280,6 +286,9 @@ server.mousepressed = function(x, y, button)
       players[id].speed = speed_table.sword
       network.host:sendToAll("sword", {info = {active = players[id].sword.active, d = players[id].sword.d}, index = id})
     end
+  end
+  if state.game == false then
+    join_menu.mousepressed(x, y, button)
   end
 end
 

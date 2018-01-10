@@ -12,7 +12,7 @@ love.load = function()
     "abcdefghijklmnopqrstuvwxyz" ..
     "0123456789!?.:", 1)
   love.graphics.setFont(font)
-  state.gui = gui.new(menus[1])
+  gui.new(menus[1])
   math.randomseed(os.time())
 end
 
@@ -25,7 +25,7 @@ love.update = function(dt)
   if state.game == true then
     game.update(dt)
   end
-  state.gui:update(dt)
+  gui:update(dt)
 end
 
 love.draw = function()
@@ -36,7 +36,7 @@ love.draw = function()
   elseif network.mode == "client" then
     client.draw()
   end
-  state.gui:draw()
+  gui:draw()
 end
 
 love.quit = function()
@@ -56,7 +56,7 @@ love.mousepressed = function(x, y, button)
   if state.game == true then
     game.mousepressed(x, y, button)
   end
-  state.gui:mousepressed(x, y, button)
+  gui:mousepressed(x, y, button)
 end
 
 love.mousereleased = function(x, y, button)
@@ -68,11 +68,11 @@ love.mousereleased = function(x, y, button)
 end
 
 love.textinput = function(t)
-  state.gui:textinput(t)
+  gui:textinput(t)
 end
 
 love.keypressed = function(key)
-  state.gui:keypressed(key)
+  gui:keypressed(key)
 end
 
 love.keyreleased = function(key)

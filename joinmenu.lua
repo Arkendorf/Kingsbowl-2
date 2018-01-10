@@ -1,10 +1,13 @@
 local join_menu = {}
+local gui = require "gui"
 
 join_menu.imgs = {}
 join_menu.imgs.smallbanner = love.graphics.newImage("guiart/smallbanner.png")
 join_menu.imgs.teamlist1 = love.graphics.newImage("guiart/teamlist1.png")
 join_menu.imgs.teamlist2 = love.graphics.newImage("guiart/teamlist2.png")
 join_menu.imgs.playerbuttons = love.graphics.newImage("guiart/playerbuttons.png")
+
+b = {type = 0}
 
 local menu_mode = {0, 0}
 
@@ -58,8 +61,22 @@ join_menu.draw = function()
   end
 end
 
+join_menu.mousepressed = function(x, y, button)
+end
+
 join_menu.swap_menu = function(mode, menu)
   menu_mode[menu] = mode
 
+  if network.mode == "server" and mode == 1 then
+    gui.add({sliders = {{x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+17, alignment = 1, w = 124, h = 12, barw = 12, table = team_info[menu].color, index = 1, numMin = 0, numMax = 255},
+            {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+33, alignment = 1, w = 124, h = 12, barw = 12, table = team_info[menu].color, index = 2, numMin = 0, numMax = 255},
+            {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+49, alignment = 1, w = 124, h = 12, barw = 12, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255}}})
+  elseif network.mode == "server" and mode == 0 then
+    gui.remove()
+  end
 end
+
+
+
+
 return join_menu
