@@ -3,9 +3,13 @@ local gui = require "gui"
 
 join_menu.imgs = {}
 join_menu.imgs.smallbanner = love.graphics.newImage("guiart/smallbanner.png")
-join_menu.imgs.teamlist1 = love.graphics.newImage("guiart/teamlist1.png")
-join_menu.imgs.teamlist2 = love.graphics.newImage("guiart/teamlist2.png")
+join_menu.imgs.teamlist = love.graphics.newImage("guiart/teamlist.png")
 join_menu.imgs.playerbuttons = love.graphics.newImage("guiart/playerbuttons.png")
+
+join_menu.quads = {}
+join_menu.quads.teamlist1 = love.graphics.newQuad(0, 0, 128, 256, join_menu.imgs.teamlist:getDimensions())
+join_menu.quads.teamlist2 = love.graphics.newQuad(128, 0, 128, 256, join_menu.imgs.teamlist:getDimensions())
+join_menu.quads.teamlist3 = love.graphics.newQuad(256, 0, 128, 256, join_menu.imgs.teamlist:getDimensions())
 
 b = {type = 0}
 
@@ -30,17 +34,24 @@ join_menu.draw = function()
   end
 
   -- draw team backgrounds
-  love.graphics.setColor(team_info[1].color)
-  if menu_mode[1] == 0 then
-    love.graphics.draw(join_menu.imgs.teamlist1, (win_width/2) - 144, (win_height-256)/2)
+  if network.mode == "server" then
+    love.graphics.setColor(team_info[1].color)
+    if menu_mode[1] == 0 then
+      love.graphics.draw(join_menu.imgs.teamlist, join_menu.quads.teamlist1, (win_width/2) - 144, (win_height-256)/2)
+    else
+      love.graphics.draw(join_menu.imgs.teamlist, join_menu.quads.teamlist2, (win_width/2) - 144, (win_height-256)/2)
+    end
+    love.graphics.setColor(team_info[2].color)
+    if menu_mode[2] == 0 then
+      love.graphics.draw(join_menu.imgs.teamlist, join_menu.quads.teamlist1, (win_width/2) + 16, (win_height-256)/2)
+    else
+      love.graphics.draw(join_menu.imgs.teamlist, join_menu.quads.teamlist2, (win_width/2) + 16, (win_height-256)/2)
+    end
   else
-    love.graphics.draw(join_menu.imgs.teamlist2, (win_width/2) - 144, (win_height-256)/2)
-  end
-  love.graphics.setColor(team_info[2].color)
-  if menu_mode[2] == 0 then
-    love.graphics.draw(join_menu.imgs.teamlist1, (win_width/2) + 16, (win_height-256)/2)
-  else
-    love.graphics.draw(join_menu.imgs.teamlist2, (win_width/2) + 16, (win_height-256)/2)
+    love.graphics.setColor(team_info[1].color)
+    love.graphics.draw(join_menu.imgs.teamlist, join_menu.quads.teamlist3, (win_width/2) - 144, (win_height-256)/2)
+    love.graphics.setColor(team_info[2].color)
+    love.graphics.draw(join_menu.imgs.teamlist, join_menu.quads.teamlist3, (win_width/2) + 16, (win_height-256)/2)
   end
 
   -- draw team names
@@ -70,9 +81,9 @@ join_menu.swap_menu = function(mode, menu)
   if network.mode == "server" and mode == 1 then
     gui.add({sliders = {{x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+17, alignment = 1, w = 124, h = 12, barw = 12, table = team_info[menu].color, index = 1, numMin = 0, numMax = 255},
             {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+33, alignment = 1, w = 124, h = 12, barw = 12, table = team_info[menu].color, index = 2, numMin = 0, numMax = 255},
-            {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+49, alignment = 1, w = 124, h = 12, barw = 12, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255}}})
+            {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+49, alignment = 1, w = 124, h = 12, barw = 12, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255}}}, 1+menu)
   elseif network.mode == "server" and mode == 0 then
-    gui.remove()
+    gui.remove(1+menu)
   end
 end
 

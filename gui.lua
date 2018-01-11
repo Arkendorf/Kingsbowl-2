@@ -5,7 +5,7 @@ local guis = {}
 local item = {gui = 1, type = 0, num = 0, info = {}}
 
 gui.update = function (gui, dt) -- love.update()
-  for j, w in ipairs(guis) do
+  for j, w in pairs(guis) do
     local gui = w
     if item.gui == j and item.type == 3 and item.num > 0 then
       if love.mouse.isDown(1) == false then
@@ -30,7 +30,7 @@ gui.update = function (gui, dt) -- love.update()
 end
 
 gui.draw = function (gui) -- love.draw()
-  for j, w in ipairs(guis) do
+  for j, w in pairs(guis) do
     local gui = w
     if gui.buttons ~= nil then
       for i, v in ipairs(gui.buttons) do
@@ -94,7 +94,7 @@ end
 
 gui.mousepressed = function (gui, x, y, button) -- love.mousepressed
   local guiClick = false
-  for j, w in ipairs(guis) do
+  for j, w in pairs(guis) do
     local gui = w
     local clickUsed = false
     if gui.buttons ~= nil then
@@ -173,7 +173,7 @@ gui.mousepressed = function (gui, x, y, button) -- love.mousepressed
 end
 
 gui.textinput = function (gui, t) -- love.textinput
-  for j, w in ipairs(guis) do
+  for j, w in pairs(guis) do
     local gui = w
     if gui.textboxes ~= nil and item.gui == j and item.type == 2 and item.num > 0 and font:getWidth(gui.textboxes[item.num].table[gui.textboxes[item.num].index]..t) <= gui.textboxes[item.num].w and (gui.textboxes[item.num].num == nil or gui.textboxes[item.num].num == false or (gui.textboxes[item.num].num == true and string.find("0123456789.", t) ~= nil)) then
       gui.textboxes[item.num].table[gui.textboxes[item.num].index] = gui.textboxes[item.num].table[gui.textboxes[item.num].index]..t
@@ -182,7 +182,7 @@ gui.textinput = function (gui, t) -- love.textinput
 end
 
 gui.keypressed = function (gui, key) -- love.keypressed
-  for j, w in ipairs(guis) do
+  for j, w in pairs(guis) do
     local gui = w
     if gui.textboxes ~= nil and item.gui == j and item.type == 2 and item.num > 0 and key == "backspace" then
       gui.textboxes[item.num].table[gui.textboxes[item.num].index] = string.sub(gui.textboxes[item.num].table[gui.textboxes[item.num].index], 1, -2)
@@ -194,13 +194,16 @@ gui.new = function(t)
   guis = {t}
 end
 
-gui.add = function(t)
-  guis[#guis+1] = t
-  return #guis
+gui.add = function(t, i)
+  if i then
+    guis[i] = t
+  else
+    guis[#guis+1] = t
+  end
 end
 
 gui.remove = function(i)
-  table.remove(guis, i)
+  guis[i] = nil
 end
 
 
