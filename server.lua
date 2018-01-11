@@ -15,34 +15,8 @@ local server_hooks = {
   connect = function(data, client)
   end,
   disconnect = function(data, client)
-    if state.game == true then
-      local index = client:getIndex()
-      local team = players[index].team
-      for i, v in ipairs(teams[team].members) do
-        if v == index then
-          table.remove(teams[team].members, i)
-          break
-        end
-      end
-      if index == qb then
-        qb = teams[team].qb
-        teams[team].qb = teams[team].qb + 1
-        if teams[team].qb > #teams[team].members then
-          teams[team].qb = 1
-        end
-        network.host:sendToAll("qb", qb)
-      end
-      if index == game.ball.baller then
-        game.ball.baller = false
-        if #teams[players[index].team].members > 0 then
-          server.new_down(players[index].p.x)
-        end
-      end
-    end
-    if players[index] then
-      players[index] = nil
-    end
-    network.host:sendToAll("playerleft", index)
+    local index = client:getIndex()
+    server.disconnect(index)
   end,
   playerinfo = function(data, client)
     local index = client:getIndex()
@@ -54,6 +28,7 @@ local server_hooks = {
       network.host:sendToPeer(network.host:getPeerByIndex(index), "currentplayers", players)
       network.host:sendToAll("newplayer", {info = players[index], index = index})
     end
+    join_menu.update_p_buttons()
   end,
   diff = function(data, client)
     local index = client:getIndex()
@@ -109,6 +84,8 @@ server.init = function()
   -- initial variables
   id = 0
   players[0] = {name = username[1], team = math.floor(math.random()+1.5)}
+
+  join_menu.init()
 end
 
 server.update = function(dt)
@@ -263,20 +240,7 @@ server.draw = function()
 end
 
 server.mousepressed = function(x, y, button)
-  if button == 1 and state.game == false then
-    local j = 1
-    for i, v in pairs(players) do
-      if  x >= 41 and x < 41+font:getWidth(v.name)+1 and y >= j*13 and y <= j*13+12 then
-        if v.team == 1 then
-          v.team = 2
-        else
-          v.team = 1
-        end
-        network.host:sendToAll("teamswap", {index = i, info = v.team})
-      end
-      j = j + 1
-    end
-  elseif button == 1 and state.game == true and players[id].dead == false and game.down.t > grace_time then
+  if button == 1 and state.game == true and players[id].dead == false and game.down.t > grace_time then
     if game.ball.baller ~= id and players[id].team == players[qb].team then
       players[id].shield = {active = true, d = game.shield_pos(), t = 0}
       players[id].speed = speed_table.shield
@@ -298,6 +262,37 @@ server.mousereleased = function (x, y, button)
     players[id].speed = speed_table.offense
   network.host:sendToAll("shield", {info = {active = players[id].shield.act}, index = id})
   end
+end
+
+server.disconnect = function(index)
+  network.host:sendToPeer(network.host:getPeerByIndex(index), "disconnect")
+  if state.game == true then
+    local team = players[index].team
+    for i, v in ipairs(teams[team].members) do
+      if v == index then
+        table.remove(teams[team].members, i)
+        break
+      end
+    end
+    if index == qb then
+      qb = teams[team].qb
+      teams[team].qb = teams[team].qb + 1
+      if teams[team].qb > #teams[team].members then
+        teams[team].qb = 1
+      end
+      network.host:sendToAll("qb", qb)
+    end
+    if index == game.ball.baller then
+      game.ball.baller = false
+      if #teams[players[index].team].members > 0 then
+        server.new_down(players[index].p.x)
+      end
+    end
+  end
+  if players[index] then
+    players[index] = nil
+  end
+  network.host:sendToAll("playerleft", index)
 end
 
 server.quit = function()

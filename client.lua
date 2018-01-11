@@ -15,10 +15,8 @@ local client_hooks = {
     network.peer:send("playerinfo", {name = username[1]})
   end,
   disconnect = function(data)
-    network.peer:disconnectNow()
-    status = "Disconnected"
     state.game = false
-    state.gui = gui.new(menus[3])
+    client.back_to_main()
   end,
   playerleft = function(data)
     if state.game == true then
