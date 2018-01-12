@@ -19,10 +19,14 @@ love.load = function()
 end
 
 love.update = function(dt)
-  if network.mode == "server" then
+  if state.game == false and network.mode == "server" then
     servermenu.update(dt)
-  elseif network.mode == "client" then
+  elseif state.game == false and network.mode == "client" then
     clientmenu.update(dt)
+  elseif state.game == true and network.mode == "server" then
+    server.update(dt)
+  elseif state.game == true and network.mode == "client" then
+    client.update(dt)
   end
   if state.game == true then
     game.update(dt)
@@ -42,10 +46,14 @@ love.draw = function()
 end
 
 love.quit = function()
-  if network.mode == "server" then
+  if state.game == false and network.mode == "server" then
     servermenu.quit()
-  elseif network.mode == "client" then
+  elseif state.game == false and network.mode == "client" then
     clientmenu.quit()
+  elseif state.game == true and network.mode == "server" then
+    server.quit()
+  elseif state.game == true and network.mode == "client" then
+    client.quit()
   end
 end
 

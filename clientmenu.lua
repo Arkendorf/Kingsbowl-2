@@ -41,6 +41,16 @@ local client_hooks = {
   teaminfo = function(data)
     team_info[data.team] = data.info
   end,
+  startgame = function(data)
+    state.gui = gui.new(menus[4])
+    players = data.players
+    qb = data.qb
+    teams = {{members = {}}, {members = {}}}
+    for i, v in pairs(players) do
+      teams[v.team].members[#teams[v.team].members+1] = i
+    end
+    game.init()
+  end,
 }
 
 clientmenu.init = function(t)

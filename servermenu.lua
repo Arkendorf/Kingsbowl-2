@@ -32,7 +32,7 @@ local server_hooks = {
     players[index] = nil
     network.host:sendToAll("remove", index)
     -- update player buttons
-    servermenu.update_p_buttons()
+    gui.remove(index+4)
   end,
 }
 
@@ -141,19 +141,18 @@ servermenu.back_to_main = function()
 end
 
 servermenu.start_game = function()
-  -- teams = {{members = {}, qb = 1}, {members = {}, qb = 1}}
-  -- for i, v in pairs(players) do
-  --   teams[v.team].members[#teams[v.team].members+1] = i
-  -- end
-  --
-  -- if #teams[1].members > 0 and #teams[2].members > 0 then -- only start game if there is at least one person per team
-  --   state.gui = gui.new(menus[4])
-  --   qb = teams[1].members[1]
-  --   network.host:sendToAll("qb", qb)
-  --   network.host:sendToAll("startgame", players)
-  --   game.init()
-  --   game.ball.baller = qb
-  -- end
+  teams = {{members = {}, qb = 1}, {members = {}, qb = 1}}
+  for i, v in pairs(players) do
+    teams[v.team].members[#teams[v.team].members+1] = i
+  end
+
+  if #teams[1].members > 0 and #teams[2].members > 0 then -- only start game if there is at least one person per team
+    state.gui = gui.new(menus[4])
+    qb = teams[1].members[1]
+    network.host:sendToAll("startgame", {players = players, qb = qb})
+    game.init()
+    game.ball.baller = qb
+  end
 end
 
 servermenu.swap_menu = function(mode, menu)
