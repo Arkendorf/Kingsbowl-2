@@ -41,8 +41,9 @@ love.draw = function()
     servermenu.draw()
   elseif network.mode == "client" then
     clientmenu.draw()
+  else
+    gui:draw()
   end
-  gui:draw()
 end
 
 love.quit = function()

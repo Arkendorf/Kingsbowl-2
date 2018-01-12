@@ -92,22 +92,34 @@ servermenu.draw = function()
   love.graphics.setColor(255, 255, 255)
   love.graphics.print("Start", 40, 12)
 
-  -- draw team backgrounds
-  love.graphics.setColor(team_info[1].color)
-  if menu_mode[1] == 0 then
-    love.graphics.draw(img.teamlist, quad.teamlist1, (win_width/2) - 144, (win_height-256)/2)
-  else
-    love.graphics.draw(img.teamlist, quad.teamlist2, (win_width/2) - 144, (win_height-256)/2)
-  end
-  love.graphics.setColor(team_info[2].color)
-  if menu_mode[2] == 0 then
-    love.graphics.draw(img.teamlist, quad.teamlist1, (win_width/2) + 16, (win_height-256)/2)
-  else
-    love.graphics.draw(img.teamlist, quad.teamlist2, (win_width/2) + 16, (win_height-256)/2)
+  -- draw team menus
+  for j = 1, 2 do
+    if menu_mode[j] == 0 then
+      -- draw banner
+      love.graphics.setColor(team_info[j].color)
+      love.graphics.draw(img.teamlist, quad.teamlist1, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
+
+      -- draw icons
+      love.graphics.setColor(255, 255, 255)
+      love.graphics.draw(img.menuicons, quad.icons1, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
+    else
+      -- draw banner
+      love.graphics.setColor(team_info[j].color)
+      love.graphics.draw(img.teamlist, quad.teamlist2, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
+
+      -- draw icons
+      love.graphics.setColor(255, 255, 255)
+      love.graphics.draw(img.menuicons, quad.icons2, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
+
+      --draw sliders
+      for i = 1, 3 do
+        love.graphics.draw(img.slider, quad.sliderbar, (win_width/2) - 302 + 160 * j, (win_height-256)/2+17*i)
+        love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(team_info[j].color[i]/255*120), (win_height-256)/2+17*i)
+      end
+    end
   end
 
   -- draw team names
-  love.graphics.setColor(255, 255, 255)
   love.graphics.print(team_info[1].name, (win_width/2) - 144, (win_height-256)/2+2)
   love.graphics.print(team_info[2].name, (win_width/2) + 16, (win_height-256)/2+2)
 
@@ -166,9 +178,9 @@ servermenu.swap_menu = function(mode, menu)
         gui.remove(i+4)
       end
     end
-    gui.add({sliders = {{x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+17, alignment = 1, w = 124, h = 12, barw = 12, table = team_info[menu].color, index = 1, numMin = 0, numMax = 255},
-            {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+33, alignment = 1, w = 124, h = 12, barw = 12, table = team_info[menu].color, index = 2, numMin = 0, numMax = 255},
-            {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+49, alignment = 1, w = 124, h = 12, barw = 12, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255}}}, 1+menu)
+    gui.add({sliders = {{x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+17, alignment = 1, w = 124, h = 12, barw = 4, table = team_info[menu].color, index = 1, numMin = 0, numMax = 255},
+            {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+33, alignment = 1, w = 124, h = 12, barw = 4, table = team_info[menu].color, index = 2, numMin = 0, numMax = 255},
+            {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+49, alignment = 1, w = 124, h = 12, barw = 4, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255}}}, 1+menu)
   elseif mode == 0 then
     gui.remove(1+menu)
     servermenu.update_p_buttons()
