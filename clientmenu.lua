@@ -3,6 +3,7 @@ local gui = require "gui"
 local game = require "game"
 local vector = require "vector"
 local network = require "network"
+local client = require "client"
 require "globals"
 local clientmenu = {}
 
@@ -49,6 +50,8 @@ local client_hooks = {
     for i, v in pairs(players) do
       teams[v.team].members[#teams[v.team].members+1] = i
     end
+
+    client.init()
     game.init()
   end,
 }

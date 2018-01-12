@@ -7,26 +7,11 @@ local network = require "network"
 require "globals"
 local server = {}
 local delete_this_later = false
-players = {}
-id = 0
 
 local server_hooks = {
-  connect = function(data, client)
-  end,
   disconnect = function(data, client)
     local index = client:getIndex()
     server.disconnect(index)
-  end,
-  playerinfo = function(data, client)
-    local index = client:getIndex()
-    if state.game == true then
-      network.host:sendToPeer(network.host:getPeerByIndex(index), "disconnect")
-    else
-      players[index] = {name = data.name, team = math.floor(math.random()+1.5)}
-      network.host:sendToPeer(network.host:getPeerByIndex(index), "id", index)
-      network.host:sendToPeer(network.host:getPeerByIndex(index), "currentplayers", players)
-      network.host:sendToAll("newplayer", {info = players[index], index = index})
-    end
   end,
   diff = function(data, client)
     local index = client:getIndex()
@@ -71,17 +56,9 @@ local server_hooks = {
 }
 
 server.init = function()
-  network.mode = "server"
-  state.gui = gui.new(menus[2])
-  network.host = sock.newServer("*", tonumber(ip.port))
-
   for k,v in pairs(server_hooks) do
     network.host:on(k, v)
   end
-
-  -- initial variables
-  id = 0
-  players[0] = {name = username[1], team = math.floor(math.random()+1.5)}
 end
 
 server.update = function(dt)
@@ -203,26 +180,6 @@ server.update = function(dt)
     if #teams[1].members <= 0 or #teams[2].members <= 0 then
       server.back_to_main()
     end
-  end
-end
-
-server.draw = function()
-  love.graphics.print("Players:", 42, 2)
-  local j = 1
-  for i, v in pairs(players) do
-    if v.team == 1 then
-      love.graphics.setColor(255, 200, 200)
-    else
-      love.graphics.setColor(200, 200, 255)
-    end
-    if i == id then
-      love.graphics.rectangle("fill", 41, j*13, font:getWidth(v.name)+1, 12)
-      love.graphics.setColor(0, 0, 0)
-      love.graphics.print(v.name, 42, j*13+2)
-    else
-      love.graphics.print(v.name, 42, j*13+2)
-    end
-    j = j + 1
   end
 end
 

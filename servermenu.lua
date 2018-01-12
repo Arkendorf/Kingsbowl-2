@@ -4,6 +4,7 @@ local game = require "game"
 local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
+local server = require "server"
 require "globals"
 local servermenu = {}
 
@@ -162,6 +163,8 @@ servermenu.start_game = function()
     state.gui = gui.new(menus[4])
     qb = teams[1].members[1]
     network.host:sendToAll("startgame", {players = players, qb = qb})
+
+    server.init()
     game.init()
     game.ball.baller = qb
   end

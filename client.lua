@@ -6,11 +6,8 @@ local network = require "network"
 require "globals"
 local client = {}
 
-local status = "Disconnected"
-
 local client_hooks = {
   connect = function(data)
-    status = "Connected"
     network.peer:send("playerinfo", {name = username[1]})
   end,
   disconnect = function(data)
@@ -27,27 +24,6 @@ local client_hooks = {
       end
     end
     players[data] = nil
-  end,
-  id = function(data)
-    id = data
-  end,
-  currentplayers = function(data)
-    players = data
-  end,
-  newplayer = function(data)
-    players[data.index] = data.info
-  end,
-  teamswap = function(data)
-    players[data.index].team = data.info
-  end,
-  startgame = function(data)
-    state.gui = gui.new(menus[4])
-    players = data
-    teams = {{members = {}}, {members = {}}}
-    for i, v in pairs(players) do
-      teams[v.team].members[#teams[v.team].members+1] = i
-    end
-    game.init()
   end,
   coords = function(data)
     players[data.index].p = data.info
@@ -107,20 +83,9 @@ local client_hooks = {
 
 
 client.init = function(t)
-  network.mode = "client"
-  state.gui = gui.new(menus[3])
-  network.peer = sock.newClient(ip.ip, tonumber(ip.port))
-
-  -- initial variables
-
-  -- important functions
-
   for k,v in pairs(client_hooks) do
     network.peer:on(k, v)
   end
-
-  network.peer:connect()
-  status = "Connecting"
 end
 
 client.update = function(dt)
@@ -137,30 +102,6 @@ client.update = function(dt)
       network.peer:send("shieldpos", game.shield_pos())
     end
     if game.ball.baller == id then network.peer:send("ballpos", game.ball.circle.p) end
-  end
-end
-
-client.draw = function()
-  if status == "Connected" then
-    love.graphics.print("Players:", 42, 2)
-    local j = 1
-    for i, v in pairs(players) do
-      if v.team == 1 then
-        love.graphics.setColor(255, 200, 200)
-      else
-        love.graphics.setColor(200, 200, 255)
-      end
-      if i == id then
-        love.graphics.rectangle("fill", 41, j*13, font:getWidth(v.name)+1, 12)
-        love.graphics.setColor(0, 0, 0)
-        love.graphics.print(v.name, 42, j*13+2)
-      else
-        love.graphics.print(v.name, 42, j*13+2)
-      end
-      j = j + 1
-    end
-  else
-    love.graphics.print(status, 41, 2)
   end
 end
 
