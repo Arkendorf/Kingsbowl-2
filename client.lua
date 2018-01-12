@@ -3,7 +3,6 @@ local gui = require "gui"
 local game = require "game"
 local vector = require "vector"
 local network = require "network"
-local join_menu = require "joinmenu"
 require "globals"
 local client = {}
 
@@ -163,9 +162,6 @@ client.draw = function()
   else
     love.graphics.print(status, 41, 2)
   end
-
-  -- temporary
-  join_menu.draw()
 end
 
 client.mousepressed = function (x, y, button)

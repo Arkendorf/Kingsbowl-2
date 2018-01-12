@@ -4,7 +4,6 @@ local game = require "game"
 local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
-local join_menu = require "joinmenu"
 require "globals"
 local server = {}
 local delete_this_later = false
@@ -28,7 +27,6 @@ local server_hooks = {
       network.host:sendToPeer(network.host:getPeerByIndex(index), "currentplayers", players)
       network.host:sendToAll("newplayer", {info = players[index], index = index})
     end
-    join_menu.update_p_buttons()
   end,
   diff = function(data, client)
     local index = client:getIndex()
@@ -84,8 +82,6 @@ server.init = function()
   -- initial variables
   id = 0
   players[0] = {name = username[1], team = math.floor(math.random()+1.5)}
-
-  join_menu.init()
 end
 
 server.update = function(dt)
@@ -208,9 +204,6 @@ server.update = function(dt)
       server.back_to_main()
     end
   end
-  if state.game == false then
-    join_menu.update(dt)
-  end
 end
 
 server.draw = function()
@@ -231,12 +224,6 @@ server.draw = function()
     end
     j = j + 1
   end
-
-  -- temporary
-  if state.game == false then
-    join_menu.draw()
-  end
-
 end
 
 server.mousepressed = function(x, y, button)
@@ -250,9 +237,6 @@ server.mousepressed = function(x, y, button)
       players[id].speed = speed_table.sword
       network.host:sendToAll("sword", {info = {active = players[id].sword.active, d = players[id].sword.d}, index = id})
     end
-  end
-  if state.game == false then
-    join_menu.mousepressed(x, y, button)
   end
 end
 

@@ -2,7 +2,6 @@ local game = {}
 local collision = require "collision"
 local state = require "state"
 local vector = require "vector"
-local img = require "graphics"
 local network = require "network"
 
 local common_send = function (k, v)
