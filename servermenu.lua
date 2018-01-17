@@ -5,6 +5,7 @@ local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
 local server = require "server"
+local servergame = require "servergame"
 require "globals"
 local servermenu = {}
 
@@ -160,13 +161,10 @@ servermenu.start_game = function()
   end
 
   if #teams[1].members > 0 and #teams[2].members > 0 then -- only start game if there is at least one person per team
-    state.gui = gui.new(menus[4])
     qb = teams[1].members[1]
     network.host:sendToAll("startgame", {players = players, qb = qb})
 
-    server.init()
-    game.init()
-    game.ball.baller = qb
+    servergame.init()
   end
 end
 

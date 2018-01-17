@@ -2,6 +2,7 @@ require "globals"
 local server = require "server"
 local client = require "client"
 local servermenu = require "servermenu"
+local servergame = require "servergame"
 local clientmenu = require "clientmenu"
 local gui = require "gui"
 local menus = require "menus"
@@ -24,23 +25,22 @@ love.update = function(dt)
   elseif state.game == false and network.mode == "client" then
     clientmenu.update(dt)
   elseif state.game == true and network.mode == "server" then
-    server.update(dt)
+    servergame.update(dt)
   elseif state.game == true and network.mode == "client" then
     client.update(dt)
-  end
-  if state.game == true then
-    game.update(dt)
   end
   gui:update(dt)
 end
 
 love.draw = function()
-  if state.game == true then
-    game.draw()
-  elseif network.mode == "server" then
+  if state.game == false and network.mode == "server" then
     servermenu.draw()
-  elseif network.mode == "client" then
+  elseif state.game == false and network.mode == "client" then
     clientmenu.draw()
+  elseif state.game == true and network.mode == "server" then
+    servergame.draw()
+  elseif state.game == true and network.mode == "client" then
+    game.draw()
   else
     gui:draw()
   end
