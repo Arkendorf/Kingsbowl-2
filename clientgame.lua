@@ -4,40 +4,28 @@ local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
 require "globals"
-local servergame = {}
+local clientgame = {}
 
 -- julians wack movement thing
-servergame.input = require("keyboard")
+clientgame.input = require("keyboard")
 
-local server_hooks = {
-  -- if a client sends move data, do this
-  posdif = function(data, client)
-    local index = client:getIndex()
-    players[index].d = data
-    network.host:sendToAllBut(client, "posdif", {index = index, info = data})
+local client_hooks = {
+  pos = function(data)
+    players[data.index].p = data.info
   end,
-  -- if a ball is thrown, do this
-  ballthrow = function(data, client)
+  posdif = function(data)
+    players[data.index].d = data.info
   end,
-  -- if client is attacking, do this
-  attack = function(data, client)
-  end,
-  -- if client puts up shield, do this
-  startdefend = function(data, client)
-  end,
-  -- if clients drops shield, do this
-  stopdefend = function (data, client)
-  end,
+
 }
 
-servergame.init = function()
-  -- initialize server hooks
-  for k,v in pairs(server_hooks) do
-    network.host:on(k, v)
+clientgame.init = function()
+  -- initialize client hooks
+  for k,v in pairs(client_hooks) do
+    network.peer:on(k, v)
   end
-  -- set the base gui for the server menu (none)
+  -- set the base gui for the client menu
   state.gui = gui.new({})
-
   -- set up initial variables for players
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
@@ -46,47 +34,45 @@ servergame.init = function()
     v.shield = {active = false, d = {x = 0, y = 0}, t = 0}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
     -- set the speed for players
-    servergame.set_speed(i)
+    clientgame.set_speed(i)
   end
   -- set game state
   state.game = true
 end
 
-servergame.update = function(dt)
-  -- update sock server
-  network.host:update()
+clientgame.update = function(dt)
+  -- update sock client
+  network.peer:update()
 
-  -- get servers direction
-  servergame.input.direction()
-  -- send players position difference to all
-  network.host:sendToAll("posdif", {info = players[id].d, index = id})
+  -- get client's direction
+  clientgame.input.direction()
+  -- send client's difference in position
+  network.peer:send("posdif", players[id].d)
 
   for i, v in pairs(players) do
     -- move player based on their diff
     v.p.x = v.p.x + v.d.x*v.speed*dt
     v.p.y = v.p.y + v.d.y*v.speed*dt
     -- apply collision to player
-    servergame.collide(v)
+    clientgame.collide(v)
     --apply collision between players
     for i, v in pairs(players) do
       for j, w in pairs(players) do
-        if i ~= j then -- don't check for collisions with self
+        if i ~= j then
           if collision.check_overlap(players[j], players[i]) then
-            local p1, p2 = collision.circle_vs_circle(players[j], players[i])
+            local p1, p2 = collision.circle_vs_circle(players[j], players[i]) --
             players[j].p = p1
             players[i].p = p2
           end
         end
       end
     end
-    -- send player's position to all
-    network.host:sendToAll("pos", {info = v.p, index = i})
   end
-  -- reduce server's velocity
+  -- reduce client's velocity
   players[id].d = vector.scale(0.9, players[id].d)
 end
 
-servergame.draw = function()
+clientgame.draw = function()
   love.graphics.push()
   love.graphics.translate(math.floor(win_width/2-players[id].p.x), math.floor(win_height/2-players[id].p.y))
   love.graphics.setColor(255, 255, 255)
@@ -118,7 +104,7 @@ servergame.draw = function()
   love.graphics.setColor(255, 255, 255)
 end
 
-servergame.set_speed = function (i) -- based on player's state, set a speed
+clientgame.set_speed = function (i) -- based on player's state, set a speed
   -- if i == game.ball.baller then
   --   players[i].speed = speed_table.with_ball
   -- elseif players[i].shield.active == true then
@@ -133,7 +119,7 @@ servergame.set_speed = function (i) -- based on player's state, set a speed
   players[i].speed = 16
 end
 
-servergame.collide = function (v)
+clientgame.collide = function (v)
   -- -- collide with line of scrimmage if down has hardly started
   -- if game.down.t <= grace_time and v.team == 1 and v.p.x+v.r > game.down.start then
   --   v.d.x = 0
@@ -160,4 +146,4 @@ servergame.collide = function (v)
   end
 end
 
-return servergame
+return clientgame

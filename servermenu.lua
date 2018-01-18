@@ -4,7 +4,6 @@ local game = require "game"
 local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
-local server = require "server"
 local servergame = require "servergame"
 require "globals"
 local servermenu = {}
@@ -50,7 +49,7 @@ servermenu.init = function()
 
   -- add server to player list, with an ID of 0
   id = 0
-  players[0] = {name = username[1], team = math.floor(math.random()+1.5)}
+  players[0] = {name = username[1], team = 2}
 
   -- set the base gui for the server menu
   state.gui = gui.new(menus[2])

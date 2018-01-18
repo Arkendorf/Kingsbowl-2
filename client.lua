@@ -7,9 +7,6 @@ require "globals"
 local client = {}
 
 local client_hooks = {
-  connect = function(data)
-    network.peer:send("playerinfo", {name = username[1]})
-  end,
   disconnect = function(data)
     state.game = false
     client.back_to_main()
@@ -90,6 +87,7 @@ end
 
 client.update = function(dt)
   network.peer:update()
+  -- get servers direction
   if state.game == true then
     for i, v in pairs(players) do
       game.set_speed(i)
@@ -97,7 +95,7 @@ client.update = function(dt)
       v.p.y = v.p.y + v.d.y*v.speed*dt
     end
     game.collide(players[id])
-    network.peer:send("diff", players[id].d)
+    network.peer:send("posdif", players[id].d)
     if players[id].shield.active == true then
       network.peer:send("shieldpos", game.shield_pos())
     end

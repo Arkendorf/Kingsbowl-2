@@ -4,6 +4,7 @@ local client = require "client"
 local servermenu = require "servermenu"
 local servergame = require "servergame"
 local clientmenu = require "clientmenu"
+local clientgame = require "clientgame"
 local gui = require "gui"
 local menus = require "menus"
 local game = require "game"
@@ -16,7 +17,6 @@ love.load = function()
     "0123456789!?.:", 1)
   love.graphics.setFont(font)
   gui.new(menus[1])
-  math.randomseed(os.time())
 end
 
 love.update = function(dt)
@@ -27,7 +27,7 @@ love.update = function(dt)
   elseif state.game == true and network.mode == "server" then
     servergame.update(dt)
   elseif state.game == true and network.mode == "client" then
-    client.update(dt)
+    clientgame.update(dt)
   end
   gui:update(dt)
 end
@@ -40,7 +40,7 @@ love.draw = function()
   elseif state.game == true and network.mode == "server" then
     servergame.draw()
   elseif state.game == true and network.mode == "client" then
-    game.draw()
+    clientgame.draw()
   else
     gui:draw()
   end
