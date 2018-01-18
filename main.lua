@@ -1,6 +1,10 @@
 require "globals"
 local server = require "server"
 local client = require "client"
+local servermenu = require "servermenu"
+local servergame = require "servergame"
+local clientmenu = require "clientmenu"
+local clientgame = require "clientgame"
 local gui = require "gui"
 local menus = require "menus"
 local game = require "game"
@@ -12,37 +16,44 @@ love.load = function()
     "abcdefghijklmnopqrstuvwxyz" ..
     "0123456789!?.:", 1)
   love.graphics.setFont(font)
-  state.gui = gui.new(menus[1])
-  math.randomseed(os.time())
+  gui.new(menus[1])
 end
 
 love.update = function(dt)
-  if network.mode == "server" then
-    server.update(dt)
-  elseif network.mode == "client" then
-    client.update(dt)
+  if state.game == false and network.mode == "server" then
+    servermenu.update(dt)
+  elseif state.game == false and network.mode == "client" then
+    clientmenu.update(dt)
+  elseif state.game == true and network.mode == "server" then
+    servergame.update(dt)
+  elseif state.game == true and network.mode == "client" then
+    clientgame.update(dt)
   end
-  if state.game == true then
-    game.update(dt)
-  end
-  state.gui:update(dt)
+  gui:update(dt)
 end
 
 love.draw = function()
-  if state.game == true then
-    game.draw()
-  elseif network.mode == "server" then
-    server.draw()
-  elseif network.mode == "client" then
-    client.draw()
+  if state.game == false and network.mode == "server" then
+    servermenu.draw()
+  elseif state.game == false and network.mode == "client" then
+    clientmenu.draw()
+  elseif state.game == true and network.mode == "server" then
+    servergame.draw()
+  elseif state.game == true and network.mode == "client" then
+    clientgame.draw()
+  else
+    gui:draw()
   end
-  state.gui:draw()
 end
 
 love.quit = function()
-  if network.mode == "server" then
+  if state.game == false and network.mode == "server" then
+    servermenu.quit()
+  elseif state.game == false and network.mode == "client" then
+    clientmenu.quit()
+  elseif state.game == true and network.mode == "server" then
     server.quit()
-  elseif network.mode == "client" then
+  elseif state.game == true and network.mode == "client" then
     client.quit()
   end
 end
@@ -56,7 +67,7 @@ love.mousepressed = function(x, y, button)
   if state.game == true then
     game.mousepressed(x, y, button)
   end
-  state.gui:mousepressed(x, y, button)
+  gui:mousepressed(x, y, button)
 end
 
 love.mousereleased = function(x, y, button)
@@ -68,11 +79,11 @@ love.mousereleased = function(x, y, button)
 end
 
 love.textinput = function(t)
-  state.gui:textinput(t)
+  gui:textinput(t)
 end
 
 love.keypressed = function(key)
-  state.gui:keypressed(key)
+  gui:keypressed(key)
 end
 
 love.keyreleased = function(key)

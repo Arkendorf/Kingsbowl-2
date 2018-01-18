@@ -22,13 +22,11 @@ client.init = function(t)
   for k,v in pairs(client_hooks) do
     network.peer:on(k, v)
   end
-
-  network.peer:connect()
-  status = "Connecting"
 end
 
 client.update = function(dt)
   network.peer:update()
+  -- get servers direction
   if state.game == true then
     for i, v in pairs(players) do
       game.set_speed(i)
@@ -36,35 +34,11 @@ client.update = function(dt)
       v.p.y = v.p.y + v.d.y*v.speed*dt
     end
     game.collide(players[id])
-    network.peer:send("diff", players[id].d)
+    network.peer:send("posdif", players[id].d)
     if players[id].shield.active == true then
       network.peer:send("shieldpos", game.shield_pos())
     end
     if game.ball.baller == id then network.peer:send("ballpos", game.ball.circle.p) end
-  end
-end
-
-client.draw = function()
-  if status == "Connected" then
-    love.graphics.print("Players:", 42, 2)
-    local j = 1
-    for i, v in pairs(players) do
-      if v.team == 1 then
-        love.graphics.setColor(255, 200, 200)
-      else
-        love.graphics.setColor(200, 200, 255)
-      end
-      if i == id then
-        love.graphics.rectangle("fill", 41, j*13, font:getWidth(v.name)+1, 12)
-        love.graphics.setColor(0, 0, 0)
-        love.graphics.print(v.name, 42, j*13+2)
-      else
-        love.graphics.print(v.name, 42, j*13+2)
-      end
-      j = j + 1
-    end
-  else
-    love.graphics.print(status, 41, 2)
   end
 end
 

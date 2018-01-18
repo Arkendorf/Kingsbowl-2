@@ -2,7 +2,6 @@ local game = {}
 local collision = require "collision"
 local state = require "state"
 local vector = require "vector"
-local img = require "graphics"
 local network = require "network"
 
 local common_send = function (k, v)
@@ -32,7 +31,7 @@ end
 
 local draw_p_to_game_p = function(x, y)
   return x - win_width/2+players[id].p.x, y - win_height/2+players[id].p.y
-end
+  end
 
 game.update = function(dt)
   -- reduce velocity
@@ -93,7 +92,7 @@ game.draw = function ()
     love.graphics.draw(img[char_img], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 32, 32)
 
     --draw colored overlay
-    if v.team == 1 then love.graphics.setColor(255, 100, 100) else love.graphics.setColor(100, 100, 255) end
+    love.graphics.setColor(team_info[v.team].color)
     love.graphics.draw(img[char_img.."_overlay"], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 32, 32)
 
     --draw username
@@ -102,13 +101,13 @@ game.draw = function ()
     if v.shield.active == true then -- draw shield
       love.graphics.setColor(255,  255, 255)
       love.graphics.draw(img.shield, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
-      if v.team == 1 then love.graphics.setColor(255, 100, 100) else love.graphics.setColor(100, 100, 255) end
+      love.graphics.setColor(team_info[v.team].color)
       love.graphics.draw(img.shield_overlay, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
     end
     if v.sword.active == true then -- draw sword
       love.graphics.setColor(255,  255, 255)
       love.graphics.draw(img.sword, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
-      if v.team == 1 then love.graphics.setColor(255, 100, 100) else love.graphics.setColor(100, 100, 255) end
+      love.graphics.setColor(team_info[v.team].color)
       love.graphics.draw(img.sword_overlay, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
     end
   end
