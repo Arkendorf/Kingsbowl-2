@@ -4,56 +4,10 @@ local game = require "game"
 local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
+local server_hooks = require "server_hooks"
 require "globals"
 local server = {}
 local delete_this_later = false
-
-local server_hooks = {
-  disconnect = function(data, client)
-    local index = client:getIndex()
-    server.disconnect(index)
-  end,
-  diff = function(data, client)
-    local index = client:getIndex()
-    players[index].d = data
-  end,
-  ballpos = function(data, client)
-    game.ball.circle.p = data
-  end,
-  newballer = function(data, client)
-    if not data then
-      players[game.ball.baller].speed = speed_table.offense
-    else
-      players[data].speed = speed_table.with_ball
-    end
-    game.ball.baller = data
-  end,
-  sword = function(data, client)
-    local index = client:getIndex()
-    players[index].sword = {active = data.active, d = data.d, t = 0}
-    game.set_speed(index)
-    network.host:sendToAll("sword", {info = data, index = index})
-  end,
-  shield = function(data, client)
-    local index = client:getIndex()
-    players[index].shield = {active = data.active, d = data.d, t = 0}
-    game.set_speed(index)
-    network.host:sendToAll("shield", {info = data, index = index})
-  end,
-  shieldpos = function(data, client)
-    local index = client:getIndex()
-    players[index].shield.d = data
-    network.host:sendToAll("shieldpos", {info = data, index = index})
-  end,
-  thrown = function(data)
-    game.ball.moving = data
-    network.host:sendToAll("thrown", data)
-  end,
-  throw = function(data, client)
-    game.ball.thrown = data
-  end
-
-}
 
 server.init = function()
   for k,v in pairs(server_hooks) do
@@ -70,7 +24,7 @@ server.update = function(dt)
   end
   network.host:update()
 
-  if state.game == true then
+  if state.game then
     for i, v in pairs(players) do -- move players
       v.p.x = v.p.x + v.d.x*v.speed*dt
       v.p.y = v.p.y + v.d.y*v.speed*dt
