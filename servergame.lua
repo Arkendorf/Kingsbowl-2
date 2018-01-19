@@ -63,19 +63,16 @@ servergame.update = function(dt)
 
   for i, v in pairs(players) do
     -- move player based on their diff
-    v.p.x = v.p.x + v.d.x*v.speed*dt
-    v.p.y = v.p.y + v.d.y*v.speed*dt
+    v.p = vector.sum(v.p, vector.scale(v.speed*dt, v.d))
     -- apply collision to player
     servergame.collide(v)
     --apply collision between players
-    for i, v in pairs(players) do
-      for j, w in pairs(players) do
-        if i ~= j then -- don't check for collisions with self
-          if collision.check_overlap(players[j], players[i]) then
-            local p1, p2 = collision.circle_vs_circle(players[j], players[i])
-            players[j].p = p1
-            players[i].p = p2
-          end
+    for j, w in pairs(players) do
+      if i ~= j then -- don't check for collisions with self
+        if collision.check_overlap(players[j], players[i]) then
+          local p1, p2 = collision.circle_vs_circle(players[j], players[i])
+          w.p = p1
+          v.p = p2
         end
       end
     end
