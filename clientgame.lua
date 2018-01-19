@@ -65,6 +65,9 @@ clientgame.update = function(dt)
   -- update sock client
   network.peer:update()
 
+  -- get server mouse positions
+  mouse.p.x = love.mouse.getX()-win_width/2
+  mouse.p.y = love.mouse.getY()-win_height/2
   -- get client's direction
   clientgame.input.direction()
   -- send client's difference in position
@@ -135,6 +138,11 @@ clientgame.draw = function()
 end
 
 clientgame.mousepressed = function(x, y, button)
+  if button == 1 then
+    if ball.owner == id then
+      network.peer:send("throw", mouse)
+    end
+  end
 end
 
 clientgame.set_speed = function (i) -- based on player's state, set a speed

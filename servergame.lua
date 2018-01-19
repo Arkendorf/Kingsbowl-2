@@ -19,8 +19,22 @@ local server_hooks = {
     players[index].d = data
     network.host:sendToAllBut(client, "posdif", {index = index, info = data})
   end,
-  -- if a ball is thrown, do this
-  ballthrow = function(data, client)
+  -- if a ball is thrown by client, do this
+  throw = function(data, client)
+    local index = client:getIndex()
+    -- ball is thrown
+    ball.owner = nil
+    -- set initial position
+    ball.p.x = players[index].p.x
+    ball.p.y = players[index].p.y
+    ball.z = 0
+    -- set direction
+    ball.d = vector.norm(data.p)
+    ball.goal = vector.sum(data.p, {x = players[index].p.x, y = players[index].p.y})
+    ball.start = {x = players[index].p.x, y = players[index].p.y}
+    ball.height = math.sqrt((ball.goal.x-ball.p.x)*(ball.goal.x-ball.p.x)+(ball.goal.y-ball.p.y)*(ball.goal.y-ball.p.y))
+
+    network.host:sendToAll("throw", ball)
   end,
   -- if client is attacking, do this
   attack = function(data, client)
@@ -115,7 +129,7 @@ servergame.update = function(dt)
   -- catch the ball
   if ball.z < 16 and not ball.owner then
     for i, v in pairs(players) do
-      if i ~= qb and collision.check_overlap(v, ball) then
+      if i ~= qb and collision.check_overlap(v, ball) then -- makes sure catcher isn't qb to prevent immediate catches after throwing
         ball.owner = i
         network.host:sendToAll("catch", i)
         break
