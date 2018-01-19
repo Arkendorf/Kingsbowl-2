@@ -9,6 +9,10 @@ local clientgame = {}
 -- julians wack movement thing
 clientgame.input = require("keyboard")
 
+-- set up variables
+local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil}
+local down = {scrim = 50, goal = 10, num = 0}
+
 local client_hooks = {
   pos = function(data)
     players[data.index].p = data.info
@@ -16,7 +20,24 @@ local client_hooks = {
   posdif = function(data)
     players[data.index].d = data.info
   end,
-
+  throw = function(data)
+    ball = data
+  end,
+  catch = function(data)
+    ball.owner = data
+  end,
+  newdown = function(data)
+    down = data
+    ball.owner = qb
+  end,
+  ballpos = function(data)
+    ball.p = data
+    -- change ball's height / angle
+    local dist = math.sqrt((ball.start.x-ball.p.x)*(ball.start.x-ball.p.x)+(ball.start.y-ball.p.y)*(ball.start.y-ball.p.y))
+    local z  = (dist*dist-ball.height*dist)/512
+    ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
+    ball.z = z
+  end,
 }
 
 clientgame.init = function()
@@ -100,8 +121,20 @@ clientgame.draw = function()
     love.graphics.print(v.name, math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), math.floor(v.p.y)-math.floor(v.r+font:getHeight()))
   end
 
+  -- draw ball
+  if not ball.owner then
+    love.graphics.setColor(255, 255, 255)
+    -- shadow
+    love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1/(ball.z*0.04-1), 1/(ball.z*0.04-1), 16, 16)
+    -- ball
+    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)+math.floor(ball.z), ball.angle, 1, 1, 16, 16)
+  end
+
   love.graphics.pop()
   love.graphics.setColor(255, 255, 255)
+end
+
+clientgame.mousepressed = function(x, y, button)
 end
 
 clientgame.set_speed = function (i) -- based on player's state, set a speed

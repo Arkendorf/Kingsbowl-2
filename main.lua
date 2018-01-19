@@ -62,7 +62,7 @@ love.mousepressed = function(x, y, button)
   if state.game == true and network.mode == "server" then
     servergame.mousepressed(x, y, button)
   elseif state.game == true and network.mode == "client" then
-    client.mousepressed(x, y, button)
+    clientgame.mousepressed(x, y, button)
   end
   gui:mousepressed(x, y, button)
 end

@@ -9,7 +9,7 @@ local servergame = {}
 -- julians wack movement thing
 servergame.input = require("keyboard")
 -- set up variables
-local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, owner = nil}
+local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil}
 local down = {scrim = 50, goal = 10, num = 0}
 
 local server_hooks = {
@@ -93,17 +93,33 @@ servergame.update = function(dt)
   -- reduce server's velocity
   players[id].d = vector.scale(0.9, players[id].d)
 
-  -- do ball stuff
+  -- move the ball
   if not ball.owner then
     -- move the ball
-    ball.p = vector.sum(ball.p, vector.scale(dt *60, ball.d))
-    -- change ball's height
+    ball.p = vector.sum(ball.p, vector.scale(dt * 60 * 4, ball.d))
+    -- change ball's height / angle
     local dist = math.sqrt((ball.start.x-ball.p.x)*(ball.start.x-ball.p.x)+(ball.start.y-ball.p.y)*(ball.start.y-ball.p.y))
-    ball.z = (dist*dist-ball.height*dist)/256
+    local z  = (dist*dist-ball.height*dist)/512
+    ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
+    ball.z = z
     -- if ball hits the ground, stop
     if ball.z >= 0 then
       ball.d.x = 0
       ball.d.y = 0
+      ball.z = 0
+    end
+
+    -- send new ball position
+    network.host:sendToAll("ballpos", ball.p)
+  end
+  -- catch the ball
+  if ball.z < 16 and not ball.owner then
+    for i, v in pairs(players) do
+      if i ~= qb and collision.check_overlap(v, ball) then
+        ball.owner = i
+        network.host:sendToAll("catch", i)
+        break
+      end
     end
   end
 end
@@ -139,13 +155,14 @@ servergame.draw = function()
   -- draw ball
   if not ball.owner then
     love.graphics.setColor(255, 255, 255)
-    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)+math.floor(ball.z), math.atan2(ball.d.y, ball.d.x), 1, 1, 16, 16)
+    -- shadow
+    love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1/(ball.z*0.04-1), 1/(ball.z*0.04-1), 16, 16)
+    -- ball
+    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)+math.floor(ball.z), ball.angle, 1, 1, 16, 16)
   end
 
   love.graphics.pop()
   love.graphics.setColor(255, 255, 255)
-
-  love.graphics.print(tostring(ball.z))
 end
 
 servergame.mousepressed = function(x, y, button)
@@ -162,6 +179,8 @@ servergame.mousepressed = function(x, y, button)
       ball.goal = vector.sum({x = mouse.p.x, y = mouse.p.y}, {x = players[id].p.x, y = players[id].p.y})
       ball.start = {x = players[id].p.x, y = players[id].p.y}
       ball.height = math.sqrt((ball.goal.x-ball.p.x)*(ball.goal.x-ball.p.x)+(ball.goal.y-ball.p.y)*(ball.goal.y-ball.p.y))
+
+      network.host:sendToAll("throw", ball)
     end
   end
 end
@@ -174,6 +193,7 @@ servergame.newdown = function()
   end
   -- give ball to quaterback
   ball.owner = qb
+  network.host:sendToAll("newdown", down)
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed
