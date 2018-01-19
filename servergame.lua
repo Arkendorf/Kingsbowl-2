@@ -8,6 +8,9 @@ local servergame = {}
 
 -- julians wack movement thing
 servergame.input = require("keyboard")
+-- set up variables
+local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, owner = nil}
+local down = {scrim = 50, goal = 10, num = 0}
 
 local server_hooks = {
   -- if a client sends move data, do this
@@ -48,6 +51,8 @@ servergame.init = function()
     -- set the speed for players
     servergame.set_speed(i)
   end
+  -- set up initial down
+  servergame.newdown()
   -- set game state
   state.game = true
 end
@@ -56,6 +61,9 @@ servergame.update = function(dt)
   -- update sock server
   network.host:update()
 
+  -- get server mouse positions
+  mouse.p.x = love.mouse.getX()-win_width/2
+  mouse.p.y = love.mouse.getY()-win_height/2
   -- get servers direction
   servergame.input.direction()
   -- send players position difference to all
@@ -84,6 +92,20 @@ servergame.update = function(dt)
   end
   -- reduce server's velocity
   players[id].d = vector.scale(0.9, players[id].d)
+
+  -- do ball stuff
+  if not ball.owner then
+    -- move the ball
+    ball.p = vector.sum(ball.p, vector.scale(dt *60, ball.d))
+    -- change ball's height
+    local dist = math.sqrt((ball.start.x-ball.p.x)*(ball.start.x-ball.p.x)+(ball.start.y-ball.p.y)*(ball.start.y-ball.p.y))
+    ball.z = (dist*dist-ball.height*dist)/256
+    -- if ball hits the ground, stop
+    if ball.z >= 0 then
+      ball.d.x = 0
+      ball.d.y = 0
+    end
+  end
 end
 
 servergame.draw = function()
@@ -114,8 +136,44 @@ servergame.draw = function()
     love.graphics.print(v.name, math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), math.floor(v.p.y)-math.floor(v.r+font:getHeight()))
   end
 
+  -- draw ball
+  if not ball.owner then
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)+math.floor(ball.z), math.atan2(ball.d.y, ball.d.x), 1, 1, 16, 16)
+  end
+
   love.graphics.pop()
   love.graphics.setColor(255, 255, 255)
+
+  love.graphics.print(tostring(ball.z))
+end
+
+servergame.mousepressed = function(x, y, button)
+  if button == 1 then
+    if ball.owner == id then
+      -- ball is thrown
+      ball.owner = nil
+      -- set initial position
+      ball.p.x = players[id].p.x
+      ball.p.y = players[id].p.y
+      ball.z = 0
+      -- set direction
+      ball.d = vector.norm({x = mouse.p.x, y = mouse.p.y})
+      ball.goal = vector.sum({x = mouse.p.x, y = mouse.p.y}, {x = players[id].p.x, y = players[id].p.y})
+      ball.start = {x = players[id].p.x, y = players[id].p.y}
+      ball.height = math.sqrt((ball.goal.x-ball.p.x)*(ball.goal.x-ball.p.x)+(ball.goal.y-ball.p.y)*(ball.goal.y-ball.p.y))
+    end
+  end
+end
+
+servergame.newdown = function()
+  -- progress down number
+  down.num = down.num + 1
+  if down.num > 4 then
+    -- swap possession
+  end
+  -- give ball to quaterback
+  ball.owner = qb
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed

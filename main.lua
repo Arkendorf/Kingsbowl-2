@@ -59,13 +59,10 @@ love.quit = function()
 end
 
 love.mousepressed = function(x, y, button)
-  if network.mode == "server" then
-    server.mousepressed(x, y, button)
-  elseif network.mode == "client" then
+  if state.game == true and network.mode == "server" then
+    servergame.mousepressed(x, y, button)
+  elseif state.game == true and network.mode == "client" then
     client.mousepressed(x, y, button)
-  end
-  if state.game == true then
-    game.mousepressed(x, y, button)
   end
   gui:mousepressed(x, y, button)
 end
