@@ -80,20 +80,32 @@ clientgame.update = function(dt)
     -- apply collision to player
     clientgame.collide(v)
     --apply collision between players
-    for i, v in pairs(players) do
-      for j, w in pairs(players) do
-        if i ~= j then
-          if collision.check_overlap(players[j], players[i]) then
-            local p1, p2 = collision.circle_vs_circle(players[j], players[i]) --
-            players[j].p = p1
-            players[i].p = p2
-          end
+    for j, w in pairs(players) do
+      if i ~= j then -- don't check for collisions with self
+        if collision.check_overlap(players[j], players[i]) then
+          local p1, p2 = collision.circle_vs_circle(players[j], players[i])
+          w.p = p1
+          v.p = p2
         end
       end
     end
   end
   -- reduce client's velocity
   players[id].d = vector.scale(0.9, players[id].d)
+  -- predict ball position
+  if not ball.owner then
+    -- move the ball
+    ball.p = vector.sum(ball.p, vector.scale(dt * 60 * 4, ball.d))
+    -- change ball's height / angle
+    local dist = math.sqrt((ball.start.x-ball.p.x)*(ball.start.x-ball.p.x)+(ball.start.y-ball.p.y)*(ball.start.y-ball.p.y))
+    local z  = (dist*dist-ball.height*dist)/512
+    ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
+    ball.z = z
+    -- if ball hits the ground, stop
+    if ball.z >= 0 then
+      ball.owner = qb
+    end
+  end
 end
 
 clientgame.draw = function()
