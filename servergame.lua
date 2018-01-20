@@ -9,8 +9,8 @@ local servergame = {}
 -- julians wack movement thing
 servergame.input = require("keyboard")
 -- set up variables
-local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil}
-local down = {scrim = 50, goal = 10, num = 0}
+local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
+local down = {scrim = field.w/2, goal = field.w/12, num = 0, dead = false, t = 3}
 
 local server_hooks = {
   -- if a client sends move data, do this
@@ -24,6 +24,7 @@ local server_hooks = {
     local index = client:getIndex()
     -- ball is thrown
     ball.owner = nil
+    ball.thrown = true
     -- set initial position
     ball.p.x = players[index].p.x
     ball.p.y = players[index].p.y
@@ -66,7 +67,7 @@ servergame.init = function()
     servergame.set_speed(i)
   end
   -- set up initial down
-  servergame.newdown()
+  servergame.new_down()
   -- set game state
   state.game = true
 end
@@ -106,7 +107,7 @@ servergame.update = function(dt)
   players[id].d = vector.scale(0.9, players[id].d)
 
   -- move the ball
-  if not ball.owner then
+  if ball.thrown then
     -- move the ball
     ball.p = vector.sum(ball.p, vector.scale(dt * 60 * 4, ball.d))
     -- change ball's height / angle
@@ -114,23 +115,33 @@ servergame.update = function(dt)
     local z  = (dist*dist-ball.height*dist)/512
     ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
     ball.z = z
-    -- if ball hits the ground, stop
+    -- if ball hits the ground, reset
     if ball.z >= 0 then
-      ball.owner = qb
+      down.dead = true
+      down.t = 3
+      ball.thrown = false
+      network.host:sendToAll("downdead")
     end
 
     -- send new ball position
     network.host:sendToAll("ballpos", ball.p)
   end
   -- catch the ball
-  if ball.z < 16 and not ball.owner then
+  if ball.z < 16 and ball.thrown then
     for i, v in pairs(players) do
       if i ~= qb and collision.check_overlap(v, ball) then -- makes sure catcher isn't qb to prevent immediate catches after throwing
+        ball.thrown = false
         ball.owner = i
         network.host:sendToAll("catch", i)
         break
       end
     end
+  end
+  -- advance play clock
+  if down.t > 0 then
+    down.t = down.t - dt
+  elseif down.dead == true then
+    servergame.new_down()
   end
 end
 
@@ -139,15 +150,21 @@ servergame.draw = function()
   love.graphics.translate(math.floor(win_width/2-players[id].p.x), math.floor(win_height/2-players[id].p.y))
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(img.field)
+  -- draw line of scrimmage
+  love.graphics.setColor(0, 0, 255)
+  love.graphics.rectangle("fill", down.scrim-2, 0, 4, field.h)
+  -- draw first down line
+  love.graphics.setColor(255, 0, 0)
+  love.graphics.rectangle("fill", down.scrim+down.goal-2, 0, 4, field.h)
 
   for i, v in pairs(players) do
     local char_img = "char"
     if v.dead == true then
       char_img = "char_dead"
-    -- elseif game.ball.baller == i and (i ~= qb or game.ball.thrown == true) then
-    --   char_img = "char_baller"
-    -- elseif game.ball.baller == i then
-    --   char_img = "char_qb"
+    elseif ball.owner and ball.owner == i and i ~= qb then
+      char_img = "char_baller"
+    elseif ball.owner == i and down.dead == false then
+      char_img = "char_qb"
     end
 
     --draw base sprite
@@ -163,7 +180,7 @@ servergame.draw = function()
   end
 
   -- draw ball
-  if not ball.owner then
+  if ball.thrown then
     love.graphics.setColor(255, 255, 255)
     -- shadow
     love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1/(ball.z*0.04-1), 1/(ball.z*0.04-1), 16, 16)
@@ -176,10 +193,11 @@ servergame.draw = function()
 end
 
 servergame.mousepressed = function(x, y, button)
-  if button == 1 then
+  if button == 1 and down.dead == false and down.t <= 0 then
     if ball.owner == id then
       -- ball is thrown
       ball.owner = nil
+      ball.thrown = true
       -- set initial position
       ball.p.x = players[id].p.x
       ball.p.y = players[id].p.y
@@ -195,15 +213,53 @@ servergame.mousepressed = function(x, y, button)
   end
 end
 
-servergame.newdown = function()
+servergame.new_down = function()
   -- progress down number
   down.num = down.num + 1
-  if down.num > 4 then
-    -- swap possession
+  if down.num > 4 or (ball.owner and players[ball.owner].team ~= players[qb].team) then
+    servergame.turnover()
   end
-  -- give ball to quaterback
+  down.dead = false
+  down.t = 3
+  -- reset player positions
+  local team_pos = {0, 0}
+  for i, v in pairs(players) do
+    if v.team == 1 then
+      v.p.x = down.scrim - 32
+    else
+      v.p.x = down.scrim + 32
+    end
+    v.p.y = (field.h-#teams[v.team].members*48)/2+team_pos[v.team]*48
+    v.d.x, v.d.y = 0, 0
+    team_pos[v.team] = team_pos[v.team] + 1
+  end
+  -- give ball to quarterback
   ball.owner = qb
-  network.host:sendToAll("newdown", down)
+  ball.thrown = false
+  network.host:sendToAll("newdown", {down = down, ball = ball, qb = qb})
+end
+
+servergame.turnover = function()
+  -- team that just got the ball
+  local team = 1
+  if players[qb].team == 1 then
+    team = 2
+  end
+  -- set new qb
+  qb = teams[team].members[teams[team].qb]
+  -- determine who the next qb will be
+  teams[team].qb = teams[team].qb + 1
+  -- reset if next qb doesn't exist
+  if teams[team].qb > #teams[team].members then
+    teams[team].qb = 1
+  end
+  -- reset down
+  down.num = 1
+  if team == 1 then
+    down.goal = field.w/12
+  else
+    down.goal = field.w/12
+  end
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed
@@ -222,14 +278,16 @@ servergame.set_speed = function (i) -- based on player's state, set a speed
 end
 
 servergame.collide = function (v)
-  -- -- collide with line of scrimmage if down has hardly started
-  -- if game.down.t <= grace_time and v.team == 1 and v.p.x+v.r > game.down.start then
-  --   v.d.x = 0
-  --   v.p.x = game.down.start-v.r
-  -- elseif game.down.t <= grace_time and v.team == 2 and v.p.x-v.r < game.down.start then
-  --   v.d.x = 0
-  --   v.p.x = game.down.start+v.r
-  -- end
+  -- collide with line of scrimmage if down has hardly started
+  if down.t > 0 and down.dead == false then
+    if v.team == 1 and v.p.x+v.r > down.scrim then
+      v.d.x = 0
+      v.p.x = down.scrim-v.r
+    elseif v.team == 2 and v.p.x-v.r < down.scrim then
+      v.d.x = 0
+      v.p.x = down.scrim+v.r
+    end
+  end
 
   -- collide with field edges
   if v.p.x-v.r < 0 then -- x

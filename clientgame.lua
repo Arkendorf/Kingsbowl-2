@@ -10,8 +10,8 @@ local clientgame = {}
 clientgame.input = require("keyboard")
 
 -- set up variables
-local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil}
-local down = {scrim = 50, goal = 10, num = 0}
+local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
+local down = {scrim = 50, goal = 10, num = 0, dead = false, t = 3}
 
 local client_hooks = {
   pos = function(data)
@@ -27,8 +27,9 @@ local client_hooks = {
     ball.owner = data
   end,
   newdown = function(data)
-    down = data
-    ball.owner = qb
+    down = data.down
+    ball = data.ball
+    qb = data.qb
   end,
   ballpos = function(data)
     ball.p = data
@@ -37,6 +38,11 @@ local client_hooks = {
     local z  = (dist*dist-ball.height*dist)/512
     ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
     ball.z = z
+  end,
+  downdead = function(data)
+    down.dead = true
+    down.t = 3
+    ball.thrown = false
   end,
 }
 
@@ -93,7 +99,7 @@ clientgame.update = function(dt)
   -- reduce client's velocity
   players[id].d = vector.scale(0.9, players[id].d)
   -- predict ball position
-  if not ball.owner then
+  if ball.thrown then
     -- move the ball
     ball.p = vector.sum(ball.p, vector.scale(dt * 60 * 4, ball.d))
     -- change ball's height / angle
@@ -103,8 +109,12 @@ clientgame.update = function(dt)
     ball.z = z
     -- if ball hits the ground, stop
     if ball.z >= 0 then
-      ball.owner = qb
+      ball.thrown = false
     end
+  end
+  -- advance play clock
+  if down.t > 0 then
+    down.t = down.t - dt
   end
 end
 
@@ -113,15 +123,21 @@ clientgame.draw = function()
   love.graphics.translate(math.floor(win_width/2-players[id].p.x), math.floor(win_height/2-players[id].p.y))
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(img.field)
+  -- draw line of scrimmage
+  love.graphics.setColor(0, 0, 255)
+  love.graphics.rectangle("fill", down.scrim-2, 0, 4, field.h)
+  -- draw first down line
+  love.graphics.setColor(255, 0, 0)
+  love.graphics.rectangle("fill", down.scrim+down.goal-2, 0, 4, field.h)
 
   for i, v in pairs(players) do
     local char_img = "char"
     if v.dead == true then
       char_img = "char_dead"
-    -- elseif game.ball.baller == i and (i ~= qb or game.ball.thrown == true) then
-    --   char_img = "char_baller"
-    -- elseif game.ball.baller == i then
-    --   char_img = "char_qb"
+    elseif ball.owner and ball.owner == i and i ~= qb then
+      char_img = "char_baller"
+    elseif ball.owner == i and down.dead == false then
+      char_img = "char_qb"
     end
 
     --draw base sprite
@@ -137,7 +153,7 @@ clientgame.draw = function()
   end
 
   -- draw ball
-  if not ball.owner then
+  if ball.thrown then
     love.graphics.setColor(255, 255, 255)
     -- shadow
     love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1/(ball.z*0.04-1), 1/(ball.z*0.04-1), 16, 16)
@@ -173,14 +189,16 @@ clientgame.set_speed = function (i) -- based on player's state, set a speed
 end
 
 clientgame.collide = function (v)
-  -- -- collide with line of scrimmage if down has hardly started
-  -- if game.down.t <= grace_time and v.team == 1 and v.p.x+v.r > game.down.start then
-  --   v.d.x = 0
-  --   v.p.x = game.down.start-v.r
-  -- elseif game.down.t <= grace_time and v.team == 2 and v.p.x-v.r < game.down.start then
-  --   v.d.x = 0
-  --   v.p.x = game.down.start+v.r
-  -- end
+  -- collide with line of scrimmage if down has hardly started
+  if down.t > 0 and down.dead == false then
+    if v.team == 1 and v.p.x+v.r > down.scrim then
+      v.d.x = 0
+      v.p.x = down.scrim-v.r
+    elseif v.team == 2 and v.p.x-v.r < down.scrim then
+      v.d.x = 0
+      v.p.x = down.scrim+v.r
+    end
+  end
 
   -- collide with field edges
   if v.p.x-v.r < 0 then -- x
