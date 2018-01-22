@@ -48,6 +48,7 @@ local server_hooks = {
     network.host:sendToAll("shieldpos", {index = index, info = data})
   end,
   disconnect = function(data, client)
+    ball.owner = 0
     quit = true
   end
 }
@@ -350,6 +351,7 @@ servergame.new_down = function()
   -- reset player positions
   local team_pos = {0, 0}
   for i, v in pairs(players) do
+    servergame.set_speed(i)
     if v.team == 1 then
       v.p.x = down.scrim - 32
     else
