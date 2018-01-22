@@ -63,6 +63,7 @@ servergame.init = function()
     v.r = 16
     v.shield = {active = false, d = {x = 0, y = 0}, t = 0}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
+    v.dead = false
     -- set the speed for players
     servergame.set_speed(i)
   end
@@ -102,14 +103,44 @@ servergame.update = function(dt)
     end
     -- send player's position to all
     network.host:sendToAll("pos", {info = v.p, index = i})
-    -- update player's attack (if at all)
+    -- do combat stuff
     if v.sword.active then
+      --update player's attack (if at all)
       v.sword.t = v.sword.t - dt
       if v.sword.t <= 0 then
         v.sword.active = false
         -- reset speed
         servergame.set_speed(i)
         network.host:sendToAll("sword", {index = i, active = false, mouse = {x = 0, y = 0}})
+      end
+
+      -- check for sword attacks
+      local strike = true
+      local sword_pos = vector.sum(v.p, v.sword.d)
+       -- check if sword hits shield
+      for j, w in pairs(players) do
+        if j ~= i and w.dead == false and w.shield.active == true then
+          shield_pos = vector.sum(w.p, w.shield.d)
+          if vector.mag_sq(vector.sub(v.p, w.p)) > vector.mag_sq(vector.sub(v.p, shield_pos)) and collision.check_overlap({r = shield.r, p = shield_pos}, {r = sword.r, p = sword_pos}) then -- prevents blocks through body
+            strike = false
+          end
+        end
+      end
+       -- if sword didn't hit shield, check if it hit people
+      if strike == true then
+        for j, w in pairs(players) do
+          if j ~= i and w.team ~= v.team and w.dead == false and collision.check_overlap({r = sword.r, p = sword_pos}, w) then
+            -- kill player
+            servergame.kill(j)
+            network.host:sendToAll("dead", j)
+            -- if player with ball is tackled
+            if j == ball.owner then
+              down.dead = true
+              down.t = grace_time
+              network.host:sendToAll("downdead")
+            end
+          end
+        end
       end
     end
   end
@@ -128,7 +159,7 @@ servergame.update = function(dt)
     -- if ball hits the ground, reset
     if ball.z >= 0 then
       down.dead = true
-      down.t = 3
+      down.t = grace_time
       ball.thrown = false
       network.host:sendToAll("downdead")
     end
@@ -139,7 +170,7 @@ servergame.update = function(dt)
   -- catch the ball
   if ball.z < 16 and ball.thrown then
     for i, v in pairs(players) do
-      if i ~= qb and collision.check_overlap(v, ball) then -- makes sure catcher isn't qb to prevent immediate catches after throwing
+      if i ~= qb and v.dead == false and collision.check_overlap(v, ball) then -- makes sure catcher isn't qb to prevent immediate catches after throwing, and not dead
         ball.thrown = false
         ball.owner = i
         network.host:sendToAll("catch", i)
@@ -214,7 +245,7 @@ servergame.draw = function()
   if ball.thrown then
     love.graphics.setColor(255, 255, 255)
     -- shadow
-    love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1/(ball.z*0.04-1), 1/(ball.z*0.04-1), 16, 16)
+    love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
     -- ball
     love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)+math.floor(ball.z), ball.angle, 1, 1, 16, 16)
   end
@@ -224,7 +255,7 @@ servergame.draw = function()
 end
 
 servergame.mousepressed = function(x, y, button)
-  if button == 1 and down.dead == false and down.t <= 0 then
+  if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then -- qb who still has ball
       servergame.throw(id, mouse)
     elseif ball.owner ~= id and players[id].team == players[qb].team then -- team with ball, but does not have ball
@@ -238,7 +269,7 @@ servergame.mousepressed = function(x, y, button)
 end
 
 servergame.mousereleased = function(x, y, button)
-  if button == 1 and down.dead == false and down.t <= 0 then
+  if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
     if players[id].shield.active == true then
       players[id].shield.active = false
       network.host:sendToAll("shieldstate", {index = id, info = false})
@@ -270,7 +301,7 @@ servergame.new_down = function()
     servergame.turnover()
   end
   down.dead = false
-  down.t = 3
+  down.t = grace_time
   -- reset player positions
   local team_pos = {0, 0}
   for i, v in pairs(players) do
@@ -282,11 +313,15 @@ servergame.new_down = function()
     v.p.y = (field.h-#teams[v.team].members*48)/2+team_pos[v.team]*48
     v.d.x, v.d.y = 0, 0
     team_pos[v.team] = team_pos[v.team] + 1
+    -- reset players
+    v.sword.active = false
+    v.shield.active = false
+    v.dead = false
   end
   -- give ball to quarterback
   ball.owner = qb
   ball.thrown = false
-  network.host:sendToAll("newdown", {down = down, ball = ball, qb = qb})
+  network.host:sendToAll("newdown", {down = down, qb = qb})
 end
 
 servergame.turnover = function()
@@ -310,6 +345,12 @@ servergame.turnover = function()
   else
     down.goal = field.w/12
   end
+end
+
+servergame.kill = function(i)
+  players[i].dead = true
+  players[i].sword.active = false
+  players[i].shield.active = false
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed

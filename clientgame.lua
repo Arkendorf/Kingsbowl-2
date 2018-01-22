@@ -28,8 +28,16 @@ local client_hooks = {
   end,
   newdown = function(data)
     down = data.down
-    ball = data.ball
     qb = data.qb
+    -- give ball to quarterback
+    ball.owner = qb
+    ball.thrown = false
+    -- reset players
+    for i, v in pairs(players) do
+      v.sword.active = false
+      v.shield.active = false
+      v.dead = false
+    end
   end,
   ballpos = function(data)
     ball.p = data
@@ -57,6 +65,9 @@ local client_hooks = {
   shieldpos = function(data)
     players[data.index].shield.d = data.info
   end,
+  dead = function(data)
+    players[data].dead = true
+  end
 }
 
 clientgame.init = function()
@@ -73,6 +84,7 @@ clientgame.init = function()
     v.r = 16
     v.shield = {active = false, d = {x = 0, y = 0}, t = 0}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
+    v.dead = false
     -- set the speed for players
     clientgame.set_speed(i)
   end
@@ -191,7 +203,7 @@ clientgame.draw = function()
   if ball.thrown then
     love.graphics.setColor(255, 255, 255)
     -- shadow
-    love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1/(ball.z*0.04-1), 1/(ball.z*0.04-1), 16, 16)
+    love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
     -- ball
     love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)+math.floor(ball.z), ball.angle, 1, 1, 16, 16)
   end
@@ -201,7 +213,7 @@ clientgame.draw = function()
 end
 
 clientgame.mousepressed = function(x, y, button)
-  if button == 1 and down.dead == false and down.t <= 0 then
+  if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then
       network.peer:send("throw", mouse)
     elseif ball.owner ~= id and players[id].team == players[qb].team then
@@ -215,7 +227,7 @@ clientgame.mousepressed = function(x, y, button)
 end
 
 clientgame.mousereleased = function(x, y, button)
-  if button == 1 and down.dead == false and down.t <= 0 then
+  if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
     if players[id].shield.active == true then
       players[id].shield.active = false
       network.peer:send("shieldstate", false)
