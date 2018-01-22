@@ -1,5 +1,7 @@
 local graphics = {}
 
+love.graphics.setDefaultFilter("nearest", "nearest")
+
 graphics.init = function()
   local img = {}
   local files = love.filesystem.getDirectoryItems("images")

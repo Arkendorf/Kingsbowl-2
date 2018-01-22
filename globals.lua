@@ -9,18 +9,19 @@ win_width, win_height = love.graphics.getDimensions( )
 sword = {dist = 26, r = 10, t = .5}
 shield = {dist = 16, r = 12}
 speed_table = {
-  with_ball = 20,
-  offense = 34,
-  defense = 28,
-  shield = 14,
-  sword = 4,
+  with_ball = 10,
+  offense = 16,
+  defense = 14,
+  shield = 8,
+  sword = 2,
 }
 grace_time = 3
 field = {w = 3600, h = 1600}
 mouse = {x = 0, y = 0}
 score = {0, 0}
-num_suffix = {"st", "nd", "rd", "th"}
+-- num_suffix = {"st", "nd", "rd", "th"}
 team_info = {{name = "Team 1", color = {255, 0, 0}}, {name = "Team 2", color = {0, 0, 255}}}
+grace_time = 3
 
 local graphics = require "graphics"
 img, quad = graphics.init()

@@ -21,7 +21,7 @@ local server_hooks = {
   -- if a player joins, do this:
   playerinfo = function(data, client)
     local index = client:getIndex()
-    players[index] = {name = data.name, team = 1}
+    players[index] = {name = data.name, team = 2}
     network.host:sendToPeer(network.host:getPeerByIndex(index), "allinfo", {id = index, players = players, team_info = team_info})
     network.host:sendToAllBut(network.host:getPeerByIndex(index),"newplayer", {info = players[index], index = index})
     -- update player buttons
@@ -49,7 +49,7 @@ servermenu.init = function()
 
   -- add server to player list, with an ID of 0
   id = 0
-  players[0] = {name = username[1], team = 2}
+  players[0] = {name = username[1], team = 1}
 
   -- set the base gui for the server menu
   state.gui = gui.new(menus[2])

@@ -1,6 +1,4 @@
 require "globals"
-local server = require "server"
-local client = require "client"
 local servermenu = require "servermenu"
 local servergame = require "servergame"
 local clientmenu = require "clientmenu"
@@ -51,29 +49,26 @@ love.quit = function()
   elseif state.game == false and network.mode == "client" then
     clientmenu.quit()
   elseif state.game == true and network.mode == "server" then
-    server.quit()
+    servergame.quit()
   elseif state.game == true and network.mode == "client" then
-    client.quit()
+    clientgame.quit()
   end
 end
 
 love.mousepressed = function(x, y, button)
-  if network.mode == "server" then
-    server.mousepressed(x, y, button)
-  elseif network.mode == "client" then
-    client.mousepressed(x, y, button)
-  end
-  if state.game == true then
-    --game.mousepressed(x, y, button)
+  if state.game == true and network.mode == "server" then
+    servergame.mousepressed(x, y, button)
+  elseif state.game == true and network.mode == "client" then
+    clientgame.mousepressed(x, y, button)
   end
   gui:mousepressed(x, y, button)
 end
 
 love.mousereleased = function(x, y, button)
   if network.mode == "server" then
-    server.mousereleased(x, y, button)
+    servergame.mousereleased(x, y, button)
   elseif network.mode == "client" then
-    client.mousereleased(x, y, button)
+    clientgame.mousereleased(x, y, button)
   end
 end
 
