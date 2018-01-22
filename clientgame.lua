@@ -35,7 +35,7 @@ clientgame.init = function()
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
     v.r = 16
-    v.shield = {active = false, d = {x = 0, y = 0}, t = 0}
+    v.shield = {active = true, d = {x = 0, y = 0}, t = 0}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
     -- set the speed for players
     clientgame.set_speed(i)
@@ -63,6 +63,14 @@ clientgame.update = function(dt)
     for j, w in pairs(players) do
       if i ~= j then
         if collision.check_overlap(players[j], players[i]) then
+          if players[i].shield.active then
+            players[j].sticky = true
+            print(1)
+          end
+          if players[j].shield.active then
+            print(1)
+            players[i].sticky = true
+          end
           local p1, p2 = collision.circle_vs_circle(players[j], players[i]) --
           w.p = p1
           v.p = p2

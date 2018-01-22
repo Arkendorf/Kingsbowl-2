@@ -3,7 +3,6 @@ local gui = require "gui"
 local game = require "game"
 local vector = require "vector"
 local network = require "network"
-local client_hooks = require "client_hooks"
 require "globals"
 local client = {}
 
@@ -18,10 +17,6 @@ client.init = function(t)
   -- initial variables
 
   -- important functions
-
-  for k,v in pairs(client_hooks) do
-    network.peer:on(k, v)
-  end
 end
 
 client.update = function(dt)

@@ -1,21 +1,13 @@
 local gui = require "gui"
 local state = require "state"
-local game = require "game"
 local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
-local server_hooks = require "server_hooks"
 require "globals"
 local server = {}
 local delete_this_later = false
 
-server.init = function()
-  for k,v in pairs(server_hooks) do
-    network.host:on(k, v)
-  end
-end
-
-server.update = function(dt)
+server.update___= function(dt)
   for i, v in pairs(players) do
     network.host:sendToAll("coords", {info = v.p, index = i})
   end
@@ -154,7 +146,7 @@ end
 server.mousereleased = function (x, y, button)
   if button == 1 and state.game == true and players[id].shield.active == true then
     players[id].shield = {active = false, t = 0}
-    players[id].speed = speed_table.offense
+    --players[id].speed = speed_table.offense
   network.host:sendToAll("shield", {info = {active = players[id].shield.act}, index = id})
   end
 end

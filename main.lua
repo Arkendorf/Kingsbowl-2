@@ -7,7 +7,6 @@ local clientmenu = require "clientmenu"
 local clientgame = require "clientgame"
 local gui = require "gui"
 local menus = require "menus"
-local game = require "game"
 local state = require "state"
 
 love.load = function()
@@ -65,7 +64,7 @@ love.mousepressed = function(x, y, button)
     client.mousepressed(x, y, button)
   end
   if state.game == true then
-    game.mousepressed(x, y, button)
+    --game.mousepressed(x, y, button)
   end
   gui:mousepressed(x, y, button)
 end
