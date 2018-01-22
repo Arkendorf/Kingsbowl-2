@@ -22,29 +22,29 @@ local server_hooks = {
   -- if a ball is thrown by client, do this
   throw = function(data, client)
     local index = client:getIndex()
-    -- ball is thrown
-    ball.owner = nil
-    ball.thrown = true
-    -- set initial position
-    ball.p.x = players[index].p.x
-    ball.p.y = players[index].p.y
-    ball.z = 0
-    -- set direction
-    ball.d = vector.norm(data.p)
-    ball.goal = vector.sum(data.p, {x = players[index].p.x, y = players[index].p.y})
-    ball.start = {x = players[index].p.x, y = players[index].p.y}
-    ball.height = math.sqrt((ball.goal.x-ball.p.x)*(ball.goal.x-ball.p.x)+(ball.goal.y-ball.p.y)*(ball.goal.y-ball.p.y))
-
-    network.host:sendToAll("throw", ball)
+    servergame.throw(index, data)
   end,
   -- if client is attacking, do this
-  attack = function(data, client)
+  sword = function(data, client)
+    local index = client:getIndex()
+    players[index].sword = {active = true, d = vector.scale(sword.dist, vector.norm(data)), t = sword.t}
+    network.host:sendToAll("sword", {index = index, active = true, mouse = data})
+    -- adjust speed
+    servergame.set_speed(index)
   end,
-  -- if client puts up shield, do this
-  startdefend = function(data, client)
+  -- if client dons or doffs shield, do this
+  shieldstate = function(data, client)
+    local index = client:getIndex()
+    players[index].shield.active = data
+    network.host:sendToAll("shieldstate", {index = index, info = data})
+    -- adjust speed
+    servergame.set_speed(index)
   end,
-  -- if clients drops shield, do this
-  stopdefend = function (data, client)
+  -- if client moves shield, do this
+  shieldpos = function(data, client)
+    local index = client:getIndex()
+    players[index].shield.d = data
+    network.host:sendToAll("shieldpos", {index = index, info = data})
   end,
 }
 
@@ -77,8 +77,8 @@ servergame.update = function(dt)
   network.host:update()
 
   -- get server mouse positions
-  mouse.p.x = love.mouse.getX()-win_width/2
-  mouse.p.y = love.mouse.getY()-win_height/2
+  mouse.x = love.mouse.getX()-win_width/2
+  mouse.y = love.mouse.getY()-win_height/2
   -- get servers direction
   servergame.input.direction()
   -- send players position difference to all
@@ -102,6 +102,16 @@ servergame.update = function(dt)
     end
     -- send player's position to all
     network.host:sendToAll("pos", {info = v.p, index = i})
+    -- update player's attack (if at all)
+    if v.sword.active then
+      v.sword.t = v.sword.t - dt
+      if v.sword.t <= 0 then
+        v.sword.active = false
+        -- reset speed
+        servergame.set_speed(i)
+        network.host:sendToAll("sword", {index = i, active = false, mouse = {x = 0, y = 0}})
+      end
+    end
   end
   -- reduce server's velocity
   players[id].d = vector.scale(0.9, players[id].d)
@@ -136,6 +146,11 @@ servergame.update = function(dt)
         break
       end
     end
+  end
+  -- adjust shield pos
+  if players[id].shield.active == true then
+    players[id].shield.d = vector.scale(shield.dist, vector.norm(mouse))
+    network.host:sendToAll("shieldpos", {info = players[id].shield.d, index = id})
   end
   -- advance play clock
   if down.t > 0 then
@@ -175,6 +190,22 @@ servergame.draw = function()
     love.graphics.setColor(team_info[v.team].color)
     love.graphics.draw(img[char_img.."_overlay"], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 32, 32)
 
+     -- draw shield
+    if v.shield.active == true then
+      love.graphics.setColor(255,  255, 255)
+      love.graphics.draw(img.shield, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
+      love.graphics.setColor(team_info[v.team].color)
+      love.graphics.draw(img.shield_overlay, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
+    end
+
+     -- draw sword
+    if v.sword.active == true then
+      love.graphics.setColor(255,  255, 255)
+      love.graphics.draw(img.sword, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
+      love.graphics.setColor(team_info[v.team].color)
+      love.graphics.draw(img.sword_overlay, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
+    end
+
     --draw username
     love.graphics.print(v.name, math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), math.floor(v.p.y)-math.floor(v.r+font:getHeight()))
   end
@@ -194,23 +225,42 @@ end
 
 servergame.mousepressed = function(x, y, button)
   if button == 1 and down.dead == false and down.t <= 0 then
-    if ball.owner == id then
-      -- ball is thrown
-      ball.owner = nil
-      ball.thrown = true
-      -- set initial position
-      ball.p.x = players[id].p.x
-      ball.p.y = players[id].p.y
-      ball.z = 0
-      -- set direction
-      ball.d = vector.norm({x = mouse.p.x, y = mouse.p.y})
-      ball.goal = vector.sum({x = mouse.p.x, y = mouse.p.y}, {x = players[id].p.x, y = players[id].p.y})
-      ball.start = {x = players[id].p.x, y = players[id].p.y}
-      ball.height = math.sqrt((ball.goal.x-ball.p.x)*(ball.goal.x-ball.p.x)+(ball.goal.y-ball.p.y)*(ball.goal.y-ball.p.y))
-
-      network.host:sendToAll("throw", ball)
+    if ball.owner == id and qb == id then -- qb who still has ball
+      servergame.throw(id, mouse)
+    elseif ball.owner ~= id and players[id].team == players[qb].team then -- team with ball, but does not have ball
+      players[id].shield.active = true
+      network.host:sendToAll("shieldstate", {index = id, info = true})
+    elseif ball.owner ~= id and players[id].team ~= players[qb].team then -- team without ball
+      players[id].sword = {active = true, d = vector.scale(sword.dist, vector.norm(mouse)), t = sword.t}
+      network.host:sendToAll("sword", {index = id, active = true, mouse = mouse})
     end
   end
+end
+
+servergame.mousereleased = function(x, y, button)
+  if button == 1 and down.dead == false and down.t <= 0 then
+    if players[id].shield.active == true then
+      players[id].shield.active = false
+      network.host:sendToAll("shieldstate", {index = id, info = false})
+    end
+  end
+end
+
+servergame.throw = function(i, mouse)
+  -- ball is thrown
+  ball.owner = nil
+  ball.thrown = true
+  -- set initial position
+  ball.p.x = players[i].p.x
+  ball.p.y = players[i].p.y
+  ball.z = 0
+  -- set direction
+  ball.d = vector.norm({x = mouse.x, y = mouse.y})
+  ball.goal = vector.sum({x = mouse.x, y = mouse.y}, {x = players[i].p.x, y = players[i].p.y})
+  ball.start = {x = players[i].p.x, y = players[i].p.y}
+  ball.height = math.sqrt((ball.goal.x-ball.p.x)*(ball.goal.x-ball.p.x)+(ball.goal.y-ball.p.y)*(ball.goal.y-ball.p.y))
+
+  network.host:sendToAll("throw", ball)
 end
 
 servergame.new_down = function()
@@ -263,18 +313,17 @@ servergame.turnover = function()
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed
-  -- if i == game.ball.baller then
-  --   players[i].speed = speed_table.with_ball
-  -- elseif players[i].shield.active == true then
-  --   players[i].speed = speed_table.shield
-  -- elseif players[i].sword.active == true then
-  --   players[i].speed = speed_table.sword
-  -- elseif players[i].team == players[qb].team then
-  --   players[i].speed = speed_table.offense
-  -- else
-  --   players[i].speed = speed_table.defense
-  -- end
-  players[i].speed = 16
+  if i == ball.owner then
+    players[i].speed = speed_table.with_ball
+  elseif players[i].shield.active == true then
+    players[i].speed = speed_table.shield
+  elseif players[i].sword.active == true then
+    players[i].speed = speed_table.sword
+  elseif players[i].team == players[qb].team then
+    players[i].speed = speed_table.offense
+  else
+    players[i].speed = speed_table.defense
+  end
 end
 
 servergame.collide = function (v)

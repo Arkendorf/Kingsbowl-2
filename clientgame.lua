@@ -44,6 +44,19 @@ local client_hooks = {
     down.t = 3
     ball.thrown = false
   end,
+  sword = function(data)
+    players[data.index].sword = {active = data.active, d = vector.scale(sword.dist, vector.norm(data.mouse)), t = sword.t}
+    -- adjust speed
+    clientgame.set_speed(data.index)
+  end,
+  shieldstate = function(data)
+    players[data.index].shield.active = data.info
+    -- adjust speed
+    clientgame.set_speed(data.index)
+  end,
+  shieldpos = function(data)
+    players[data.index].shield.d = data.info
+  end,
 }
 
 clientgame.init = function()
@@ -72,8 +85,8 @@ clientgame.update = function(dt)
   network.peer:update()
 
   -- get server mouse positions
-  mouse.p.x = love.mouse.getX()-win_width/2
-  mouse.p.y = love.mouse.getY()-win_height/2
+  mouse.x = love.mouse.getX()-win_width/2
+  mouse.y = love.mouse.getY()-win_height/2
   -- get client's direction
   clientgame.input.direction()
   -- send client's difference in position
@@ -112,6 +125,11 @@ clientgame.update = function(dt)
       ball.thrown = false
     end
   end
+  -- adjust shield pos
+  if players[id].shield.active == true then
+    players[id].shield.d = vector.scale(shield.dist, vector.norm(mouse))
+    network.peer:send("shieldpos", players[id].shield.d)
+  end
   -- advance play clock
   if down.t > 0 then
     down.t = down.t - dt
@@ -148,6 +166,23 @@ clientgame.draw = function()
     love.graphics.setColor(team_info[v.team].color)
     love.graphics.draw(img[char_img.."_overlay"], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 32, 32)
 
+    -- draw shield
+   if v.shield.active == true then
+     love.graphics.setColor(255,  255, 255)
+     love.graphics.draw(img.shield, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
+     love.graphics.setColor(team_info[v.team].color)
+     love.graphics.draw(img.shield_overlay, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
+   end
+
+   -- draw sword
+  if v.sword.active == true then
+    love.graphics.setColor(255,  255, 255)
+    love.graphics.draw(img.sword, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
+    love.graphics.setColor(team_info[v.team].color)
+    love.graphics.draw(img.sword_overlay, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
+  end
+
+
     --draw username
     love.graphics.print(v.name, math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), math.floor(v.p.y)-math.floor(v.r+font:getHeight()))
   end
@@ -166,26 +201,40 @@ clientgame.draw = function()
 end
 
 clientgame.mousepressed = function(x, y, button)
-  if button == 1 then
-    if ball.owner == id then
+  if button == 1 and down.dead == false and down.t <= 0 then
+    if ball.owner == id and qb == id then
       network.peer:send("throw", mouse)
+    elseif ball.owner ~= id and players[id].team == players[qb].team then
+      players[id].shield.active = true
+      network.peer:send("shieldstate", true)
+    elseif ball.owner ~= id and players[id].team ~= players[qb].team then
+      players[id].sword = {active = true, d = vector.scale(sword.dist, vector.norm(mouse)), t = sword.t}
+      network.peer:send("sword", mouse)
+    end
+  end
+end
+
+clientgame.mousereleased = function(x, y, button)
+  if button == 1 and down.dead == false and down.t <= 0 then
+    if players[id].shield.active == true then
+      players[id].shield.active = false
+      network.peer:send("shieldstate", false)
     end
   end
 end
 
 clientgame.set_speed = function (i) -- based on player's state, set a speed
-  -- if i == game.ball.baller then
-  --   players[i].speed = speed_table.with_ball
-  -- elseif players[i].shield.active == true then
-  --   players[i].speed = speed_table.shield
-  -- elseif players[i].sword.active == true then
-  --   players[i].speed = speed_table.sword
-  -- elseif players[i].team == players[qb].team then
-  --   players[i].speed = speed_table.offense
-  -- else
-  --   players[i].speed = speed_table.defense
-  -- end
-  players[i].speed = 16
+  if i == ball.owner then
+    players[i].speed = speed_table.with_ball
+  elseif players[i].shield.active == true then
+    players[i].speed = speed_table.shield
+  elseif players[i].sword.active == true then
+    players[i].speed = speed_table.sword
+  elseif players[i].team == players[qb].team then
+    players[i].speed = speed_table.offense
+  else
+    players[i].speed = speed_table.defense
+  end
 end
 
 clientgame.collide = function (v)

@@ -69,9 +69,9 @@ end
 
 love.mousereleased = function(x, y, button)
   if network.mode == "server" then
-    server.mousereleased(x, y, button)
+    servergame.mousereleased(x, y, button)
   elseif network.mode == "client" then
-    client.mousereleased(x, y, button)
+    clientgame.mousereleased(x, y, button)
   end
 end
 
