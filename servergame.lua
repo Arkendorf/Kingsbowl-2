@@ -65,7 +65,7 @@ servergame.init = function()
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
     v.r = 16
-    v.shield = {active = false, d = {x = 0, y = 0}, t = 0}
+    v.shield = {active = true, d = {x = 0, y = 0}, t = 0}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
     v.dead = false
     -- set the speed for players
@@ -91,8 +91,8 @@ servergame.update = function(dt)
 
   for i, v in pairs(players) do
     -- move player based on their diff
-    v.p.x = v.p.x + v.d.x*v.speed*dt
-    v.p.y = v.p.y + v.d.y*v.speed*dt
+    v.p = vector.sum(v.p, vector.scale(v.speed*dt*(v.sticky and 0.5 or 1), v.d))
+    print(v.sticky)
     -- apply collision to player
     servergame.collide(v)
     --apply collision between players

@@ -5,7 +5,6 @@ local clientmenu = require "clientmenu"
 local clientgame = require "clientgame"
 local gui = require "gui"
 local menus = require "menus"
-local game = require "game"
 local state = require "state"
 
 love.load = function()
