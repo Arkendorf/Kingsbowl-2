@@ -52,9 +52,9 @@ love.quit = function()
   elseif state.game == false and network.mode == "client" then
     clientmenu.quit()
   elseif state.game == true and network.mode == "server" then
-    server.quit()
+    servergame.quit()
   elseif state.game == true and network.mode == "client" then
-    client.quit()
+    clientgame.quit()
   end
 end
 

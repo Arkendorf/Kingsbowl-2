@@ -11,7 +11,7 @@ clientgame.input = require("keyboard")
 
 -- set up variables
 local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
-local down = {scrim = 50, goal = 10, num = 0, dead = false, t = 3}
+local down = {scrim = 0, goal = 0, num = 0, dead = false, t = 3}
 
 local client_hooks = {
   pos = function(data)
@@ -67,7 +67,16 @@ local client_hooks = {
   end,
   dead = function(data)
     players[data].dead = true
-  end
+  end,
+  touchdown = function(data)
+    score[data] = score[data] + 7
+    down.dead = true
+    down.t = 3
+    ball.thrown = false
+  end,
+  disconnect = function(data)
+    clientgame.back_to_main()
+  end,
 }
 
 clientgame.init = function()
@@ -158,7 +167,7 @@ clientgame.draw = function()
   love.graphics.rectangle("fill", down.scrim-2, 0, 4, field.h)
   -- draw first down line
   love.graphics.setColor(255, 0, 0)
-  love.graphics.rectangle("fill", down.scrim+down.goal-2, 0, 4, field.h)
+  love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
 
   for i, v in pairs(players) do
     local char_img = "char"
@@ -233,6 +242,16 @@ clientgame.mousereleased = function(x, y, button)
       network.peer:send("shieldstate", false)
     end
   end
+end
+
+clientgame.quit = function()
+  network.peer:disconnectNow()
+end
+
+clientgame.back_to_main = function()
+  clientgame.quit()
+  network.mode = nil
+  state.gui = gui.new(menus[1])
 end
 
 clientgame.set_speed = function (i) -- based on player's state, set a speed

@@ -10,7 +10,8 @@ local servergame = {}
 servergame.input = require("keyboard")
 -- set up variables
 local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
-local down = {scrim = field.w/2, goal = field.w/12, num = 0, dead = false, t = 3}
+local down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
+local quit = false
 
 local server_hooks = {
   -- if a client sends move data, do this
@@ -46,6 +47,9 @@ local server_hooks = {
     players[index].shield.d = data
     network.host:sendToAll("shieldpos", {index = index, info = data})
   end,
+  disconnect = function(data, client)
+    quit = true
+  end
 }
 
 servergame.init = function()
@@ -136,6 +140,7 @@ servergame.update = function(dt)
             -- if player with ball is tackled
             if j == ball.owner then
               down.dead = true
+              down.new_scrim = w.p.x
               down.t = grace_time
               network.host:sendToAll("downdead")
             end
@@ -183,11 +188,26 @@ servergame.update = function(dt)
     players[id].shield.d = vector.scale(shield.dist, vector.norm(mouse))
     network.host:sendToAll("shieldpos", {info = players[id].shield.d, index = id})
   end
+  if down.dead == false and ball.owner ~= nil then
+    -- find team to check
+    local team = players[ball.owner].team
+    if (team == 1 and players[ball.owner].p.x > field.w/12*11) or (team == 2 and players[ball.owner].p.x < field.w/12) then
+      score[team] = score[team] + 7
+      down.dead = true
+      down.new_scrim = field.w/12*7
+      down.t = grace_time
+      network.host:sendToAll("touchdown", team)
+    end
+  end
   -- advance play clock
   if down.t > 0 then
     down.t = down.t - dt
   elseif down.dead == true then
     servergame.new_down()
+  end
+  -- quit if necessary
+  if quit then
+    servergame.back_to_main()
   end
 end
 
@@ -201,7 +221,7 @@ servergame.draw = function()
   love.graphics.rectangle("fill", down.scrim-2, 0, 4, field.h)
   -- draw first down line
   love.graphics.setColor(255, 0, 0)
-  love.graphics.rectangle("fill", down.scrim+down.goal-2, 0, 4, field.h)
+  love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
 
   for i, v in pairs(players) do
     local char_img = "char"
@@ -277,6 +297,19 @@ servergame.mousereleased = function(x, y, button)
   end
 end
 
+servergame.quit = function()
+  network.host:sendToAll("disconnect")
+  network.host:update()
+  network.host:destroy()
+end
+
+servergame.back_to_main = function()
+  state.game = false
+  network.mode = nil
+  state.gui = gui.new(menus[1])
+  servergame.quit()
+end
+
 servergame.throw = function(i, mouse)
   -- ball is thrown
   ball.owner = nil
@@ -297,9 +330,21 @@ end
 servergame.new_down = function()
   -- progress down number
   down.num = down.num + 1
+  -- adjust line of scrimmage / goal
+  down.scrim = down.new_scrim
+  if players[qb].team == 1 and down.scrim >= down.goal then
+    down.goal = down.scrim + field.w/12
+    down.num = 1
+  elseif players[qb].team == 2 and down.scrim <= down.goal then
+    down.goal = down.scrim - field.w/12
+    down.num = 1
+  end
+
+  -- check if there is a turnover
   if down.num > 4 or (ball.owner and players[ball.owner].team ~= players[qb].team) then
     servergame.turnover()
   end
+
   down.dead = false
   down.t = grace_time
   -- reset player positions
@@ -330,6 +375,7 @@ servergame.turnover = function()
   if players[qb].team == 1 then
     team = 2
   end
+
   -- set new qb
   qb = teams[team].members[teams[team].qb]
   -- determine who the next qb will be
@@ -339,12 +385,12 @@ servergame.turnover = function()
     teams[team].qb = 1
   end
   -- reset down
-  down.num = 1
   if team == 1 then
-    down.goal = field.w/12
-  else
-    down.goal = field.w/12
+    down.goal = down.scrim + field.w/12
+  elseif team == 2 then
+    down.goal = down.scrim - field.w/12
   end
+  down.num = 1
 end
 
 servergame.kill = function(i)

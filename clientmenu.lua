@@ -49,7 +49,6 @@ local client_hooks = {
     for i, v in pairs(players) do
       teams[v.team].members[#teams[v.team].members+1] = i
     end
-
     clientgame.init()
   end,
 }
