@@ -1,6 +1,4 @@
 require "globals"
-local server = require "server"
-local client = require "client"
 local servermenu = require "servermenu"
 local servergame = require "servergame"
 local clientmenu = require "clientmenu"
