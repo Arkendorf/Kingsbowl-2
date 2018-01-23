@@ -179,8 +179,10 @@ clientgame.draw = function()
   love.graphics.setColor(0, 0, 255)
   love.graphics.rectangle("fill", down.scrim-2, 0, 4, field.h)
   -- draw first down line
-  love.graphics.setColor(255, 0, 0)
-  love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
+  if down.goal then
+    love.graphics.setColor(255, 0, 0)
+    love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
+  end
 
   for i, v in pairs(players) do
     local char_img = "char"
@@ -238,10 +240,10 @@ clientgame.mousepressed = function(x, y, button)
   if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then
       network.peer:send("throw", mouse)
-    elseif ball.owner ~= id and players[id].team == players[qb].team then
+    elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team == players[id].team) or (not ball.owner and players[qb].team == players[id].team)) then
       players[id].shield.active = true
       network.peer:send("shieldstate", true)
-    elseif ball.owner ~= id and players[id].team ~= players[qb].team then
+    elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team ~= players[id].team) or (not ball.owner and players[qb].team ~= players[id].team)) then
       players[id].sword = {active = true, d = vector.scale(sword.dist, vector.norm(mouse)), t = sword.t}
       network.peer:send("sword", mouse)
     end
