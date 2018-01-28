@@ -83,7 +83,7 @@ local client_hooks = {
     ball.thrown = false
   end,
   disconnect = function(data)
-    clientgame.back_to_main()
+    love.event.quit()
   end,
 }
 
