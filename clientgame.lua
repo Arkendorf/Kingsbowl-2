@@ -67,8 +67,11 @@ local client_hooks = {
     -- adjust speed
     clientgame.set_speed(data.index)
   end,
-  shieldpos = function(data)
-    players[data.index].shield.d = data.info
+  mousepos = function(data, client)
+    players[data.index].mouse = data.info
+    if players[data.index].shield.active then
+      players[data.index].shield.d = vector.scale(shield.dist, vector.norm(data.info))
+    end
   end,
   dead = function(data)
     players[data].dead = true
@@ -99,6 +102,7 @@ clientgame.init = function()
     v.shield = {active = true, d = {x = 0, y = 0}, t = 0}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
     v.dead = false
+    v.mouse = {x = 0, y = 0}
     -- set the speed for players
     clientgame.set_speed(i)
   end
@@ -111,8 +115,10 @@ clientgame.update = function(dt)
   network.peer:update()
 
   -- get server mouse positions
-  mouse.x = love.mouse.getX()-win_width/2
-  mouse.y = love.mouse.getY()-win_height/2
+  players[id].mouse.x = love.mouse.getX()-win_width/2
+  players[id].mouse.y = love.mouse.getY()-win_height/2
+  -- send client mouse position to server
+  network.peer:send("mousepos", players[id].mouse)
   -- get client's direction
   clientgame.input.direction()
   -- send client's difference in position
@@ -161,8 +167,7 @@ clientgame.update = function(dt)
   end
   -- adjust shield pos
   if players[id].shield.active == true then
-    players[id].shield.d = vector.scale(shield.dist, vector.norm(mouse))
-    network.peer:send("shieldpos", players[id].shield.d)
+    players[id].shield.d = vector.scale(shield.dist, vector.norm(players[id].mouse))
   end
   -- advance play clock
   if down.t > 0 then
@@ -239,13 +244,13 @@ end
 clientgame.mousepressed = function(x, y, button)
   if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then
-      network.peer:send("throw", mouse)
+      network.peer:send("throw", players[id].mouse)
     elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team == players[id].team) or (not ball.owner and players[qb].team == players[id].team)) then
       players[id].shield.active = true
       network.peer:send("shieldstate", true)
     elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team ~= players[id].team) or (not ball.owner and players[qb].team ~= players[id].team)) then
-      players[id].sword = {active = true, d = vector.scale(sword.dist, vector.norm(mouse)), t = sword.t}
-      network.peer:send("sword", mouse)
+      players[id].sword = {active = true, d = vector.scale(sword.dist, vector.norm(players[id].mouse)), t = sword.t}
+      network.peer:send("sword", players[id].mouse)
     end
   end
 end

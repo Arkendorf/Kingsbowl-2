@@ -15,6 +15,8 @@ local td = false
 local quit = false
 
 local server_hooks = {
+  connect = function(data, client)
+  end,
   -- if a client sends move data, do this
   posdif = function(data, client)
     local index = client:getIndex()
@@ -42,16 +44,21 @@ local server_hooks = {
     -- adjust speed
     servergame.set_speed(index)
   end,
-  -- if client moves shield, do this
-  shieldpos = function(data, client)
+  mousepos = function(data, client)
     local index = client:getIndex()
-    players[index].shield.d = data
-    network.host:sendToAll("shieldpos", {index = index, info = data})
+    players[index].mouse = data
+    if players[index].shield.active then
+      players[index].shield.d = vector.scale(shield.dist, vector.norm(data))
+    end
+    network.host:sendToAll("mousepos", {index = index, info = data})
   end,
   disconnect = function(data, client)
+    local index = client:getIndex()
     ball.owner = 0
-    quit = true
-  end
+    if players[index] then
+      quit = true
+    end
+  end,
 }
 
 servergame.init = function()
@@ -70,6 +77,8 @@ servergame.init = function()
     v.shield = {active = false, d = {x = 0, y = 0}, t = 0}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
     v.dead = false
+    v.mouse = {x = 0, y = 0}
+    v.art = {state = "base", anim = "idle", dir = 1, frame = 1}
     -- set the speed for players
     servergame.set_speed(i)
   end
@@ -84,8 +93,10 @@ servergame.update = function(dt)
   network.host:update()
 
   -- get server mouse positions
-  mouse.x = love.mouse.getX()-win_width/2
-  mouse.y = love.mouse.getY()-win_height/2
+  players[id].mouse.x = love.mouse.getX()-win_width/2
+  players[id].mouse.y = love.mouse.getY()-win_height/2
+  -- send server mouse position to clients
+  network.host:sendToAll("mousepos", {info = players[id].mouse, index = id})
   -- get servers direction
   servergame.input.direction()
   -- send players position difference to all
@@ -150,6 +161,8 @@ servergame.update = function(dt)
         end
       end
     end
+    -- do art stuff
+    servergame.animate(v, dt)
   end
   -- reduce server's velocity
   players[id].d = vector.scale(0.9, players[id].d)
@@ -204,7 +217,7 @@ servergame.update = function(dt)
   end
   -- adjust shield pos
   if players[id].shield.active == true then
-    players[id].shield.d = vector.scale(shield.dist, vector.norm(mouse))
+    players[id].shield.d = vector.scale(shield.dist, vector.norm(players[id].mouse))
     network.host:sendToAll("shieldpos", {info = players[id].shield.d, index = id})
   end
   if down.dead == false and ball.owner ~= nil then
@@ -257,11 +270,11 @@ servergame.draw = function()
 
     --draw base sprite
     love.graphics.setColor(255, 255, 255)
-    love.graphics.draw(img[char_img], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 32, 32)
+    love.graphics.draw(char[v.art.state][v.art.anim].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 16, 16)
 
     --draw colored overlay
     love.graphics.setColor(team_info[v.team].color)
-    love.graphics.draw(img[char_img.."_overlay"], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 32, 32)
+    love.graphics.draw(char[v.art.state][v.art.anim.."overlay"].img, char[v.art.state][v.art.anim.."overlay"].quad[v.art.dir][math.floor(v.art.frame)], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 16, 16)
 
      -- draw shield
     if v.shield.active == true then
@@ -299,13 +312,13 @@ end
 servergame.mousepressed = function(x, y, button)
   if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then -- qb who still has ball
-      servergame.throw(id, mouse)
+      servergame.throw(id,players[id]. mouse)
     elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team == players[id].team) or (not ball.owner and players[qb].team == players[id].team)) then -- team with ball, but does not have ball
       players[id].shield.active = true
       network.host:sendToAll("shieldstate", {index = id, info = true})
     elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team ~= players[id].team) or (not ball.owner and players[qb].team ~= players[id].team)) then -- team without ball
-      players[id].sword = {active = true, d = vector.scale(sword.dist, vector.norm(mouse)), t = sword.t}
-      network.host:sendToAll("sword", {index = id, active = true, mouse = mouse})
+      players[id].sword = {active = true, d = vector.scale(sword.dist, vector.norm(players[id].mouse)), t = sword.t}
+      network.host:sendToAll("sword", {index = id, active = true, mouse = players[id].mouse})
     end
   end
 end
@@ -468,6 +481,39 @@ servergame.collide = function (v)
   elseif v.p.y+v.r > field.h then
     v.d.y = 0
     v.p.y = field.h-v.r
+  end
+end
+
+servergame.animate = function(v, dt)
+  -- get direction
+  if v.mouse.y < 0 then
+    v.art.dir = 8+math.floor(math.atan2(v.mouse.y, v.mouse.x)/math.pi*4+1.5)
+  else
+    v.art.dir = math.floor(math.atan2(v.mouse.y, v.mouse.x)/math.pi*4+1.5)
+  end
+  -- make sure direction is in bounds (1-8)
+  if v.art.dir > 8 then
+    v.art.dir = 1
+  end
+  -- get anim (run or idle)
+  if vector.mag_sq(v.d) > 0.5 then
+    v.art.anim = "run"
+  else
+    v.art.anim = "idle"
+  end
+  -- add or subtract frame based on direction
+  local mouse = vector.norm(v.mouse)
+  local d = vector.norm(v.d)
+  if (mouse.x-d.x)*(mouse.x-d.x)+(mouse.y-d.y)*(mouse.y-d.y) <= 2 then
+    v.art.frame = v.art.frame + dt * 12
+  else
+    v.art.frame = v.art.frame - dt * 12
+  end
+  if v.art.frame >= #char[v.art.state][v.art.anim].quad[v.art.dir] + 1 then
+    v.art.frame = 1.1
+  end
+  if v.art.frame < 1 then
+    v.art.frame = #char[v.art.state][v.art.anim].quad[v.art.dir] + .9
   end
 end
 

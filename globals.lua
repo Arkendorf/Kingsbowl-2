@@ -24,4 +24,4 @@ team_info = {{name = "Team 1", color = {255, 0, 0}}, {name = "Team 2", color = {
 grace_time = 3
 
 local graphics = require "graphics"
-img, quad = graphics.init()
+img, quad, char = graphics.init()
