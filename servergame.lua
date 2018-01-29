@@ -162,7 +162,7 @@ servergame.update = function(dt)
       end
     end
     -- do art stuff
-    servergame.animate(v, dt)
+    servergame.animate(i, v, dt)
   end
   -- reduce server's velocity
   players[id].d = vector.scale(0.9, players[id].d)
@@ -240,7 +240,7 @@ servergame.update = function(dt)
   end
   -- quit if necessary
   if quit then
-    servergame.back_to_main()
+    love.event.quit()
   end
 end
 
@@ -259,22 +259,15 @@ servergame.draw = function()
   end
 
   for i, v in pairs(players) do
-    local char_img = "char"
-    if v.dead == true then
-      char_img = "char_dead"
-    elseif ball.owner and ball.owner == i and i ~= qb then
-      char_img = "char_baller"
-    elseif ball.owner == i and down.dead == false then
-      char_img = "char_qb"
-    end
-
-    --draw base sprite
+    -- draw shadow
     love.graphics.setColor(255, 255, 255)
-    love.graphics.draw(char[v.art.state][v.art.anim].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 16, 16)
+    love.graphics.draw(img.shadow, math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 8, 8)
+    --draw base sprite
+    love.graphics.draw(char[v.art.state][v.art.anim].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 16, 46)
 
     --draw colored overlay
     love.graphics.setColor(team_info[v.team].color)
-    love.graphics.draw(char[v.art.state][v.art.anim.."overlay"].img, char[v.art.state][v.art.anim.."overlay"].quad[v.art.dir][math.floor(v.art.frame)], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 16, 16)
+    love.graphics.draw(char[v.art.state][v.art.anim.."overlay"].img, char[v.art.state][v.art.anim.."overlay"].quad[v.art.dir][math.floor(v.art.frame)], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 16, 46)
 
      -- draw shield
     if v.shield.active == true then
@@ -293,7 +286,7 @@ servergame.draw = function()
     end
 
     --draw username
-    love.graphics.print(v.name, math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), math.floor(v.p.y)-math.floor(v.r+font:getHeight()))
+    love.graphics.print(v.name, math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), math.floor(v.p.y)-math.floor(48+font:getHeight()))
   end
 
   -- draw ball
@@ -302,7 +295,7 @@ servergame.draw = function()
     -- shadow
     love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
     -- ball
-    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)+math.floor(ball.z), ball.angle, 1, 1, 16, 16)
+    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)+math.floor(ball.z), ball.angle, 1, 1, 8, 8)
   end
 
   love.graphics.pop()
@@ -312,7 +305,7 @@ end
 servergame.mousepressed = function(x, y, button)
   if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then -- qb who still has ball
-      servergame.throw(id,players[id]. mouse)
+      servergame.throw(id, players[id].mouse)
     elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team == players[id].team) or (not ball.owner and players[qb].team == players[id].team)) then -- team with ball, but does not have ball
       players[id].shield.active = true
       network.host:sendToAll("shieldstate", {index = id, info = true})
@@ -484,7 +477,21 @@ servergame.collide = function (v)
   end
 end
 
-servergame.animate = function(v, dt)
+servergame.animate = function(i, v, dt)
+  -- get state
+  if v.dead == true then
+    v.art.state = "dead"
+  elseif ball.owner and ball.owner == i and qb == i then
+    v.art.state = "qb"
+  elseif ball.owner and ball.owner == i then
+    v.art.state = "owner"
+  elseif v.sword.active then
+    v.art.state = "sword"
+  elseif v.shield.active then
+    v.art.state = "shield"
+  else
+    v.art.state = "base"
+  end
   -- get direction
   if v.mouse.y < 0 then
     v.art.dir = 8+math.floor(math.atan2(v.mouse.y, v.mouse.x)/math.pi*4+1.5)
