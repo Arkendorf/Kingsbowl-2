@@ -58,7 +58,9 @@ local client_hooks = {
     ball.thrown = false
   end,
   sword = function(data)
-    players[data.index].sword = {active = data.active, d = vector.scale(sword.dist, vector.norm(data.mouse)), t = sword.t}
+    players[data.index].sword.active = data.active
+    players[data.index].sword.d = vector.scale(sword.dist, vector.norm(data.mouse))
+    players[data.index].sword.t = sword.t
     -- adjust speed
     clientgame.set_speed(data.index)
   end,
@@ -249,14 +251,16 @@ clientgame.mousepressed = function(x, y, button)
       players[id].shield.active = true
       network.peer:send("shieldstate", true)
     elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team ~= players[id].team) or (not ball.owner and players[qb].team ~= players[id].team)) then
-      players[id].sword = {active = true, d = vector.scale(sword.dist, vector.norm(players[id].mouse)), t = sword.t}
+      players[id].sword.active = true
+      players[id].sword.d = vector.scale(sword.dist, vector.norm(players[id].mouse))
+      players[id].sword.t = sword.t
       network.peer:send("sword", players[id].mouse)
     end
   end
 end
 
 clientgame.mousereleased = function(x, y, button)
-  if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
+  if button == 1 and down.t <= 0 and players[id].dead == false then
     if players[id].shield.active == true then
       players[id].shield.active = false
       network.peer:send("shieldstate", false)
