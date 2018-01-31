@@ -173,11 +173,11 @@ servergame.update = function(dt)
     ball.p = vector.sum(ball.p, vector.scale(dt * 60 * 4, ball.d))
     -- change ball's height / angle
     local dist = math.sqrt((ball.start.x-ball.p.x)*(ball.start.x-ball.p.x)+(ball.start.y-ball.p.y)*(ball.start.y-ball.p.y))
-    local z  = (dist*dist-ball.height*dist)/512
-    ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
+    local z = ((dist*dist-ball.height*dist)/512-18)*-1
+    ball.angle = math.atan2(ball.d.y-z+ball.z, ball.d.x)
     ball.z = z
     -- if ball hits the ground, reset
-    if ball.z >= 0 then
+    if ball.z <= 0 then
       down.dead = true
       down.t = grace_time
       ball.thrown = false
@@ -267,22 +267,22 @@ servergame.draw = function()
 
     --draw colored overlay
     love.graphics.setColor(team_info[v.team].color)
-    love.graphics.draw(char[v.art.state][v.art.anim.."overlay"].img, char[v.art.state][v.art.anim.."overlay"].quad[v.art.dir][math.floor(v.art.frame)], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 16, 46)
+    love.graphics.draw(char[v.art.state][v.art.anim.."overlay"].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 16, 46)
 
      -- draw shield
     if v.shield.active == true then
       love.graphics.setColor(255,  255, 255)
-      love.graphics.draw(img.shield, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
+      love.graphics.draw(img.shield, quad.shield[v.art.dir], math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y)*.5-18, 0, 1, 1, 16, 16)
       love.graphics.setColor(team_info[v.team].color)
-      love.graphics.draw(img.shield_overlay, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
+      love.graphics.draw(img.shield_overlay, quad.shield[v.art.dir], math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y)*.5-18, 0, 1, 1, 16, 16)
     end
 
      -- draw sword
     if v.sword.active == true then
       love.graphics.setColor(255,  255, 255)
-      love.graphics.draw(img.sword, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
+      love.graphics.draw(img.sword, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y)*.5-18, math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 16, 16)
       love.graphics.setColor(team_info[v.team].color)
-      love.graphics.draw(img.sword_overlay, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
+      love.graphics.draw(img.sword_overlay, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y)*.5-18, math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 16, 16)
     end
 
     --draw username
@@ -295,7 +295,7 @@ servergame.draw = function()
     -- shadow
     love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
     -- ball
-    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)+math.floor(ball.z), ball.angle, 1, 1, 8, 8)
+    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)-math.floor(ball.z), ball.angle, 1, 1, 8, 8)
   end
 
   love.graphics.pop()
@@ -345,7 +345,7 @@ servergame.throw = function(i, mouse)
   -- set initial position
   ball.p.x = players[i].p.x
   ball.p.y = players[i].p.y
-  ball.z = 0
+  ball.z = -18
   -- set direction
   ball.d = vector.norm({x = mouse.x, y = mouse.y})
   ball.goal = vector.sum({x = mouse.x, y = mouse.y}, {x = players[i].p.x, y = players[i].p.y})

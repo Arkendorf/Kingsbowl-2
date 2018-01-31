@@ -48,7 +48,7 @@ local client_hooks = {
     ball.p = data
     -- change ball's height / angle
     local dist = math.sqrt((ball.start.x-ball.p.x)*(ball.start.x-ball.p.x)+(ball.start.y-ball.p.y)*(ball.start.y-ball.p.y))
-    local z  = (dist*dist-ball.height*dist)/512
+    local z = ((dist*dist-ball.height*dist)/512-18)*-1
     ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
     ball.z = z
   end,
@@ -157,11 +157,11 @@ clientgame.update = function(dt)
     ball.p = vector.sum(ball.p, vector.scale(dt * 60 * 4, ball.d))
     -- change ball's height / angle
     local dist = math.sqrt((ball.start.x-ball.p.x)*(ball.start.x-ball.p.x)+(ball.start.y-ball.p.y)*(ball.start.y-ball.p.y))
-    local z  = (dist*dist-ball.height*dist)/512
-    ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
+    local z = ((dist*dist-ball.height*dist)/512-18)*-1
+    ball.angle = math.atan2(ball.d.y-z+ball.z, ball.d.x)
     ball.z = z
     -- if ball hits the ground, stop
-    if ball.z >= 0 then
+    if ball.z <= 0 then
       ball.thrown = false
     end
   end
@@ -234,7 +234,7 @@ clientgame.draw = function()
     -- shadow
     love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
     -- ball
-    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)+math.floor(ball.z), ball.angle, 1, 1, 16, 16)
+    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)-math.floor(ball.z), ball.angle, 1, 1, 16, 16)
   end
 
   love.graphics.pop()

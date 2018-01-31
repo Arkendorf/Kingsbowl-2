@@ -14,6 +14,18 @@ graphics.charsheet = function(img)
   return quad
 end
 
+graphics.spritesheet = function(tw, th, img)
+  local quad = {}
+  local w = math.floor(img:getWidth()/tw)
+  local h = math.floor(img:getHeight()/th)
+  for i = 0, h - 1 do
+    for j = 0, w - 1 do
+      quad[i*h+j+1] = love.graphics.newQuad(j*tw, i*th, tw, th, img:getDimensions())
+    end
+  end
+  return quad
+end
+
 graphics.init = function()
   local img = {}
   local files = love.filesystem.getDirectoryItems("images")
@@ -32,9 +44,7 @@ graphics.init = function()
     char[v].run.quad = graphics.charsheet(char[v].run.img)
     -- overlays
     char[v].idleoverlay.img = love.graphics.newImage("char/"..v.."/idleoverlay.png")
-    char[v].idleoverlay.quad = graphics.charsheet(char[v].idleoverlay.img)
     char[v].runoverlay.img = love.graphics.newImage("char/"..v.."/runoverlay.png")
-    char[v].runoverlay.quad = graphics.charsheet(char[v].runoverlay.img)
   end
 
   local quad = {}
@@ -45,6 +55,7 @@ graphics.init = function()
   quad.icons2 = love.graphics.newQuad(0, 12, 128, 12, img.menuicons:getDimensions())
   quad.sliderbar = love.graphics.newQuad(0, 0, 124, 12, img.slider:getDimensions())
   quad.slidernode = love.graphics.newQuad(124, 0, 4, 12, img.slider:getDimensions())
+  quad.shield = graphics.spritesheet(32, 32, img.shield)
 
   return img, quad, char
 end
