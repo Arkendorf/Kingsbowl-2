@@ -101,10 +101,11 @@ clientgame.init = function()
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
     v.r = 16
-    v.shield = {active = true, d = {x = 0, y = 0}, t = 0}
-    v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
+    v.shield = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
+    v.sword = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
     v.dead = false
     v.mouse = {x = 0, y = 0}
+    v.art = {state = "base", anim = "idle", dir = 1, frame = 1, canvas = love.graphics.newCanvas(32, 48)}
     -- set the speed for players
     clientgame.set_speed(i)
   end
@@ -150,6 +151,8 @@ clientgame.update = function(dt)
         end
       end
     end
+    -- do art stuff
+    clientgame.animate(i, v, dt)
   end
   -- reduce client's velocity
   players[id].d = vector.scale(0.9, players[id].d)
@@ -178,6 +181,57 @@ clientgame.update = function(dt)
 end
 
 clientgame.draw = function()
+  local queue = {}
+
+  for i, v in pairs(players) do
+    love.graphics.setCanvas(v.art.canvas)
+    love.graphics.clear()
+    -- draw shadow
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.draw(img.shadow, 8, 30)
+    --draw base sprite
+    love.graphics.draw(char[v.art.state][v.art.anim].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)], 0, -8)
+
+    --draw colored overlay
+    love.graphics.setColor(team_info[v.team].color)
+    love.graphics.draw(char[v.art.state][v.art.anim.."overlay"].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)], 0, -8)
+
+    love.graphics.setCanvas()
+    queue[#queue+1] = {img = v.art.canvas, x = math.floor(v.p.x), y = math.floor(v.p.y), ox = 16, oy = 40}
+
+     -- draw shield
+    if v.shield.active == true then
+      love.graphics.setCanvas(v.shield.canvas)
+      love.graphics.clear()
+
+      love.graphics.setColor(255,  255, 255)
+      love.graphics.draw(img.shield, quad.shield[v.art.dir])
+      love.graphics.setColor(team_info[v.team].color)
+      love.graphics.draw(img.shield_overlay, quad.shield[v.art.dir])
+
+      love.graphics.setCanvas()
+      queue[#queue+1] = {img = v.shield.canvas, x = math.floor(v.p.x)+math.floor(v.shield.d.x), y = math.floor(v.p.y)+math.floor(v.shield.d.y)*.5, z = 18, ox = 16, oy = 16}
+    end
+
+     -- draw sword
+    if v.sword.active == true then
+      love.graphics.setCanvas(v.sword.canvas)
+      love.graphics.clear()
+
+      love.graphics.setColor(255, 255, 255)
+      love.graphics.draw(img.sword)
+      love.graphics.setColor(team_info[v.team].color)
+      love.graphics.draw(img.sword_overlay)
+
+      love.graphics.setCanvas()
+      queue[#queue+1] = {img = v.sword.canvas, x = math.floor(v.p.x)+math.floor(v.sword.d.x), y = math.floor(v.p.y)+math.floor(v.sword.d.y)*.5, z = 18, r = math.atan2(v.sword.d.y, v.sword.d.x), ox = 16, oy = 16}
+    end
+
+    --queue username
+    queue[#queue+1] = {txt = v.name, x = math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), y = math.floor(v.p.y), z = math.floor(48+font:getHeight()), color = team_info[v.team].color}
+  end
+
+  -- set up camera
   love.graphics.push()
   love.graphics.translate(math.floor(win_width/2-players[id].p.x), math.floor(win_height/2-players[id].p.y))
   love.graphics.setColor(255, 255, 255)
@@ -191,52 +245,34 @@ clientgame.draw = function()
     love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
   end
 
-  for i, v in pairs(players) do
-    local char_img = "char"
-    if v.dead == true then
-      char_img = "char_dead"
-    elseif ball.owner and ball.owner == i and i ~= qb then
-      char_img = "char_baller"
-    elseif ball.owner == i and down.dead == false then
-      char_img = "char_qb"
-    end
-
-    --draw base sprite
-    love.graphics.setColor(255, 255, 255)
-    love.graphics.draw(img[char_img], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 32, 32)
-
-    --draw colored overlay
-    love.graphics.setColor(team_info[v.team].color)
-    love.graphics.draw(img[char_img.."_overlay"], math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 32, 32)
-
-    -- draw shield
-   if v.shield.active == true then
-     love.graphics.setColor(255,  255, 255)
-     love.graphics.draw(img.shield, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
-     love.graphics.setColor(team_info[v.team].color)
-     love.graphics.draw(img.shield_overlay, math.floor(v.p.x)+math.floor(v.shield.d.x), math.floor(v.p.y)+math.floor(v.shield.d.y), 0, 1, 1, 12, 12)
-   end
-
-   -- draw sword
-  if v.sword.active == true then
-    love.graphics.setColor(255,  255, 255)
-    love.graphics.draw(img.sword, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
-    love.graphics.setColor(team_info[v.team].color)
-    love.graphics.draw(img.sword_overlay, math.floor(v.p.x)+math.floor(v.sword.d.x), math.floor(v.p.y)+math.floor(v.sword.d.y), math.atan2(v.sword.d.y, v.sword.d.x), 1, 1, 10, 10)
-  end
-
-
-    --draw username
-    love.graphics.print(v.name, math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), math.floor(v.p.y)-math.floor(v.r+font:getHeight()))
-  end
-
   -- draw ball
   if ball.thrown then
     love.graphics.setColor(255, 255, 255)
     -- shadow
     love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
     -- ball
-    love.graphics.draw(img.arrow, math.floor(ball.p.x), math.floor(ball.p.y)-math.floor(ball.z), ball.angle, 1, 1, 16, 16)
+    queue[#queue+1] = {img = img.arrow, x = math.floor(ball.p.x), y = math.floor(ball.p.y), z = math.floor(ball.z), r = ball.angle, ox = 8, oy = 8}
+  end
+
+  -- draw items in queue
+  table.sort(queue, function(a, b) return a.y < b.y end)
+  for i, v in ipairs(queue) do
+    if not v.z then v.z = 0 end
+    if not v.color then v.color = {255, 255, 255} end
+    if v.img then
+      if not v.r then v.r = 0 end
+      if not v.ox then v.ox = 0 end
+      if not v.oy then v.oy = 0 end
+      love.graphics.setColor(v.color)
+      if v.quad then
+        love.graphics.draw(v.img, v.quad, v.x, v.y-v.z, v.r, 1, 1, v.ox, v.oy)
+      else
+        love.graphics.draw(v.img, v.x, v.y-v.z, v.r, 1, 1, v.ox, v.oy)
+      end
+    elseif v.txt then
+      love.graphics.setColor(v.color)
+      love.graphics.print(v.txt, v.x, v.y-v.z)
+    end
   end
 
   love.graphics.pop()
@@ -318,6 +354,60 @@ clientgame.collide = function (v)
   elseif v.p.y+v.r > field.h then
     v.d.y = 0
     v.p.y = field.h-v.r
+  end
+end
+
+clientgame.animate = function(i, v, dt)
+  -- get state
+  if v.dead == true then
+    v.art.state = "dead"
+  elseif ball.owner and ball.owner == i and qb == i then
+    v.art.state = "qb"
+  elseif ball.owner and ball.owner == i then
+    v.art.state = "owner"
+  elseif v.sword.active then
+    v.art.state = "sword"
+  elseif v.shield.active then
+    v.art.state = "shield"
+  else
+    v.art.state = "base"
+  end
+  -- get what determines direction
+  local dir = v.mouse
+  if v.sword.active then
+    dir = v.sword.d
+  elseif v.shield.active then
+    dir = v.shield.d
+  end
+  -- get direction
+  if dir.y < 0 then
+    v.art.dir = 8+math.floor(math.atan2(dir.y, dir.x)/math.pi*4+1.5)
+  else
+    v.art.dir = math.floor(math.atan2(dir.y, dir.x)/math.pi*4+1.5)
+  end
+  -- make sure direction is in bounds (1-8)
+  if v.art.dir > 8 then
+    v.art.dir = 1
+  end
+  -- get anim (run or idle)
+  if vector.mag_sq(v.d) > 0.5 then
+    v.art.anim = "run"
+  else
+    v.art.anim = "idle"
+  end
+  -- add or subtract frame based on direction
+  local mouse = vector.norm(v.mouse)
+  local d = vector.norm(v.d)
+  if (mouse.x-d.x)*(mouse.x-d.x)+(mouse.y-d.y)*(mouse.y-d.y) <= 2 then
+    v.art.frame = v.art.frame + dt * 12
+  else
+    v.art.frame = v.art.frame - dt * 12
+  end
+  if v.art.frame >= #char[v.art.state][v.art.anim].quad[v.art.dir] + 1 then
+    v.art.frame = 1.1
+  end
+  if v.art.frame < 1 then
+    v.art.frame = #char[v.art.state][v.art.anim].quad[v.art.dir] + .9
   end
 end
 
