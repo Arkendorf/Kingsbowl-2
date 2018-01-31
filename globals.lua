@@ -22,6 +22,8 @@ score = {0, 0}
 -- num_suffix = {"st", "nd", "rd", "th"}
 team_info = {{name = "Team 1", color = {255, 0, 0}}, {name = "Team 2", color = {0, 0, 255}}}
 grace_time = 3
+camera = {translate = {x = 0, y = 0}, scale = {x = 1, y = 1}, mouse = {x = 0, y = 0}, zoom = 1}
+
 
 local graphics = require "graphics"
 img, quad, char = graphics.init()

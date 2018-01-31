@@ -94,9 +94,28 @@ servergame.update = function(dt)
   -- update sock server
   network.host:update()
 
+
+  -- find camera values
+  camera.mouse.x = camera.mouse.x+dt*(love.mouse.getX()-win_width/2)/win_width*2048
+  camera.translate.x = players[id].p.x+camera.mouse.x/2
+  if camera.mouse.x>win_width or camera.mouse.x<-win_width then
+    camera.scale.x = win_width/math.abs(camera.mouse.x)
+  end
+  camera.mouse.y = camera.mouse.y+dt*(love.mouse.getY()-win_height/2)/win_width*2048
+  camera.translate.y = players[id].p.y+camera.mouse.y/2
+  if camera.mouse.y>win_height or camera.mouse.y<-win_height then
+    camera.scale.y = win_height/math.abs(camera.mouse.y)
+  end
+  if math.abs(camera.scale.x) < math.abs(camera.scale.y) then
+    camera.zoom = camera.scale.x
+  else
+    camera.zoom = camera.scale.y
+  end
+
   -- get server mouse positions
-  players[id].mouse.x = love.mouse.getX()-win_width/2
-  players[id].mouse.y = love.mouse.getY()-win_height/2
+  players[id].mouse.x = camera.mouse.x/2
+  players[id].mouse.y = camera.mouse.y/2
+
   -- send server mouse position to clients
   network.host:sendToAll("mousepos", {info = players[id].mouse, index = id})
   -- get servers direction
@@ -175,7 +194,7 @@ servergame.update = function(dt)
     ball.p = vector.sum(ball.p, vector.scale(dt * 60 * 4, ball.d))
     -- change ball's height / angle
     local dist = math.sqrt((ball.start.x-ball.p.x)*(ball.start.x-ball.p.x)+(ball.start.y-ball.p.y)*(ball.start.y-ball.p.y))
-    local z = ((dist*dist-ball.height*dist)/512-18)*-1
+    local z = (dist*dist-ball.height*dist)/512*-1
     ball.angle = math.atan2(ball.d.y-z+ball.z, ball.d.x)
     ball.z = z
     -- if ball hits the ground, reset
@@ -299,7 +318,9 @@ servergame.draw = function()
 
   -- set up camera
   love.graphics.push()
-  love.graphics.translate(math.floor(win_width/2-players[id].p.x), math.floor(win_height/2-players[id].p.y))
+  love.graphics.translate(win_width/2, win_height/2)
+  love.graphics.scale(camera.zoom, camera.zoom)
+  love.graphics.translate(-camera.translate.x, -camera.translate.y)
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(img.field)
   -- draw line of scrimmage
@@ -317,7 +338,7 @@ servergame.draw = function()
     -- shadow
     love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
     -- ball
-    queue[#queue+1] = {img = img.arrow, x = math.floor(ball.p.x), y = math.floor(ball.p.y), z = math.floor(ball.z), r = ball.angle, ox = 8, oy = 8}
+    queue[#queue+1] = {img = img.arrow, x = math.floor(ball.p.x), y = math.floor(ball.p.y), z = math.floor(ball.z)+18, r = ball.angle, ox = 8, oy = 8}
   end
 
   -- draw items in queue
@@ -390,7 +411,7 @@ servergame.throw = function(i, mouse)
   -- set initial position
   ball.p.x = players[i].p.x
   ball.p.y = players[i].p.y
-  ball.z = -18
+  ball.z = 0
   -- set direction
   ball.d = vector.norm({x = mouse.x, y = mouse.y})
   ball.goal = vector.sum({x = mouse.x, y = mouse.y}, {x = players[i].p.x, y = players[i].p.y})
