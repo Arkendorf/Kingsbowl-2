@@ -17,6 +17,9 @@ love.load = function()
 end
 
 love.update = function(dt)
+  for k,v in pairs(players or {}) do
+    print(k, v.speed)
+  end
   if state.game == false and network.mode == "server" then
     servermenu.update(dt)
   elseif state.game == false and network.mode == "client" then

@@ -66,7 +66,7 @@ servergame.init = function()
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
     v.r = 16
-    v.shield = {active = true, d = {x = 0, y = 0}, t = 0}
+    v.shield = {active = false, d = {x = 0, y = 0}, t = 0}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0}
     v.dead = false
     -- set the speed for players
@@ -279,7 +279,7 @@ servergame.mousepressed = function(x, y, button)
   if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then -- qb who still has ball
       servergame.throw(id, mouse)
-    elseif ball.owner ~= id and players[id].team == players[qb].team then -- team with ball, but does not have ball
+    elseif ball.owner ~= id and players[id].team == players[ball.owner].team then -- team with ball, but does not have ball
       players[id].shield.active = true
       network.host:sendToAll("shieldstate", {index = id, info = true})
     elseif ball.owner ~= id and players[id].team ~= players[qb].team then -- team without ball

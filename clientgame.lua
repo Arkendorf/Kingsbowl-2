@@ -39,6 +39,7 @@ local client_hooks = {
     ball.thrown = false
     -- reset players
     for i, v in pairs(players) do
+      clientgame.set_speed(i)
       v.sword.active = false
       v.shield.active = false
       v.dead = false
