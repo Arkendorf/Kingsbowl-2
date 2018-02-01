@@ -17,6 +17,7 @@ love.load = function()
 end
 
 love.update = function(dt)
+    global_dt = dt
   if state.game == false and network.mode == "server" then
     servermenu.update(dt)
   elseif state.game == false and network.mode == "client" then
@@ -69,6 +70,14 @@ love.mousereleased = function(x, y, button)
     servergame.mousereleased(x, y, button)
   elseif network.mode == "client" then
     clientgame.mousereleased(x, y, button)
+  end
+end
+
+love.mousemoved = function(x, y, dx, dy, istouch)
+  if state.game == true and network.mode == "server" then
+    servergame.mousemoved(x, y, dx, dy, istouch)
+  elseif state.game == true and network.mode == "client" then
+    clientgame.mousemoved(x, y, dx, dy, istouch)
   end
 end
 

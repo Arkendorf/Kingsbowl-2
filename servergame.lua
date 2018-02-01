@@ -64,6 +64,7 @@ local server_hooks = {
 }
 
 servergame.init = function()
+  love.mouse.setRelativeMode(true)
   -- initialize server hooks
   for k,v in pairs(server_hooks) do
     network.host:on(k, v)
@@ -94,28 +95,9 @@ servergame.update = function(dt)
   -- update sock server
   network.host:update()
 
-
-  -- find camera values
-  camera.mouse.x = camera.mouse.x+dt*(love.mouse.getX()-win_width/2)/win_width*2048
-  camera.translate.x = players[id].p.x+camera.mouse.x/2
-  if camera.mouse.x>win_width or camera.mouse.x<-win_width then
-    camera.scale.x = win_width/math.abs(camera.mouse.x)
-  end
-  camera.mouse.y = camera.mouse.y+dt*(love.mouse.getY()-win_height/2)/win_width*2048
-  camera.translate.y = players[id].p.y+camera.mouse.y/2
-  if camera.mouse.y>win_height or camera.mouse.y<-win_height then
-    camera.scale.y = win_height/math.abs(camera.mouse.y)
-  end
-  if math.abs(camera.scale.x) < math.abs(camera.scale.y) then
-    camera.zoom = camera.scale.x
-  else
-    camera.zoom = camera.scale.y
-  end
-
-  -- get server mouse positions
-  players[id].mouse.x = camera.mouse.x/2
-  players[id].mouse.y = camera.mouse.y/2
-
+  --get server mouse positions
+  players[id].mouse.x = camera.x-players[id].p.x
+  players[id].mouse.y = camera.y-players[id].p.y
   -- send server mouse position to clients
   network.host:sendToAll("mousepos", {info = players[id].mouse, index = id})
   -- get servers direction
@@ -125,8 +107,7 @@ servergame.update = function(dt)
 
   for i, v in pairs(players) do
     -- move player based on their diff
-    v.p = vector.sum(v.p, vector.scale(v.speed*dt*(v.sticky and 0.5 or 1), v.d))
-    print(v.sticky)
+    v.p = vector.sum(v.p, vector.scale(v.speed*dt, v.d))
     -- apply collision to player
     servergame.collide(v)
     --apply collision between players
@@ -191,7 +172,7 @@ servergame.update = function(dt)
   -- move the ball
   if ball.thrown then
     -- move the ball
-    ball.p = vector.sum(ball.p, vector.scale(dt * 60 * 4, ball.d))
+    ball.p = vector.sum(ball.p, vector.scale(dt * 60 * ball_speed, ball.d))
     -- change ball's height / angle
     local dist = math.sqrt((ball.start.x-ball.p.x)*(ball.start.x-ball.p.x)+(ball.start.y-ball.p.y)*(ball.start.y-ball.p.y))
     local z = (dist*dist-ball.height*dist)/512*-1
@@ -271,18 +252,16 @@ servergame.draw = function()
   for i, v in pairs(players) do
     love.graphics.setCanvas(v.art.canvas)
     love.graphics.clear()
-    -- draw shadow
     love.graphics.setColor(255, 255, 255)
-    love.graphics.draw(img.shadow, 8, 30)
     --draw base sprite
-    love.graphics.draw(char[v.art.state][v.art.anim].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)], 0, -8)
+    love.graphics.draw(char[v.art.state][v.art.anim].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)])
 
     --draw colored overlay
     love.graphics.setColor(team_info[v.team].color)
-    love.graphics.draw(char[v.art.state][v.art.anim.."overlay"].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)], 0, -8)
+    love.graphics.draw(char[v.art.state][v.art.anim.."overlay"].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)])
 
     love.graphics.setCanvas()
-    queue[#queue+1] = {img = v.art.canvas, x = math.floor(v.p.x), y = math.floor(v.p.y), ox = 16, oy = 40}
+    queue[#queue+1] = {img = v.art.canvas, x = math.floor(v.p.x), y = math.floor(v.p.y), ox = 16, oy = 48}
 
      -- draw shield
     if v.shield.active == true then
@@ -318,9 +297,7 @@ servergame.draw = function()
 
   -- set up camera
   love.graphics.push()
-  love.graphics.translate(win_width/2, win_height/2)
-  love.graphics.scale(camera.zoom, camera.zoom)
-  love.graphics.translate(-camera.translate.x, -camera.translate.y)
+  love.graphics.translate(win_width/2-math.floor(camera.x), win_height/2-math.floor(camera.y))
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(img.field)
   -- draw line of scrimmage
@@ -331,6 +308,36 @@ servergame.draw = function()
     love.graphics.setColor(255, 0, 0)
     love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
   end
+
+  -- draw flat player things (e.g. shadows)
+  for i, v in pairs(players) do
+    -- draw shadow
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.draw(img.shadow, math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 8, 10)
+    -- draw target prediction
+    if id == qb and v.team == players[qb].team and i ~= qb then
+      local dist = math.sqrt((players[qb].p.x-v.p.x)*(players[qb].p.x-v.p.x)+(players[qb].p.y-v.p.y)*(players[qb].p.y-v.p.y))
+      local p = vector.sum(vector.scale(dist/(ball_speed*60), vector.scale(v.speed, v.d)), v.p)
+      love.graphics.setColor(team_info[v.team].color)
+      love.graphics.line(v.p.x, v.p.y, p.x, p.y)
+      love.graphics.draw(img.charnode, math.floor(p.x), math.floor(p.y), 0, 1, 1, 16, 16)
+    end
+  end
+
+  --draw qb cursor
+  love.graphics.setColor(team_info[players[qb].team].color)
+  if ball.thrown and not ball.owner then
+    love.graphics.draw(img.balltarget, math.floor(ball.goal.x), math.floor(ball.goal.y), 0, 1, 1, 16, 16)
+  elseif ball.owner and ball.owner == qb then
+    love.graphics.draw(img.qbtarget, math.floor(players[qb].p.x+players[qb].mouse.x), math.floor(players[qb].p.y+players[qb].mouse.y), 0, 1, 1, 16, 16)
+  end
+
+  -- draw personal cursor
+  if id ~= qb or ball.thrown then
+    love.graphics.setColor(team_info[players[id].team].color)
+    love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
+  end
+
 
   -- draw ball
   if ball.thrown then
@@ -352,13 +359,13 @@ servergame.draw = function()
       if not v.oy then v.oy = 0 end
       love.graphics.setColor(v.color)
       if v.quad then
-        love.graphics.draw(v.img, v.quad, v.x, v.y-v.z, v.r, 1, 1, v.ox, v.oy)
+        love.graphics.draw(v.img, v.quad, math.floor(v.x), math.floor(v.y-v.z), v.r, 1, 1, math.floor(v.ox), math.floor(v.oy))
       else
-        love.graphics.draw(v.img, v.x, v.y-v.z, v.r, 1, 1, v.ox, v.oy)
+        love.graphics.draw(v.img, math.floor(v.x), math.floor(v.y-v.z), v.r, 1, 1, math.floor(v.ox), math.floor(v.oy))
       end
     elseif v.txt then
       love.graphics.setColor(v.color)
-      love.graphics.print(v.txt, v.x, v.y-v.z)
+      love.graphics.print(v.txt, math.floor(v.x), math.floor(v.y-v.z))
     end
   end
 
@@ -389,6 +396,12 @@ servergame.mousereleased = function(x, y, button)
       network.host:sendToAll("shieldstate", {index = id, info = false})
     end
   end
+end
+
+servergame.mousemoved = function(x, y, dx, dy, istouch)
+  -- find camera values
+  camera.x = camera.x + dx*global_dt*30
+  camera.y = camera.y + dy*global_dt*30
 end
 
 servergame.quit = function()
@@ -456,7 +469,7 @@ servergame.new_down = function()
     else
       v.p.x = down.scrim + 32
     end
-    v.p.y = (field.h-#teams[v.team].members*48)/2+team_pos[v.team]*48
+    v.p.y = (field.h-#teams[v.team].members*48)/2+team_pos[v.team]*48+32
     v.d.x, v.d.y = 0, 0
     team_pos[v.team] = team_pos[v.team] + 1
     -- reset players
@@ -467,6 +480,11 @@ servergame.new_down = function()
   -- give ball to quarterback
   ball.owner = qb
   ball.thrown = false
+
+  -- reset target
+  camera.x = players[id].p.x
+  camera.y = players[id].p.y
+
   network.host:sendToAll("newdown", {down = down, qb = qb})
 end
 
