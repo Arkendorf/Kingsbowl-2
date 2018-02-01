@@ -1,6 +1,5 @@
 local gui = require "gui"
 local state = require "state"
-local game = require "game"
 local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
