@@ -11,6 +11,7 @@ servergame.input = require("keyboard")
 -- set up variables
 local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
 local down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
+local td = false
 local quit = false
 
 local server_hooks = {
@@ -179,6 +180,23 @@ servergame.update = function(dt)
       if i ~= qb and v.dead == false and collision.check_overlap(v, ball) then -- makes sure catcher isn't qb to prevent immediate catches after throwing, and not dead
         ball.thrown = false
         ball.owner = i
+                -- inteception
+        if players[ball.owner].team ~= players[qb].team then
+          -- reset swords and shields
+          for i, v in pairs(players) do
+            if v.shield.active == true then
+              v.shield.active = false
+              network.host:sendToAll("shieldstate", {index = i, active = false, mouse = {x = 0, y = 0}})
+            end
+            if v.sword.active == true then
+              v.sword.active = false
+              v.sword.t = 0
+              network.host:sendToAll("sword", {index = i, active = false, mouse = {x = 0, y = 0}})
+            end
+            -- set the speed for players
+            servergame.set_speed(i)
+          end
+        end
         network.host:sendToAll("catch", i)
         break
       end
@@ -197,6 +215,7 @@ servergame.update = function(dt)
       down.dead = true
       down.new_scrim = field.w/12*7
       down.t = grace_time
+      td = true
       network.host:sendToAll("touchdown", team)
     end
   end
@@ -221,8 +240,10 @@ servergame.draw = function()
   love.graphics.setColor(0, 0, 255)
   love.graphics.rectangle("fill", down.scrim-2, 0, 4, field.h)
   -- draw first down line
-  love.graphics.setColor(255, 0, 0)
-  love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
+  if down.goal then
+    love.graphics.setColor(255, 0, 0)
+    love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
+  end
 
   for i, v in pairs(players) do
     local char_img = "char"
@@ -279,10 +300,10 @@ servergame.mousepressed = function(x, y, button)
   if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then -- qb who still has ball
       servergame.throw(id, mouse)
-    elseif ball.owner ~= id and players[id].team == players[ball.owner].team then -- team with ball, but does not have ball
+    elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team == players[id].team) or (not ball.owner and players[qb].team == players[id].team)) then -- team with ball, but does not have ball
       players[id].shield.active = true
       network.host:sendToAll("shieldstate", {index = id, info = true})
-    elseif ball.owner ~= id and players[id].team ~= players[qb].team then -- team without ball
+    elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team ~= players[id].team) or (not ball.owner and players[qb].team ~= players[id].team)) then -- team without ball
       players[id].sword = {active = true, d = vector.scale(sword.dist, vector.norm(mouse)), t = sword.t}
       network.host:sendToAll("sword", {index = id, active = true, mouse = mouse})
     end
@@ -333,18 +354,24 @@ servergame.new_down = function()
   down.num = down.num + 1
   -- adjust line of scrimmage / goal
   down.scrim = down.new_scrim
-  if players[qb].team == 1 and down.scrim >= down.goal then
-    down.goal = down.scrim + field.w/12
-    down.num = 1
-  elseif players[qb].team == 2 and down.scrim <= down.goal then
-    down.goal = down.scrim - field.w/12
-    down.num = 1
+  if down.goal then -- if goal isn't end zone
+    if players[qb].team == 1 and down.scrim >= down.goal then
+      down.goal = down.scrim + field.w/12
+      down.num = 1
+    elseif players[qb].team == 2 and down.scrim <= down.goal then
+      down.goal = down.scrim - field.w/12
+      down.num = 1
+    end
+    if down.goal <= field.w/12 or down.goal >= field.w/12*11 then -- if goal is in end zone, remove it
+      down.goal = nil
+    end
   end
 
   -- check if there is a turnover
-  if down.num > 4 or (ball.owner and players[ball.owner].team ~= players[qb].team) then
+  if down.num > 4 or (ball.owner and players[ball.owner].team ~= players[qb].team) or td == true then
     servergame.turnover()
   end
+  td = false
 
   down.dead = false
   down.t = grace_time
