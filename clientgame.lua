@@ -263,7 +263,7 @@ clientgame.draw = function()
   end
 
   -- draw personal cursor
-  if id ~= qb or ball.thrown then
+  if id ~= qb or id ~= ball.owner then
     love.graphics.setColor(team_info[players[id].team].color)
     love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
   end

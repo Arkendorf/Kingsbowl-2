@@ -333,7 +333,7 @@ servergame.draw = function()
   end
 
   -- draw personal cursor
-  if id ~= qb or ball.thrown then
+  if id ~= qb or id ~= ball.owner then
     love.graphics.setColor(team_info[players[id].team].color)
     love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
   end
@@ -476,6 +476,8 @@ servergame.new_down = function()
     v.sword.active = false
     v.shield.active = false
     v.dead = false
+    -- send reset position
+    network.host:sendToAll("pos", {info = v.p, index = i})
   end
   -- give ball to quarterback
   ball.owner = qb
@@ -508,6 +510,9 @@ servergame.turnover = function()
     down.goal = down.scrim + field.w/12
   elseif team == 2 then
     down.goal = down.scrim - field.w/12
+  end
+  if down.goal <= field.w/12 or down.goal >= field.w/12*11 then -- if goal is in end zone, remove it
+    down.goal = nil
   end
   down.num = 1
 end
