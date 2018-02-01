@@ -245,7 +245,7 @@ clientgame.draw = function()
     love.graphics.setColor(255, 255, 255)
     love.graphics.draw(img.shadow, math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 8, 10)
     -- draw target prediction
-    if id == qb and v.team == players[qb].team and i ~= qb then
+    if id == qb and id == ball.owner and v.team == players[qb].team and i ~= qb then
       local dist = math.sqrt((players[qb].p.x-v.p.x)*(players[qb].p.x-v.p.x)+(players[qb].p.y-v.p.y)*(players[qb].p.y-v.p.y))
       local p = vector.sum(vector.scale(dist/(ball_speed*60), vector.scale(v.speed, v.d)), v.p)
       love.graphics.setColor(team_info[v.team].color)
