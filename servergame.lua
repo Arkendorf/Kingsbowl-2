@@ -94,7 +94,6 @@ servergame.update = function(dt)
   for i, v in pairs(players) do
     -- move player based on their diff
     v.p = vector.sum(v.p, vector.scale(v.speed*dt*(v.sticky and 0.5 or 1), v.d))
-    print(v.sticky)
     -- apply collision to player
     servergame.collide(v)
     --apply collision between players
@@ -429,11 +428,13 @@ servergame.kill = function(i)
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed
+  print(i, players[i].shield.active, players[i].sword.active)
   if i == ball.owner then
     players[i].speed = speed_table.with_ball
-  elseif players[i].shield.active == true then
+  elseif players[i].shield.active then
+    print("oops 2")
     players[i].speed = speed_table.shield
-  elseif players[i].sword.active == true then
+  elseif players[i].sword.active then
     players[i].speed = speed_table.sword
   elseif players[i].team == players[qb].team then
     players[i].speed = speed_table.offense
