@@ -83,7 +83,6 @@ servergame.init = function()
     v.mouse = {x = 0, y = 0}
     v.art = {state = "base", anim = "idle", dir = 1, frame = 1, canvas = love.graphics.newCanvas(32, 48)}
     -- set the speed for players
-    servergame.set_speed(i)
   end
   -- set up initial down
   servergame.new_down()
@@ -489,6 +488,9 @@ servergame.new_down = function()
   camera.x = players[id].p.x
   camera.y = players[id].p.y
 
+  for i,p in pairs(players) do
+    servergame.set_speed(i)
+  end
   network.host:sendToAll("newdown", {down = down, qb = qb})
 end
 
@@ -526,10 +528,9 @@ servergame.kill = function(i)
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed
-  if i == ball.owner or i == qb then
+  if i == ball.owner then
     players[i].speed = speed_table.with_ball
   elseif players[i].shield.active then
-    print("oops 2")
     players[i].speed = speed_table.shield
   elseif players[i].sword.active then
     players[i].speed = speed_table.sword

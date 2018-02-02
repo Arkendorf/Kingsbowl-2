@@ -347,7 +347,7 @@ clientgame.back_to_main = function()
 end
 
 clientgame.set_speed = function (i) -- based on player's state, set a speed
-  if i == ball.owner or i == qb then
+  if i == ball.owner then
     players[i].speed = speed_table.with_ball
   elseif players[i].shield.active then
     print("oops")
