@@ -107,6 +107,7 @@ servergame.update = function(dt)
   for i, v in pairs(players) do
     -- move player based on their diff
     v.p = vector.sum(v.p, vector.scale(v.speed*dt*(v.sticky and 0.5 or 1), v.d))
+    v.sticky = false
     -- apply collision to player
     servergame.collide(v)
     --apply collision between players
@@ -138,7 +139,7 @@ servergame.update = function(dt)
        -- check if sword hits shield
       for j, w in pairs(players) do
         if j ~= i and w.dead == false and w.shield.active == true then
-          shield_pos = vector.sum(w.p, w.shield.d)
+          local shield_pos = vector.sum(w.p, w.shield.d)
           if vector.mag_sq(vector.sub(v.p, w.p)) > vector.mag_sq(vector.sub(v.p, shield_pos)) and collision.check_overlap({r = shield.r, p = shield_pos}, {r = sword.r, p = sword_pos}) then -- prevents blocks through body
             strike = false
           end
@@ -160,6 +161,12 @@ servergame.update = function(dt)
             end
           end
         end
+      end
+    end
+    for j,w in pairs(players) do
+      local shield_pos = vector.sum(w.p, w.shield.d)
+      if collision.check_overlap(players[i],  {r = shield.r, p = shield_pos}) and j ~= i then
+        v.sticky = true
       end
     end
     -- do art stuff
@@ -461,6 +468,7 @@ servergame.new_down = function()
   down.dead = false
   down.t = grace_time
   -- reset player positions
+  ball.owner = qb
   local team_pos = {0, 0}
   for i, v in pairs(players) do
     servergame.set_speed(i)
@@ -480,17 +488,12 @@ servergame.new_down = function()
     network.host:sendToAll("pos", {info = v.p, index = i})
   end
   -- give ball to quarterback
-  ball.owner = qb
-  print(ball.owner)
   ball.thrown = false
 
   -- reset target
   camera.x = players[id].p.x
   camera.y = players[id].p.y
 
-  for i,p in pairs(players) do
-    servergame.set_speed(i)
-  end
   network.host:sendToAll("newdown", {down = down, qb = qb})
 end
 
