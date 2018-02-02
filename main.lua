@@ -14,6 +14,7 @@ love.load = function()
     "0123456789!?.:", 1)
   love.graphics.setFont(font)
   gui.new(menus[1])
+  math.randomseed(os.time())
 end
 
 love.update = function(dt)

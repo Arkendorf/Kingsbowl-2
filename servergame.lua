@@ -355,6 +355,18 @@ servergame.draw = function()
     end
   end
 
+  -- draw effects (blood, etc.)
+  love.graphics.setColor(255, 255, 255)
+  for i, v in ipairs(effects) do
+    if not v.ox then v.ox = 0 end
+    if not v.oy then v.oy = 0 end
+    if v.quad then
+      love.graphics.draw(img[v.img], quad[v.quad], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
+    else
+      love.graphics.draw(img[v.img], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
+    end
+  end
+
   --draw qb cursor
   love.graphics.setColor(team_info[players[qb].team].color)
   if ball.thrown and not ball.owner then
@@ -369,18 +381,6 @@ servergame.draw = function()
     love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
   elseif id == qb and ball.owner and ball.owner == qb then
     love.graphics.draw(img.qbtarget, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
-  end
-
-  -- draw effects (blood, etc.)
-  love.graphics.setColor(255, 255, 255)
-  for i, v in ipairs(effects) do
-    if not v.ox then v.ox = 0 end
-    if not v.oy then v.oy = 0 end
-    if v.quad then
-      love.graphics.draw(img[v.img], quad[v.quad], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
-    else
-      love.graphics.draw(img[v.img], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
-    end
   end
 
   -- draw ball
@@ -568,6 +568,7 @@ servergame.kill = function(i)
   players[i].dead = true
   players[i].sword.active = false
   players[i].shield.active = false
+  -- blood spurt
   for j = 1, 4 do
     effects[#effects+1] = {img = "blood", quad = "drop", x = players[i].p.x, y = players[i].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
   end
