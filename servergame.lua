@@ -87,6 +87,7 @@ servergame.init = function()
     -- set the speed for players
   end
   -- set up initial down
+  qb = 0
   servergame.new_down()
   -- set game state
   state.game = true
@@ -478,7 +479,6 @@ servergame.throw = function(i, mouse)
 end
 
 servergame.new_down = function()
-  qb = 0
   -- progress down number
   down.num = down.num + 1
   -- adjust line of scrimmage / goal

@@ -9,10 +9,10 @@ win_width, win_height = love.graphics.getDimensions( )
 sword = {dist = 26, r = 10, t = .5}
 shield = {dist = 16, r = 12}
 speed_table = {
-  with_ball = 10,
-  offense = 16,
-  defense = 14,
-  shield = 8,
+  with_ball = 6,
+  offense = 10,
+  defense = 8,
+  shield = 4,
   sword = 2,
 }
 grace_time = 3
