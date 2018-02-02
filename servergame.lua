@@ -76,7 +76,7 @@ servergame.init = function()
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
-    v.r = 16
+    v.r = 10
     v.shield = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
     v.dead = false
@@ -165,8 +165,9 @@ servergame.update = function(dt)
     end
     for j,w in pairs(players) do
       local shield_pos = vector.sum(w.p, w.shield.d)
-      if collision.check_overlap(players[i],  {r = shield.r, p = shield_pos}) and j ~= i then
+      if collision.check_overlap(players[i],  {r = shield.r, p = shield_pos}) and j ~= i and w.shield.active then
         v.sticky = true
+        print(1)
       end
     end
     -- do art stuff

@@ -105,7 +105,7 @@ clientgame.init = function()
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
-    v.r = 16
+    v.r = 10
     v.shield = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
     v.dead = false
