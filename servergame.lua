@@ -435,6 +435,7 @@ servergame.throw = function(i, mouse)
 end
 
 servergame.new_down = function()
+  qb = 0
   -- progress down number
   down.num = down.num + 1
   -- adjust line of scrimmage / goal
@@ -481,6 +482,7 @@ servergame.new_down = function()
   end
   -- give ball to quarterback
   ball.owner = qb
+  print(ball.owner)
   ball.thrown = false
 
   -- reset target
@@ -524,8 +526,7 @@ servergame.kill = function(i)
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed
-  print(i, players[i].shield.active, players[i].sword.active)
-  if i == ball.owner then
+  if i == ball.owner or i == qb then
     players[i].speed = speed_table.with_ball
   elseif players[i].shield.active then
     print("oops 2")
@@ -537,6 +538,7 @@ servergame.set_speed = function (i) -- based on player's state, set a speed
   else
     players[i].speed = speed_table.defense
   end
+  print('s', qb, ball.owner, i, players[i].team == players[qb].team, players[i].shield.active, players[i].speed)
 end
 
 servergame.collide = function (v)

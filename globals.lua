@@ -4,7 +4,7 @@ joystick = nil
 username = {"Sir Placeholder"}
 players = {}
 id = nil
-qb = nil
+qb = 0
 win_width, win_height = love.graphics.getDimensions( )
 sword = {dist = 26, r = 10, t = .5}
 shield = {dist = 16, r = 12}
