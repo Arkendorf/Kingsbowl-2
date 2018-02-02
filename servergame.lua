@@ -14,6 +14,8 @@ local down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, de
 local td = false
 local quit = false
 
+local effects = {}
+
 local server_hooks = {
   connect = function(data, client)
   end,
@@ -187,6 +189,7 @@ servergame.update = function(dt)
     ball.z = z
     -- if ball hits the ground, reset
     if ball.z <= 0 then
+      effects[#effects+1] = {img = "stuckarrow", x = ball.p.x, y = ball.p.y, z = 0, ox = 16, oy = 16}
       down.dead = true
       down.t = grace_time
       ball.thrown = false
@@ -246,6 +249,26 @@ servergame.update = function(dt)
     down.t = down.t - dt
   elseif down.dead == true then
     servergame.new_down()
+  end
+  -- update effects
+  for i, v in pairs(effects) do
+    if v.dx then
+      v.x = v.x + v.dx
+      v.dx = v.dx * 0.9
+    end
+    if v.dy then
+      v.y = v.y + v.dy
+      v.dy = v.dy * 0.9
+    end
+    if v.dz then
+      if v.z > 0 then
+        v.z = v.z + v.dz
+        v.dz = v.dz - dt * 12
+      else
+        v.z = 0
+        v.quad = "puddle"
+      end
+    end
   end
   -- quit if necessary
   if quit then
@@ -335,22 +358,35 @@ servergame.draw = function()
   love.graphics.setColor(team_info[players[qb].team].color)
   if ball.thrown and not ball.owner then
     love.graphics.draw(img.balltarget, math.floor(ball.goal.x), math.floor(ball.goal.y), 0, 1, 1, 16, 16)
-  elseif ball.owner and ball.owner == qb then
+  elseif id ~= qb and ball.owner and ball.owner == qb then
     love.graphics.draw(img.qbtarget, math.floor(players[qb].p.x+players[qb].mouse.x), math.floor(players[qb].p.y+players[qb].mouse.y), 0, 1, 1, 16, 16)
   end
 
   -- draw personal cursor
+  love.graphics.setColor(team_info[players[id].team].color)
   if id ~= qb or id ~= ball.owner then
-    love.graphics.setColor(team_info[players[id].team].color)
     love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
+  elseif id == qb and ball.owner and ball.owner == qb then
+    love.graphics.draw(img.qbtarget, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
   end
 
+  -- draw effects (blood, etc.)
+  love.graphics.setColor(255, 255, 255)
+  for i, v in ipairs(effects) do
+    if not v.ox then v.ox = 0 end
+    if not v.oy then v.oy = 0 end
+    if v.quad then
+      love.graphics.draw(img[v.img], quad[v.quad], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
+    else
+      love.graphics.draw(img[v.img], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
+    end
+  end
 
   -- draw ball
   if ball.thrown then
     love.graphics.setColor(255, 255, 255)
     -- shadow
-    love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
+    love.graphics.draw(img.smallshadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
     -- ball
     queue[#queue+1] = {img = img.arrow, x = math.floor(ball.p.x), y = math.floor(ball.p.y), z = math.floor(ball.z)+18, r = ball.angle, ox = 8, oy = 8}
   end
@@ -495,6 +531,9 @@ servergame.new_down = function()
   camera.x = players[id].p.x
   camera.y = players[id].p.y
 
+  -- clear effects
+  effects = {}
+
   network.host:sendToAll("newdown", {down = down, qb = qb})
 end
 
@@ -529,6 +568,9 @@ servergame.kill = function(i)
   players[i].dead = true
   players[i].sword.active = false
   players[i].shield.active = false
+  for j = 1, 4 do
+    effects[#effects+1] = {img = "blood", quad = "drop", x = players[i].p.x, y = players[i].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
+  end
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed

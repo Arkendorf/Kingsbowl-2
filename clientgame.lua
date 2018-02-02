@@ -259,14 +259,16 @@ clientgame.draw = function()
   love.graphics.setColor(team_info[players[qb].team].color)
   if ball.thrown and not ball.owner then
     love.graphics.draw(img.balltarget, math.floor(ball.goal.x), math.floor(ball.goal.y), 0, 1, 1, 16, 16)
-  elseif ball.owner and ball.owner == qb then
+  elseif id ~= qb and ball.owner and ball.owner == qb then
     love.graphics.draw(img.qbtarget, math.floor(players[qb].p.x+players[qb].mouse.x), math.floor(players[qb].p.y+players[qb].mouse.y), 0, 1, 1, 16, 16)
   end
 
   -- draw personal cursor
+  love.graphics.setColor(team_info[players[id].team].color)
   if id ~= qb or id ~= ball.owner then
-    love.graphics.setColor(team_info[players[id].team].color)
     love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
+  elseif id == qb and ball.owner and ball.owner == qb then
+    love.graphics.draw(img.qbtarget, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
   end
 
 
@@ -277,7 +279,7 @@ clientgame.draw = function()
     -- shadow
     love.graphics.draw(img.shadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
     -- ball
-    queue[#queue+1] = {img = img.arrow, x = math.floor(ball.p.x), y = math.floor(ball.p.y), z = math.floor(ball.z)+18, r = ball.angle, ox = 8, oy = 8}
+    queue[#queue+1] = {img = img.arrow, x = math.floor(ball.p.x), y = math.floor(ball.p.y), z = math.floor(ball.z), r = ball.angle, ox = 8, oy = 8}
   end
 
   -- draw items in queue

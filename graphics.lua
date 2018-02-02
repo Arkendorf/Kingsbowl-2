@@ -56,6 +56,8 @@ graphics.init = function()
   quad.sliderbar = love.graphics.newQuad(0, 0, 124, 12, img.slider:getDimensions())
   quad.slidernode = love.graphics.newQuad(124, 0, 4, 12, img.slider:getDimensions())
   quad.shield = graphics.spritesheet(32, 32, img.shield)
+  quad.drop = love.graphics.newQuad(0, 0, 16, 16, img.blood:getDimensions())
+  quad.puddle = love.graphics.newQuad(16, 0, 16, 16, img.blood:getDimensions())
 
   return img, quad, char
 end
