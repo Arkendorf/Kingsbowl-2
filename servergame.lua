@@ -87,7 +87,6 @@ servergame.init = function()
     -- set the speed for players
   end
   -- set up initial down
-  qb = 0
   servergame.new_down()
   -- set game state
   state.game = true

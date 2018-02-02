@@ -69,7 +69,7 @@ local client_hooks = {
     clientgame.set_speed(data.index)
   end,
   shieldstate = function(data)
-    -- players[data.index].shield.active = data.info
+    players[data.index].shield.active = data.info
     -- adjust speed
     clientgame.set_speed(data.index)
   end,
