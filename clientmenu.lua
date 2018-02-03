@@ -73,8 +73,11 @@ clientmenu.update = function(dt)
 end
 
 clientmenu.draw = function()
-  -- leave button
+  -- base
   love.graphics.setColor(255, 255, 255)
+  love.graphics.draw(img.field, (win_width-field.w)/2, (win_height-field.h)/2)
+
+  -- leave button
   love.graphics.draw(img.button, 2, 2)
   love.graphics.setColor(team_info[1].color)
   love.graphics.draw(img.button_overlay, 2, 2)

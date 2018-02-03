@@ -14,6 +14,7 @@ love.load = function()
     "abcdefghijklmnopqrstuvwxyz" ..
     "0123456789!?.:", 1)
   love.graphics.setFont(font)
+  love.graphics.setBackgroundColor(60, 152, 70)
   gui.new(menus[1])
   math.randomseed(os.time())
 end

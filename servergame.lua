@@ -15,6 +15,7 @@ local td = false
 local quit = false
 
 local effects = {}
+local alerts = {}
 
 local server_hooks = {
   connect = function(data, client)
@@ -151,9 +152,11 @@ servergame.update = function(dt)
       if strike == true then
         for j, w in pairs(players) do
           if j ~= i and w.team ~= v.team and w.dead == false and collision.check_overlap({r = sword.r, p = sword_pos}, w) then
+            -- add alert
+            alerts[#alerts+1] = {txt = v.name.." has tackled "..w.name, team = v.team}
             -- kill player
             servergame.kill(j)
-            network.host:sendToAll("dead", j)
+            network.host:sendToAll("dead", {killer = i, victim = j})
             -- if player with ball is tackled
             if j == ball.owner then
               down.dead = true
@@ -207,6 +210,8 @@ servergame.update = function(dt)
         ball.owner = i
                 -- inteception
         if players[ball.owner].team ~= players[qb].team then
+          -- add alert
+          alerts[#alerts+1] = {txt = players[ball.owner].name.." has intecepted the ball", team = players[ball.owner].team}
           -- reset swords and shields
           for i, v in pairs(players) do
             if v.shield.active == true then
@@ -221,6 +226,9 @@ servergame.update = function(dt)
             -- set the speed for players
             servergame.set_speed(i)
           end
+        else
+          -- add alert
+          alerts[#alerts+1] = {txt = players[ball.owner].name.." has caught the ball", team = players[ball.owner].team}
         end
         network.host:sendToAll("catch", i)
         break
@@ -236,6 +244,9 @@ servergame.update = function(dt)
     -- find team to check
     local team = players[ball.owner].team
     if (team == 1 and players[ball.owner].p.x > field.w/12*11) or (team == 2 and players[ball.owner].p.x < field.w/12) then
+      -- add alert
+      alerts[#alerts+1] = {txt = players[ball.owner].name.." has scored a touchdown for "..team_info[team].name, team = team}
+      -- do stuff
       score[team] = score[team] + 7
       down.dead = true
       down.new_scrim = field.w/12*7
@@ -268,6 +279,17 @@ servergame.update = function(dt)
         v.z = 0
         v.quad = "puddle"
       end
+    end
+  end
+  --update alerts
+  if #alerts > 0 then
+    if alerts[1].t then
+      alerts[1].t = alerts[1].t - dt
+      if alerts[1].t <= 0 then
+        table.remove(alerts, 1)
+      end
+    else
+      alerts[1].t = 2
     end
   end
   -- quit if necessary
@@ -304,7 +326,7 @@ servergame.draw = function()
       love.graphics.draw(img.shield_overlay, quad.shield[v.art.dir])
 
       love.graphics.setCanvas()
-      queue[#queue+1] = {img = v.shield.canvas, x = math.floor(v.p.x)+math.floor(v.shield.d.x), y = math.floor(v.p.y)+math.floor(v.shield.d.y)*.5, z = 18, ox = 16, oy = 16}
+      queue[#queue+1] = {img = v.shield.canvas, x = math.floor(v.p.x)+math.floor(v.shield.d.x), y = math.floor(v.p.y)+math.floor(v.shield.d.y*.75), z = 18, ox = 16, oy = 16}
     end
 
      -- draw sword
@@ -318,7 +340,7 @@ servergame.draw = function()
       love.graphics.draw(img.sword_overlay)
 
       love.graphics.setCanvas()
-      queue[#queue+1] = {img = v.sword.canvas, x = math.floor(v.p.x)+math.floor(v.sword.d.x), y = math.floor(v.p.y)+math.floor(v.sword.d.y)*.5, z = 18, r = math.atan2(v.sword.d.y, v.sword.d.x), ox = 16, oy = 16}
+      queue[#queue+1] = {img = v.sword.canvas, x = math.floor(v.p.x)+math.floor(v.sword.d.x), y = math.floor(v.p.y)+math.floor(v.sword.d.y*.75), z = 18, r = math.atan2(v.sword.d.y, v.sword.d.x), ox = 16, oy = 16}
     end
 
     --queue username
@@ -432,6 +454,12 @@ servergame.draw = function()
     love.graphics.printf(math.ceil(down.t+grace_time), (win_width+160)/2-32, 52, 32, "center")
   else
     love.graphics.printf(math.ceil(down.t), (win_width+160)/2-32, 52, 32, "center")
+  end
+
+  -- draw alerts
+  if #alerts > 0 then
+    love.graphics.setColor(team_info[alerts[1].team].color)
+    love.graphics.print(alerts[1].txt, math.floor((win_width-font:getWidth(alerts[1].txt))/2), win_height/2+32)
   end
 end
 

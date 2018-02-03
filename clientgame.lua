@@ -19,6 +19,7 @@ local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil,
 local down = {scrim = 0, goal = 0, num = 0, dead = false, t = 3}
 
 local effects = {}
+local alerts = {}
 
 local client_hooks = {
   pos = function(data)
@@ -32,6 +33,12 @@ local client_hooks = {
   end,
   catch = function(data)
     ball.owner = data
+    -- add alert
+    if players[ball.owner].team ~= players[qb].team then
+      alerts[#alerts+1] = {txt = players[ball.owner].name.." has intecepted the ball", team = players[ball.owner].team}
+    else
+      alerts[#alerts+1] = {txt = players[ball.owner].name.." has caught the ball", team = players[ball.owner].team}
+    end
   end,
   newdown = function(data)
     down = data.down
@@ -84,13 +91,18 @@ local client_hooks = {
     end
   end,
   dead = function(data)
-    players[data].dead = true
+    -- add alert
+    alerts[#alerts+1] = {txt = players[data.killer].name.." has tackled "..players[data.victim].name, team = players[data.killer].team}
+    players[data.victim].dead = true
     -- blood spurt
     for j = 1, 4 do
-      effects[#effects+1] = {img = "blood", quad = "drop", x = players[data].p.x, y = players[data].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
+      effects[#effects+1] = {img = "blood", quad = "drop", x = players[data.victim].p.x, y = players[data.victim].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
     end
   end,
   touchdown = function(data)
+    -- add alert
+    alerts[#alerts+1] = {txt = players[ball.owner].name.." has scored a touchdown for "..team_info[data].name, team = data}
+    -- do stuff
     score[data] = score[data] + 7
     down.dead = true
     down.t = 3
@@ -204,6 +216,17 @@ clientgame.update = function(dt)
       end
     end
   end
+  --update alerts
+  if #alerts > 0 then
+    if alerts[1].t then
+      alerts[1].t = alerts[1].t - dt
+      if alerts[1].t <= 0 then
+        table.remove(alerts, 1)
+      end
+    else
+      alerts[1].t = 2
+    end
+  end
 end
 
 clientgame.draw = function()
@@ -234,7 +257,7 @@ clientgame.draw = function()
       love.graphics.draw(img.shield_overlay, quad.shield[v.art.dir])
 
       love.graphics.setCanvas()
-      queue[#queue+1] = {img = v.shield.canvas, x = math.floor(v.p.x)+math.floor(v.shield.d.x), y = math.floor(v.p.y)+math.floor(v.shield.d.y)*.5, z = 18, ox = 16, oy = 16}
+      queue[#queue+1] = {img = v.shield.canvas, x = math.floor(v.p.x)+math.floor(v.shield.d.x), y = math.floor(v.p.y)+math.floor(v.shield.d.y*.75), z = 18, ox = 16, oy = 16}
     end
 
      -- draw sword
@@ -248,7 +271,7 @@ clientgame.draw = function()
       love.graphics.draw(img.sword_overlay)
 
       love.graphics.setCanvas()
-      queue[#queue+1] = {img = v.sword.canvas, x = math.floor(v.p.x)+math.floor(v.sword.d.x), y = math.floor(v.p.y)+math.floor(v.sword.d.y)*.5, z = 18, r = math.atan2(v.sword.d.y, v.sword.d.x), ox = 16, oy = 16}
+      queue[#queue+1] = {img = v.sword.canvas, x = math.floor(v.p.x)+math.floor(v.sword.d.x), y = math.floor(v.p.y)+math.floor(v.sword.d.y*.75), z = 18, r = math.atan2(v.sword.d.y, v.sword.d.x), ox = 16, oy = 16}
     end
 
     --queue username
@@ -363,6 +386,12 @@ clientgame.draw = function()
     love.graphics.printf(math.ceil(down.t+grace_time), (win_width+160)/2-32, 52, 32, "center")
   else
     love.graphics.printf(math.ceil(down.t), (win_width+160)/2-32, 52, 32, "center")
+  end
+
+  -- draw alerts
+  if #alerts > 0 then
+    love.graphics.setColor(team_info[alerts[1].team].color)
+    love.graphics.print(alerts[1].txt, math.floor((win_width-font:getWidth(alerts[1].txt))/2), win_height/2+32)
   end
 end
 
