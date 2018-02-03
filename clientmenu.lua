@@ -73,11 +73,16 @@ clientmenu.update = function(dt)
 end
 
 clientmenu.draw = function()
-  -- leave button
-  love.graphics.setColor(0, 212, 0)
-  love.graphics.draw(img.smallbanner)
+  -- base
   love.graphics.setColor(255, 255, 255)
-  love.graphics.print("Leave", 4, 12)
+  love.graphics.draw(img.field, (win_width-field.w)/2, (win_height-field.h)/2)
+
+  -- leave button
+  love.graphics.draw(img.button, 2, 2)
+  love.graphics.setColor(team_info[1].color)
+  love.graphics.draw(img.button_overlay, 2, 2)
+  love.graphics.setColor(229, 229, 229)
+  love.graphics.print("Leave", 14, 14)
 
   -- draw team backgrounds
   love.graphics.setColor(team_info[1].color)
@@ -86,9 +91,9 @@ clientmenu.draw = function()
   love.graphics.draw(img.teamlist, quad.teamlist3, (win_width/2) + 16, (win_height-256)/2)
 
   -- draw team names
-  love.graphics.setColor(255, 255, 255)
-  love.graphics.print(team_info[1].name, (win_width/2) - 144, (win_height-256)/2+2)
-  love.graphics.print(team_info[2].name, (win_width/2) + 16, (win_height-256)/2+2)
+  love.graphics.setColor(229, 229, 229)
+  love.graphics.print(team_info[1].name, (win_width/2) - 138, (win_height-256)/2+2)
+  love.graphics.print(team_info[2].name, (win_width/2) + 22, (win_height-256)/2+2)
 
   -- draw player names
   local team_size = {0, 0}

@@ -11,12 +11,12 @@ local difflog = {}
 difflog.p = {}
 difflog.tail = difflog.head
 
--- julians wack movement thing
-clientgame.input = require("keyboard")
-
 -- set up variables
 local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
 local down = {scrim = 0, goal = 0, num = 0, dead = false, t = 3}
+
+local effects = {}
+local alerts = {}
 
 local client_hooks = {
   pos = function(data)
@@ -30,6 +30,12 @@ local client_hooks = {
   end,
   catch = function(data)
     ball.owner = data
+    -- add alert
+    if players[ball.owner].team ~= players[qb].team then
+      alerts[#alerts+1] = {txt = players[ball.owner].name.." has intecepted the ball", team = players[ball.owner].team}
+    else
+      alerts[#alerts+1] = {txt = players[ball.owner].name.." has caught the ball", team = players[ball.owner].team}
+    end
   end,
   newdown = function(data)
     down = data.down
@@ -47,12 +53,14 @@ local client_hooks = {
     -- reset target
     camera.x = players[id].p.x
     camera.y = players[id].p.y
+    -- clear effects
+    effects = {}
   end,
   ballpos = function(data)
     ball.p = data
     -- change ball's height / angle
     local dist = math.sqrt((ball.start.x-ball.p.x)*(ball.start.x-ball.p.x)+(ball.start.y-ball.p.y)*(ball.start.y-ball.p.y))
-    local z = ((dist*dist-ball.height*dist)/512-18)*-1
+    local z = (dist*dist-ball.height*dist)/512*-1
     ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
     ball.z = z
   end,
@@ -69,7 +77,7 @@ local client_hooks = {
     clientgame.set_speed(data.index)
   end,
   shieldstate = function(data)
-    -- players[data.index].shield.active = data.info
+    players[data.index].shield.active = data.info
     -- adjust speed
     clientgame.set_speed(data.index)
   end,
@@ -80,9 +88,18 @@ local client_hooks = {
     end
   end,
   dead = function(data)
-    players[data].dead = true
+    -- add alert
+    alerts[#alerts+1] = {txt = players[data.killer].name.." has tackled "..players[data.victim].name, team = players[data.killer].team}
+    players[data.victim].dead = true
+    -- blood spurt
+    for j = 1, 4 do
+      effects[#effects+1] = {img = "blood", quad = "drop", x = players[data.victim].p.x, y = players[data.victim].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
+    end
   end,
   touchdown = function(data)
+    -- add alert
+    alerts[#alerts+1] = {txt = players[ball.owner].name.." has scored a touchdown for "..team_info[data].name, team = data}
+    -- do stuff
     score[data] = score[data] + 7
     down.dead = true
     down.t = 3
@@ -123,12 +140,11 @@ clientgame.update = function(dt)
   network.peer:update()
 
   -- get server mouse positions
-  players[id].mouse.x = camera.x-players[id].p.x
-  players[id].mouse.y = camera.y-players[id].p.y
+  input.target()
   -- send client mouse position to server
   network.peer:send("mousepos", players[id].mouse)
   -- get client's direction
-  clientgame.input.direction()
+  input.direction()
   -- send client's difference in position
 
   network.peer:send("posdif", players[id].d)
@@ -164,6 +180,7 @@ clientgame.update = function(dt)
     ball.z = z
     -- if ball hits the ground, stop
     if ball.z <= 0 then
+      effects[#effects+1] = {img = "stuckarrow", x = ball.p.x, y = ball.p.y, z = 0, ox = 16, oy = 16}
       ball.thrown = false
     end
   end
@@ -174,6 +191,37 @@ clientgame.update = function(dt)
   -- advance play clock
   if down.t > 0 then
     down.t = down.t - dt
+  end
+  -- update effects
+  for i, v in pairs(effects) do
+    if v.dx then
+      v.x = v.x + v.dx
+      v.dx = v.dx * 0.9
+    end
+    if v.dy then
+      v.y = v.y + v.dy
+      v.dy = v.dy * 0.9
+    end
+    if v.dz then
+      if v.z > 0 then
+        v.z = v.z + v.dz
+        v.dz = v.dz - dt * 12
+      else
+        v.z = 0
+        v.quad = "puddle"
+      end
+    end
+  end
+  --update alerts
+  if #alerts > 0 then
+    if alerts[1].t then
+      alerts[1].t = alerts[1].t - dt
+      if alerts[1].t <= 0 then
+        table.remove(alerts, 1)
+      end
+    else
+      alerts[1].t = 2
+    end
   end
 end
 
@@ -205,7 +253,7 @@ clientgame.draw = function()
       love.graphics.draw(img.shield_overlay, quad.shield[v.art.dir])
 
       love.graphics.setCanvas()
-      queue[#queue+1] = {img = v.shield.canvas, x = math.floor(v.p.x)+math.floor(v.shield.d.x), y = math.floor(v.p.y)+math.floor(v.shield.d.y)*.5, z = 18, ox = 16, oy = 16}
+      queue[#queue+1] = {img = v.shield.canvas, x = math.floor(v.p.x)+math.floor(v.shield.d.x), y = math.floor(v.p.y)+math.floor(v.shield.d.y*.75), z = 18, ox = 16, oy = 16}
     end
 
      -- draw sword
@@ -219,7 +267,7 @@ clientgame.draw = function()
       love.graphics.draw(img.sword_overlay)
 
       love.graphics.setCanvas()
-      queue[#queue+1] = {img = v.sword.canvas, x = math.floor(v.p.x)+math.floor(v.sword.d.x), y = math.floor(v.p.y)+math.floor(v.sword.d.y)*.5, z = 18, r = math.atan2(v.sword.d.y, v.sword.d.x), ox = 16, oy = 16}
+      queue[#queue+1] = {img = v.sword.canvas, x = math.floor(v.p.x)+math.floor(v.sword.d.x), y = math.floor(v.p.y)+math.floor(v.sword.d.y*.75), z = 18, r = math.atan2(v.sword.d.y, v.sword.d.x), ox = 16, oy = 16}
     end
 
     --queue username
@@ -232,11 +280,11 @@ clientgame.draw = function()
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(img.field)
   -- draw line of scrimmage
-  love.graphics.setColor(0, 0, 255)
+  love.graphics.setColor(255, 0, 0)
   love.graphics.rectangle("fill", down.scrim-2, 0, 4, field.h)
   -- draw first down line
   if down.goal then
-    love.graphics.setColor(255, 0, 0)
+    love.graphics.setColor(255, 225, 0)
     love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
   end
 
@@ -246,12 +294,25 @@ clientgame.draw = function()
     love.graphics.setColor(255, 255, 255)
     love.graphics.draw(img.shadow, math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 8, 10)
     -- draw target prediction
-    if id == qb and v.team == players[qb].team and i ~= qb then
+    if id == qb and ball.owner == id and v.team == players[qb].team and i ~= qb then
       local dist = math.sqrt((players[qb].p.x-v.p.x)*(players[qb].p.x-v.p.x)+(players[qb].p.y-v.p.y)*(players[qb].p.y-v.p.y))
-      local p = vector.sum(vector.scale(dist/(ball_speed*60), vector.scale(v.speed, v.d)), v.p)
+      local adj_d = vector.scale(v.speed/60, v.d)
+      local p = vector.sum(vector.scale(- dist / (math.sqrt(vector.mag_sq(adj_d)) - ball_speed), adj_d), v.p)
       love.graphics.setColor(team_info[v.team].color)
       love.graphics.line(v.p.x, v.p.y, p.x, p.y)
       love.graphics.draw(img.charnode, math.floor(p.x), math.floor(p.y), 0, 1, 1, 16, 16)
+    end
+  end
+
+  -- draw effects (blood, etc.)
+  love.graphics.setColor(255, 255, 255)
+  for i, v in ipairs(effects) do
+    if not v.ox then v.ox = 0 end
+    if not v.oy then v.oy = 0 end
+    if v.quad then
+      love.graphics.draw(img[v.img], quad[v.quad], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
+    else
+      love.graphics.draw(img[v.img], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
     end
   end
 
@@ -270,7 +331,6 @@ clientgame.draw = function()
   elseif id == qb and ball.owner and ball.owner == qb then
     love.graphics.draw(img.qbtarget, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
   end
-
 
 
   -- draw ball
@@ -305,10 +365,34 @@ clientgame.draw = function()
 
   love.graphics.pop()
   love.graphics.setColor(255, 255, 255)
+  -- draw scoreboard
+  love.graphics.draw(img.scoreboard, (win_width-160)/2, 0)
+  love.graphics.setColor(team_info[1].color)
+  love.graphics.draw(img.scoreboard_overlay, (win_width-160)/2, 0)
+  love.graphics.setColor(team_info[2].color)
+  love.graphics.draw(img.scoreboard_overlay, (win_width)/2, 0)
+  love.graphics.setColor(229, 229, 229)
+  love.graphics.print(team_info[1].name, math.floor((win_width-80-font:getWidth(team_info[1].name))/2), 8)
+  love.graphics.print(score[1], math.floor((win_width-80-font:getWidth(tostring(score[1])))/2), 24)
+  love.graphics.print(team_info[2].name, math.floor((win_width+80-font:getWidth(team_info[1].name))/2), 8)
+  love.graphics.print(score[2], math.floor((win_width+80-font:getWidth(tostring(score[2])))/2), 24)
+  love.graphics.print(tostring(down.num)..num_suffix[down.num].." and "..tostring(math.ceil(math.abs(down.goal - down.scrim)/field.w*120)), (win_width-160)/2+4, 52)
+  love.graphics.setColor(51, 51, 51)
+  if down.dead then
+    love.graphics.printf(math.ceil(down.t+grace_time), (win_width+160)/2-32, 52, 32, "center")
+  else
+    love.graphics.printf(math.ceil(down.t), (win_width+160)/2-32, 52, 32, "center")
+  end
+
+  -- draw alerts
+  if #alerts > 0 then
+    love.graphics.setColor(team_info[alerts[1].team].color)
+    love.graphics.print(alerts[1].txt, math.floor((win_width-font:getWidth(alerts[1].txt))/2), win_height/2+32)
+  end
 end
 
 clientgame.mousepressed = function(x, y, button)
-  if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
+  if down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then
       network.peer:send("throw", players[id].mouse)
     elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team == players[id].team) or (not ball.owner and players[qb].team == players[id].team)) then
@@ -324,7 +408,7 @@ clientgame.mousepressed = function(x, y, button)
 end
 
 clientgame.mousereleased = function(x, y, button)
-  if button == 1 and down.t <= 0 and players[id].dead == false then
+  if down.t <= 0 and players[id].dead == false then
     if players[id].shield.active == true then
       players[id].shield.active = false
       network.peer:send("shieldstate", false)

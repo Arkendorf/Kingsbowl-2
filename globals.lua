@@ -6,8 +6,8 @@ players = {}
 id = nil
 qb = 0
 win_width, win_height = love.graphics.getDimensions( )
-sword = {dist = 26, r = 10, t = .5}
-shield = {dist = 16, r = 12}
+sword = {dist = 18, r = 6, t = .5}
+shield = {dist = 12, r = 8}
 speed_table = {
   with_ball = 6,
   offense = 10,
@@ -19,12 +19,14 @@ grace_time = 3
 field = {w = 3600, h = 1600}
 mouse = {x = 0, y = 0}
 score = {0, 0}
--- num_suffix = {"st", "nd", "rd", "th"}
+num_suffix = {"st", "nd", "rd", "th"}
 team_info = {{name = "Team 1", color = {255, 0, 0}}, {name = "Team 2", color = {0, 0, 255}}}
 grace_time = 3
 camera = {x = 0, y = 0}
 global_dt = 0
 ball_speed = 4
+
+input = require("keyboard")
 
 
 local graphics = require "graphics"

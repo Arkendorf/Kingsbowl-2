@@ -6,8 +6,6 @@ local network = require "network"
 require "globals"
 local servergame = {}
 
--- julians wack movement thing
-servergame.input = require("keyboard")
 -- set up variables
 local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
 local down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
@@ -15,6 +13,7 @@ local td = false
 local quit = false
 
 local effects = {}
+local alerts = {}
 
 local server_hooks = {
   connect = function(data, client)
@@ -87,7 +86,6 @@ servergame.init = function()
     -- set the speed for players
   end
   -- set up initial down
-  qb = 0
   servergame.new_down()
   -- set game state
   state.game = true
@@ -98,12 +96,11 @@ servergame.update = function(dt)
   network.host:update()
 
   --get server mouse positions
-  players[id].mouse.x = camera.x-players[id].p.x
-  players[id].mouse.y = camera.y-players[id].p.y
+  input.target()
   -- send server mouse position to clients
   network.host:sendToAll("mousepos", {info = players[id].mouse, index = id})
   -- get servers direction
-  servergame.input.direction()
+  input.direction()
   -- send players position difference to all
   network.host:sendToAll("posdif", {info = players[id].d, index = id})
 
@@ -152,9 +149,11 @@ servergame.update = function(dt)
       if strike == true then
         for j, w in pairs(players) do
           if j ~= i and w.team ~= v.team and w.dead == false and collision.check_overlap({r = sword.r, p = sword_pos}, w) then
+            -- add alert
+            alerts[#alerts+1] = {txt = v.name.." has tackled "..w.name, team = v.team}
             -- kill player
             servergame.kill(j)
-            network.host:sendToAll("dead", j)
+            network.host:sendToAll("dead", {killer = i, victim = j})
             -- if player with ball is tackled
             if j == ball.owner then
               down.dead = true
@@ -210,6 +209,8 @@ servergame.update = function(dt)
         end
                 -- inteception
         if players[ball.owner].team ~= players[qb].team then
+          -- add alert
+          alerts[#alerts+1] = {txt = players[ball.owner].name.." has intecepted the ball", team = players[ball.owner].team}
           -- reset swords and shields
           for i, v in pairs(players) do
             if v.shield.active == true then
@@ -224,6 +225,9 @@ servergame.update = function(dt)
             -- set the speed for players
             servergame.set_speed(i)
           end
+        else
+          -- add alert
+          alerts[#alerts+1] = {txt = players[ball.owner].name.." has caught the ball", team = players[ball.owner].team}
         end
         network.host:sendToAll("catch", i)
         break
@@ -239,6 +243,9 @@ servergame.update = function(dt)
     -- find team to check
     local team = players[ball.owner].team
     if (team == 1 and players[ball.owner].p.x > field.w/12*11) or (team == 2 and players[ball.owner].p.x < field.w/12) then
+      -- add alert
+      alerts[#alerts+1] = {txt = players[ball.owner].name.." has scored a touchdown for "..team_info[team].name, team = team}
+      -- do stuff
       score[team] = score[team] + 7
       down.dead = true
       down.new_scrim = field.w/12*7
@@ -271,6 +278,17 @@ servergame.update = function(dt)
         v.z = 0
         v.quad = "puddle"
       end
+    end
+  end
+  --update alerts
+  if #alerts > 0 then
+    if alerts[1].t then
+      alerts[1].t = alerts[1].t - dt
+      if alerts[1].t <= 0 then
+        table.remove(alerts, 1)
+      end
+    else
+      alerts[1].t = 2
     end
   end
   -- quit if necessary
@@ -307,7 +325,7 @@ servergame.draw = function()
       love.graphics.draw(img.shield_overlay, quad.shield[v.art.dir])
 
       love.graphics.setCanvas()
-      queue[#queue+1] = {img = v.shield.canvas, x = math.floor(v.p.x)+math.floor(v.shield.d.x), y = math.floor(v.p.y)+math.floor(v.shield.d.y)*.5, z = 18, ox = 16, oy = 16}
+      queue[#queue+1] = {img = v.shield.canvas, x = math.floor(v.p.x)+math.floor(v.shield.d.x), y = math.floor(v.p.y)+math.floor(v.shield.d.y*.75), z = 18, ox = 16, oy = 16}
     end
 
      -- draw sword
@@ -321,7 +339,7 @@ servergame.draw = function()
       love.graphics.draw(img.sword_overlay)
 
       love.graphics.setCanvas()
-      queue[#queue+1] = {img = v.sword.canvas, x = math.floor(v.p.x)+math.floor(v.sword.d.x), y = math.floor(v.p.y)+math.floor(v.sword.d.y)*.5, z = 18, r = math.atan2(v.sword.d.y, v.sword.d.x), ox = 16, oy = 16}
+      queue[#queue+1] = {img = v.sword.canvas, x = math.floor(v.p.x)+math.floor(v.sword.d.x), y = math.floor(v.p.y)+math.floor(v.sword.d.y*.75), z = 18, r = math.atan2(v.sword.d.y, v.sword.d.x), ox = 16, oy = 16}
     end
 
     --queue username
@@ -334,11 +352,11 @@ servergame.draw = function()
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(img.field)
   -- draw line of scrimmage
-  love.graphics.setColor(0, 0, 255)
+  love.graphics.setColor(255, 0, 0)
   love.graphics.rectangle("fill", down.scrim-2, 0, 4, field.h)
   -- draw first down line
   if down.goal then
-    love.graphics.setColor(255, 0, 0)
+    love.graphics.setColor(255, 225, 0)
     love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
   end
 
@@ -348,12 +366,25 @@ servergame.draw = function()
     love.graphics.setColor(255, 255, 255)
     love.graphics.draw(img.shadow, math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 8, 10)
     -- draw target prediction
-    if id == qb and v.team == players[qb].team and i ~= qb then
+    if id == qb and ball.owner == id and v.team == players[qb].team and i ~= qb then
       local dist = math.sqrt((players[qb].p.x-v.p.x)*(players[qb].p.x-v.p.x)+(players[qb].p.y-v.p.y)*(players[qb].p.y-v.p.y))
-      local p = vector.sum(vector.scale(dist/(ball_speed*60), vector.scale(v.speed, v.d)), v.p)
+      local adj_d = vector.scale(v.speed/60, v.d)
+      local p = vector.sum(vector.scale(- dist / (math.sqrt(vector.mag_sq(adj_d)) - ball_speed), adj_d), v.p)
       love.graphics.setColor(team_info[v.team].color)
       love.graphics.line(v.p.x, v.p.y, p.x, p.y)
       love.graphics.draw(img.charnode, math.floor(p.x), math.floor(p.y), 0, 1, 1, 16, 16)
+    end
+  end
+
+  -- draw effects (blood, etc.)
+  love.graphics.setColor(255, 255, 255)
+  for i, v in ipairs(effects) do
+    if not v.ox then v.ox = 0 end
+    if not v.oy then v.oy = 0 end
+    if v.quad then
+      love.graphics.draw(img[v.img], quad[v.quad], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
+    else
+      love.graphics.draw(img[v.img], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
     end
   end
 
@@ -371,18 +402,6 @@ servergame.draw = function()
     love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
   elseif id == qb and ball.owner and ball.owner == qb then
     love.graphics.draw(img.qbtarget, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
-  end
-
-  -- draw effects (blood, etc.)
-  love.graphics.setColor(255, 255, 255)
-  for i, v in ipairs(effects) do
-    if not v.ox then v.ox = 0 end
-    if not v.oy then v.oy = 0 end
-    if v.quad then
-      love.graphics.draw(img[v.img], quad[v.quad], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
-    else
-      love.graphics.draw(img[v.img], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
-    end
   end
 
   -- draw ball
@@ -417,10 +436,34 @@ servergame.draw = function()
 
   love.graphics.pop()
   love.graphics.setColor(255, 255, 255)
+  -- draw scoreboard
+  love.graphics.draw(img.scoreboard, (win_width-160)/2, 0)
+  love.graphics.setColor(team_info[1].color)
+  love.graphics.draw(img.scoreboard_overlay, (win_width-160)/2, 0)
+  love.graphics.setColor(team_info[2].color)
+  love.graphics.draw(img.scoreboard_overlay, (win_width)/2, 0)
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.print(team_info[1].name, math.floor((win_width-80-font:getWidth(team_info[1].name))/2), 8)
+  love.graphics.print(score[1], math.floor((win_width-80-font:getWidth(tostring(score[1])))/2), 24)
+  love.graphics.print(team_info[2].name, math.floor((win_width+80-font:getWidth(team_info[1].name))/2), 8)
+  love.graphics.print(score[2], math.floor((win_width+80-font:getWidth(tostring(score[2])))/2), 24)
+  love.graphics.print(tostring(down.num)..num_suffix[down.num].." and "..tostring(math.ceil(math.abs(down.goal - down.scrim)/field.w*120)), (win_width-160)/2+4, 52)
+  love.graphics.setColor(0, 0, 0)
+  if down.dead then
+    love.graphics.printf(math.ceil(down.t+grace_time), (win_width+160)/2-32, 52, 32, "center")
+  else
+    love.graphics.printf(math.ceil(down.t), (win_width+160)/2-32, 52, 32, "center")
+  end
+
+  -- draw alerts
+  if #alerts > 0 then
+    love.graphics.setColor(team_info[alerts[1].team].color)
+    love.graphics.print(alerts[1].txt, math.floor((win_width-font:getWidth(alerts[1].txt))/2), win_height/2+32)
+  end
 end
 
 servergame.mousepressed = function(x, y, button)
-  if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
+  if down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then -- qb who still has ball
       servergame.throw(id, players[id].mouse)
     elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team == players[id].team) or (not ball.owner and players[qb].team == players[id].team)) then -- team with ball, but does not have ball
@@ -436,7 +479,7 @@ servergame.mousepressed = function(x, y, button)
 end
 
 servergame.mousereleased = function(x, y, button)
-  if button == 1 and down.t <= 0 and players[id].dead == false then
+  if down.t <= 0 and players[id].dead == false then
     if players[id].shield.active == true then
       players[id].shield.active = false
       network.host:sendToAll("shieldstate", {index = id, info = false})
@@ -570,6 +613,7 @@ servergame.kill = function(i)
   players[i].dead = true
   players[i].sword.active = false
   players[i].shield.active = false
+  -- blood spurt
   for j = 1, 4 do
     effects[#effects+1] = {img = "blood", quad = "drop", x = players[i].p.x, y = players[i].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
   end
