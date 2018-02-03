@@ -168,9 +168,8 @@ servergame.update = function(dt)
     end
     for j,w in pairs(players) do
       local shield_pos = vector.sum(w.p, w.shield.d)
-      if collision.check_overlap(players[i],  {r = shield.r, p = shield_pos}) and j ~= i and w.shield.active then
+      if collision.check_overlap(players[i],  {r = shield.r, p = shield_pos}) and v.team ~= w.team and w.shield.active then
         v.sticky = true
-        print(1)
       end
     end
     -- do art stuff
@@ -206,6 +205,9 @@ servergame.update = function(dt)
       if i ~= qb and v.dead == false and collision.check_overlap(v, ball) then -- makes sure catcher isn't qb to prevent immediate catches after throwing, and not dead
         ball.thrown = false
         ball.owner = i
+        for j,w in pairs(players) do
+          servergame.set_speed(j)
+        end
                 -- inteception
         if players[ball.owner].team ~= players[qb].team then
           -- reset swords and shields
