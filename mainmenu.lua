@@ -6,6 +6,7 @@ function mainmenu.draw()
   love.graphics.draw(img.field, (win_width-field.w)/2, (win_height-field.h)/2)
   love.graphics.draw(img.mainmenu, (win_width-296)/2, win_height/2+64)
   love.graphics.draw(img.username, (win_width-96)/2, win_height/2+32)
+  love.graphics.draw(img.logo, (win_width-512)/2, 0)
 
   -- draw button base
   love.graphics.setColor(team_info[1].color)

@@ -95,7 +95,7 @@ servermenu.draw = function()
   love.graphics.setColor(team_info[1].color)
   love.graphics.draw(img.button_overlay, 2, 2)
   love.graphics.setColor(229, 229, 229)
-  love.graphics.print("Leave", 14, 14)
+  love.graphics.print("Leave", 13, 14)
 
   -- start button
   love.graphics.setColor(255, 255, 255)
@@ -103,7 +103,7 @@ servermenu.draw = function()
   love.graphics.setColor(team_info[2].color)
   love.graphics.draw(img.button_overlay, 52, 2)
   love.graphics.setColor(229, 229, 229)
-  love.graphics.print("Start", 66, 14)
+  love.graphics.print("Start", 63, 14)
 
   -- draw team menus
   for j = 1, 2 do

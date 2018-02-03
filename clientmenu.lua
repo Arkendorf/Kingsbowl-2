@@ -82,7 +82,7 @@ clientmenu.draw = function()
   love.graphics.setColor(team_info[1].color)
   love.graphics.draw(img.button_overlay, 2, 2)
   love.graphics.setColor(229, 229, 229)
-  love.graphics.print("Leave", 14, 14)
+  love.graphics.print("Leave", 13, 14)
 
   -- draw team backgrounds
   love.graphics.setColor(team_info[1].color)
