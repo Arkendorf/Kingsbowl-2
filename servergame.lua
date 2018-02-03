@@ -6,8 +6,6 @@ local network = require "network"
 require "globals"
 local servergame = {}
 
--- julians wack movement thing
-servergame.input = require("keyboard")
 -- set up variables
 local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
 local down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
@@ -98,12 +96,11 @@ servergame.update = function(dt)
   network.host:update()
 
   --get server mouse positions
-  players[id].mouse.x = camera.x-players[id].p.x
-  players[id].mouse.y = camera.y-players[id].p.y
+  input.target()
   -- send server mouse position to clients
   network.host:sendToAll("mousepos", {info = players[id].mouse, index = id})
   -- get servers direction
-  servergame.input.direction()
+  input.direction()
   -- send players position difference to all
   network.host:sendToAll("posdif", {info = players[id].d, index = id})
 
@@ -464,7 +461,7 @@ servergame.draw = function()
 end
 
 servergame.mousepressed = function(x, y, button)
-  if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
+  if down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then -- qb who still has ball
       servergame.throw(id, players[id].mouse)
     elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team == players[id].team) or (not ball.owner and players[qb].team == players[id].team)) then -- team with ball, but does not have ball
@@ -480,7 +477,7 @@ servergame.mousepressed = function(x, y, button)
 end
 
 servergame.mousereleased = function(x, y, button)
-  if button == 1 and down.t <= 0 and players[id].dead == false then
+  if down.t <= 0 and players[id].dead == false then
     if players[id].shield.active == true then
       players[id].shield.active = false
       network.host:sendToAll("shieldstate", {index = id, info = false})

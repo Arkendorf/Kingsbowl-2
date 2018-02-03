@@ -47,6 +47,12 @@ local direction = function()
   end
 end
 
+local target = function()
+  players[id].mouse.x = camera.x-players[id].p.x
+  players[id].mouse.y = camera.y-players[id].p.y
+end
+
 return {
-  direction = direction
+  direction = direction,
+  target = target,
 }

@@ -11,9 +11,6 @@ local difflog = {}
 difflog.p = {}
 difflog.tail = difflog.head
 
--- julians wack movement thing
-clientgame.input = require("keyboard")
-
 -- set up variables
 local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
 local down = {scrim = 0, goal = 0, num = 0, dead = false, t = 3}
@@ -143,12 +140,11 @@ clientgame.update = function(dt)
   network.peer:update()
 
   -- get server mouse positions
-  players[id].mouse.x = camera.x-players[id].p.x
-  players[id].mouse.y = camera.y-players[id].p.y
+  input.target()
   -- send client mouse position to server
   network.peer:send("mousepos", players[id].mouse)
   -- get client's direction
-  clientgame.input.direction()
+  input.direction()
   -- send client's difference in position
 
   network.peer:send("posdif", players[id].d)
@@ -396,7 +392,7 @@ clientgame.draw = function()
 end
 
 clientgame.mousepressed = function(x, y, button)
-  if button == 1 and down.dead == false and down.t <= 0 and players[id].dead == false then
+  if down.dead == false and down.t <= 0 and players[id].dead == false then
     if ball.owner == id and qb == id then
       network.peer:send("throw", players[id].mouse)
     elseif ball.owner ~= id and ((ball.owner and players[ball.owner].team == players[id].team) or (not ball.owner and players[qb].team == players[id].team)) then
@@ -412,7 +408,7 @@ clientgame.mousepressed = function(x, y, button)
 end
 
 clientgame.mousereleased = function(x, y, button)
-  if button == 1 and down.t <= 0 and players[id].dead == false then
+  if down.t <= 0 and players[id].dead == false then
     if players[id].shield.active == true then
       players[id].shield.active = false
       network.peer:send("shieldstate", false)

@@ -26,6 +26,8 @@ camera = {x = 0, y = 0}
 global_dt = 0
 ball_speed = 4
 
+input = require("keyboard")
+
 
 local graphics = require "graphics"
 img, quad, char = graphics.init()

@@ -60,27 +60,71 @@ love.quit = function()
 end
 
 love.mousepressed = function(x, y, button)
-  if state.game == true and network.mode == "server" then
-    servergame.mousepressed(x, y, button)
-  elseif state.game == true and network.mode == "client" then
-    clientgame.mousepressed(x, y, button)
+  if not joystick then
+    if state.game == true and network.mode == "server" then
+      servergame.mousepressed(x, y, button)
+    elseif state.game == true and network.mode == "client" then
+      clientgame.mousepressed(x, y, button)
+    end
   end
   gui:mousepressed(x, y, button)
 end
 
 love.mousereleased = function(x, y, button)
-  if network.mode == "server" then
-    servergame.mousereleased(x, y, button)
-  elseif network.mode == "client" then
-    clientgame.mousereleased(x, y, button)
+  if not joystick then
+    if network.mode == "server" then
+      servergame.mousereleased(x, y, button)
+    elseif network.mode == "client" then
+      clientgame.mousereleased(x, y, button)
+    end
   end
 end
 
 love.mousemoved = function(x, y, dx, dy, istouch)
-  if state.game == true and network.mode == "server" then
-    servergame.mousemoved(x, y, dx, dy, istouch)
-  elseif state.game == true and network.mode == "client" then
-    clientgame.mousemoved(x, y, dx, dy, istouch)
+  if not joystick then
+    if state.game == true and network.mode == "server" then
+      servergame.mousemoved(x, y, dx, dy, istouch)
+    elseif state.game == true and network.mode == "client" then
+      clientgame.mousemoved(x, y, dx, dy, istouch)
+    end
+  end
+end
+
+love.gamepadpressed = function(j, button)
+  if joystick then
+    if state.game == true and network.mode == "server" then
+      servergame.mousepressed(0, 0, button)
+    elseif state.game == true and network.mode == "client" then
+      clientgame.mousepressed(0, 0, button)
+    end
+  end
+end
+
+love.gamepadreleased = function(j, button)
+  if joystick then
+    if network.mode == "server" then
+      servergame.mousereleased(0, 0, button)
+    elseif network.mode == "client" then
+      clientgame.mousereleased(0, 0, button)
+    end
+  end
+end
+
+love.gamepadaxis = function(j, axis, value)
+  if joystick and axis == "triggerright" or axis == "triggerleft" then
+    if value >= 0.5 then
+      if state.game == true and network.mode == "server" then
+        servergame.mousepressed(0, 0, axis)
+      elseif state.game == true and network.mode == "client" then
+        clientgame.mousepressed(0, 0, axis)
+      end
+    else
+      if network.mode == "server" then
+        servergame.mousereleased(0, 0, axis)
+      elseif network.mode == "client" then
+        clientgame.mousereleased(0, 0, axis)
+      end
+    end
   end
 end
 
@@ -98,5 +142,6 @@ end
 love.joystickadded = function(x)
   if not joystick and x:isGamepad() then
     joystick = x
+    input = require("joystick")
   end
 end
