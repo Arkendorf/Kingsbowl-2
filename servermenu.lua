@@ -87,16 +87,20 @@ end
 
 servermenu.draw = function()
   -- leave button
-  love.graphics.setColor(0, 212, 0)
-  love.graphics.draw(img.smallbanner)
   love.graphics.setColor(255, 255, 255)
-  love.graphics.print("Leave", 4, 12)
+  love.graphics.draw(img.button, 2, 2)
+  love.graphics.setColor(team_info[1].color)
+  love.graphics.draw(img.button_overlay, 2, 2)
+  love.graphics.setColor(229, 229, 229)
+  love.graphics.print("Leave", 14, 14)
 
   -- start button
-  love.graphics.setColor(0, 212, 0)
-  love.graphics.draw(img.smallbanner, 34)
   love.graphics.setColor(255, 255, 255)
-  love.graphics.print("Start", 40, 12)
+  love.graphics.draw(img.button, 52, 2)
+  love.graphics.setColor(team_info[2].color)
+  love.graphics.draw(img.button_overlay, 52, 2)
+  love.graphics.setColor(229, 229, 229)
+  love.graphics.print("Start", 66, 14)
 
   -- draw team menus
   for j = 1, 2 do
@@ -126,10 +130,12 @@ servermenu.draw = function()
   end
 
   -- draw team names
-  love.graphics.print(team_info[1].name, (win_width/2) - 144, (win_height-256)/2+2)
-  love.graphics.print(team_info[2].name, (win_width/2) + 16, (win_height-256)/2+2)
+  love.graphics.setColor(51, 51, 51)
+  love.graphics.print(team_info[1].name, (win_width/2) - 138, (win_height-256)/2+2)
+  love.graphics.print(team_info[2].name, (win_width/2) + 22, (win_height-256)/2+2)
 
   -- draw player names
+  love.graphics.setColor(229, 229, 229)
   local team_size = {0, 0}
   for i, v in pairs(players) do
     if menu_mode[v.team] == 0 then

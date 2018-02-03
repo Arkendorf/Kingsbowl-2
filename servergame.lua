@@ -331,11 +331,11 @@ servergame.draw = function()
   love.graphics.setColor(255, 255, 255)
   love.graphics.draw(img.field)
   -- draw line of scrimmage
-  love.graphics.setColor(0, 0, 255)
+  love.graphics.setColor(255, 0, 0)
   love.graphics.rectangle("fill", down.scrim-2, 0, 4, field.h)
   -- draw first down line
   if down.goal then
-    love.graphics.setColor(255, 0, 0)
+    love.graphics.setColor(255, 225, 0)
     love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
   end
 
@@ -415,6 +415,24 @@ servergame.draw = function()
 
   love.graphics.pop()
   love.graphics.setColor(255, 255, 255)
+  -- draw scoreboard
+  love.graphics.draw(img.scoreboard, (win_width-160)/2, 0)
+  love.graphics.setColor(team_info[1].color)
+  love.graphics.draw(img.scoreboard_overlay, (win_width-160)/2, 0)
+  love.graphics.setColor(team_info[2].color)
+  love.graphics.draw(img.scoreboard_overlay, (win_width)/2, 0)
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.print(team_info[1].name, math.floor((win_width-80-font:getWidth(team_info[1].name))/2), 8)
+  love.graphics.print(score[1], math.floor((win_width-80-font:getWidth(tostring(score[1])))/2), 24)
+  love.graphics.print(team_info[2].name, math.floor((win_width+80-font:getWidth(team_info[1].name))/2), 8)
+  love.graphics.print(score[2], math.floor((win_width+80-font:getWidth(tostring(score[2])))/2), 24)
+  love.graphics.print(tostring(down.num)..num_suffix[down.num].." and "..tostring(math.ceil(math.abs(down.goal - down.scrim)/field.w*120)), (win_width-160)/2+4, 52)
+  love.graphics.setColor(0, 0, 0)
+  if down.dead then
+    love.graphics.printf(math.ceil(down.t+grace_time), (win_width+160)/2-32, 52, 32, "center")
+  else
+    love.graphics.printf(math.ceil(down.t), (win_width+160)/2-32, 52, 32, "center")
+  end
 end
 
 servergame.mousepressed = function(x, y, button)

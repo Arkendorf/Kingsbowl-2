@@ -3,6 +3,7 @@ local servermenu = require "servermenu"
 local servergame = require "servergame"
 local clientmenu = require "clientmenu"
 local clientgame = require "clientgame"
+local mainmenu = require "mainmenu"
 local gui = require "gui"
 local menus = require "menus"
 local state = require "state"
@@ -41,7 +42,7 @@ love.draw = function()
   elseif state.game == true and network.mode == "client" then
     clientgame.draw()
   else
-    gui:draw()
+    mainmenu.draw()
   end
 end
 

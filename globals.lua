@@ -19,7 +19,7 @@ grace_time = 3
 field = {w = 3600, h = 1600}
 mouse = {x = 0, y = 0}
 score = {0, 0}
--- num_suffix = {"st", "nd", "rd", "th"}
+num_suffix = {"st", "nd", "rd", "th"}
 team_info = {{name = "Team 1", color = {255, 0, 0}}, {name = "Team 2", color = {0, 0, 255}}}
 grace_time = 3
 camera = {x = 0, y = 0}
