@@ -175,7 +175,7 @@ end
 gui.textinput = function (gui, t) -- love.textinput
   for j, w in pairs(guis) do
     local gui = w
-    if gui.textboxes ~= nil and item.gui == j and item.type == 2 and item.num > 0 and font:getWidth(gui.textboxes[item.num].table[gui.textboxes[item.num].index]..t) <= gui.textboxes[item.num].w and (gui.textboxes[item.num].num == nil or gui.textboxes[item.num].num == false or (gui.textboxes[item.num].num == true and string.find("0123456789.", t) ~= nil)) then
+    if gui.textboxes ~= nil and item.gui == j and item.type == 2 and item.num > 0 and font:getWidth(gui.textboxes[item.num].table[gui.textboxes[item.num].index]..t) <= gui.textboxes[item.num].w/2 and (gui.textboxes[item.num].num == nil or gui.textboxes[item.num].num == false or (gui.textboxes[item.num].num == true and string.find("0123456789.", t) ~= nil)) then
       gui.textboxes[item.num].table[gui.textboxes[item.num].index] = gui.textboxes[item.num].table[gui.textboxes[item.num].index]..t
     end
   end

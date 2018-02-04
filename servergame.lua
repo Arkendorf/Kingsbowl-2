@@ -207,10 +207,10 @@ servergame.update = function(dt)
         for j,w in pairs(players) do
           servergame.set_speed(j)
         end
-                -- inteception
+                -- interception
         if players[ball.owner].team ~= players[qb].team then
           -- add alert
-          alerts[#alerts+1] = {txt = players[ball.owner].name.." has intecepted the ball", team = players[ball.owner].team}
+          alerts[#alerts+1] = {txt = players[ball.owner].name.." has intercepted the ball", team = players[ball.owner].team}
           -- reset swords and shields
           for i, v in pairs(players) do
             if v.shield.active == true then
@@ -311,7 +311,7 @@ servergame.draw = function()
     love.graphics.setColor(team_info[v.team].color)
     love.graphics.draw(char[v.art.state][v.art.anim.."overlay"].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)])
 
-    love.graphics.setCanvas()
+    love.graphics.setCanvas(win_canvas)
     queue[#queue+1] = {img = v.art.canvas, x = math.floor(v.p.x), y = math.floor(v.p.y), ox = 16, oy = 48}
 
      -- draw shield
@@ -324,7 +324,7 @@ servergame.draw = function()
       love.graphics.setColor(team_info[v.team].color)
       love.graphics.draw(img.shield_overlay, quad.shield[v.art.dir])
 
-      love.graphics.setCanvas()
+      love.graphics.setCanvas(win_canvas)
       queue[#queue+1] = {img = v.shield.canvas, x = math.floor(v.p.x)+math.floor(v.shield.d.x), y = math.floor(v.p.y)+math.floor(v.shield.d.y*.75), z = 18, ox = 16, oy = 16}
     end
 
@@ -338,7 +338,7 @@ servergame.draw = function()
       love.graphics.setColor(team_info[v.team].color)
       love.graphics.draw(img.sword_overlay)
 
-      love.graphics.setCanvas()
+      love.graphics.setCanvas(win_canvas)
       queue[#queue+1] = {img = v.sword.canvas, x = math.floor(v.p.x)+math.floor(v.sword.d.x), y = math.floor(v.p.y)+math.floor(v.sword.d.y*.75), z = 18, r = math.atan2(v.sword.d.y, v.sword.d.x), ox = 16, oy = 16}
     end
 

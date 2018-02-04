@@ -6,7 +6,7 @@ function mainmenu.draw()
   love.graphics.draw(img.field, (win_width-field.w)/2, (win_height-field.h)/2)
   love.graphics.draw(img.mainmenu, (win_width-296)/2, win_height/2+64)
   love.graphics.draw(img.username, (win_width-96)/2, win_height/2+32)
-  love.graphics.draw(img.logo, (win_width-512)/2, 0)
+  love.graphics.draw(img.logo, (win_width-256)/2, 0)
 
   -- draw button base
   love.graphics.setColor(team_info[1].color)
@@ -21,8 +21,8 @@ function mainmenu.draw()
 
   -- draw ip text
   love.graphics.setColor(51, 51, 51)
-  love.graphics.print(ip.ip, (win_width-296)/2+10, win_height/2+70)
-  love.graphics.print(ip.port, (win_width-296)/2+10, win_height/2+82)
+  love.graphics.print(ip.ip, math.floor((win_width-296)/2+10), win_height/2+70)
+  love.graphics.print(ip.port, math.floor((win_width-296)/2+10), win_height/2+82)
   love.graphics.print(username[1], math.floor((win_width-font:getWidth(username[1]))/2), win_height/2+36)
 end
 

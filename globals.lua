@@ -5,7 +5,10 @@ username = {"Sir Placeholder"}
 players = {}
 id = nil
 qb = 0
-win_width, win_height = love.graphics.getDimensions( )
+love.window.setFullscreen(true)
+true_win_width, true_win_height = love.graphics.getDimensions()
+win_width = math.floor(true_win_width/4)*2
+win_height = math.floor(true_win_height/4)*2
 sword = {dist = 18, r = 6, t = .5}
 shield = {dist = 12, r = 8}
 speed_table = {
@@ -31,3 +34,4 @@ input = require("keyboard")
 
 local graphics = require "graphics"
 img, quad, char = graphics.init()
+win_canvas = love.graphics.newCanvas(win_width, win_height)

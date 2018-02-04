@@ -192,9 +192,9 @@ servermenu.swap_menu = function(mode, menu)
         gui.remove(i+4)
       end
     end
-    gui.add({sliders = {{x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+17, alignment = 1, w = 124, h = 12, barw = 4, table = team_info[menu].color, index = 1, numMin = 0, numMax = 255},
-            {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+33, alignment = 1, w = 124, h = 12, barw = 4, table = team_info[menu].color, index = 2, numMin = 0, numMax = 255},
-            {x = (win_width/2) - 302 + 160 * menu, y = (win_height-256)/2+49, alignment = 1, w = 124, h = 12, barw = 4, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255}}}, 1+menu)
+    gui.add({sliders = {{x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+34, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 1, numMin = 0, numMax = 255},
+            {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+66, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 2, numMin = 0, numMax = 255},
+            {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+98, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255}}}, 1+menu)
   elseif mode == 0 then
     gui.remove(1+menu)
     servermenu.update_p_buttons()
@@ -207,7 +207,7 @@ servermenu.update_p_buttons = function ()
   for i, v in pairs(players) do
     gui.remove(i+4)
     if menu_mode[v.team] == 0 then
-      gui.add({buttons = {{x = (win_width/2) - 202 + 160 * v.team, y = (win_height-256)/2+16+team_size[v.team]*16, w = 12, h = 12, txt = "s", func = servermenu.teamswap, args = {i}}, {x = (win_width/2) - 190 + 160 * v.team, y = (win_height-256)/2+16+team_size[v.team]*16, w = 12, h = 12, txt = "r", func = servermenu.kick, args = {i}}}}, i+4)
+      gui.add({buttons = {{x = (true_win_width/2) - 404 + 320 * v.team, y = (true_win_height-512)/2+32+team_size[v.team]*32, w = 24, h = 24, txt = "s", func = servermenu.teamswap, args = {i}}, {x = (true_win_width/2) - 380 + 320 * v.team, y = (true_win_height-512)/2+32+team_size[v.team]*32, w = 24, h = 24, txt = "r", func = servermenu.kick, args = {i}}}}, i+4)
       team_size[v.team] = team_size[v.team] + 1
     end
   end

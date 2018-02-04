@@ -8,6 +8,8 @@ local gui = require "gui"
 local menus = require "menus"
 local state = require "state"
 
+local quit = 2
+
 love.load = function()
   font = love.graphics.newImageFont("font.png",
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
@@ -31,9 +33,19 @@ love.update = function(dt)
     clientgame.update(dt)
   end
   gui:update(dt)
+  if love.keyboard.isDown("escape") then
+    quit = quit - dt
+    if quit <= 0 then
+      love.event.quit()
+    end
+  elseif quit < 2 then
+    quit = 2
+  end
 end
 
 love.draw = function()
+  love.graphics.setCanvas(win_canvas)
+  love.graphics.clear()
   if state.game == false and network.mode == "server" then
     servermenu.draw()
   elseif state.game == false and network.mode == "client" then
@@ -45,6 +57,9 @@ love.draw = function()
   else
     mainmenu.draw()
   end
+  love.graphics.setCanvas()
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.draw(win_canvas, 0, 0, 0, 2, 2)
 end
 
 love.quit = function()
