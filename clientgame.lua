@@ -63,6 +63,9 @@ local client_hooks = {
     local z = (dist*dist-ball.height*dist)/512*-1
     ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
     ball.z = z
+    if ball.z <= 0 then
+      effects[#effects+1] = {img = "stuckarrow", x = ball.p.x, y = ball.p.y, z = 0, ox = 16, oy = 16}
+    end
   end,
   downdead = function(data)
     down.dead = true
@@ -180,7 +183,6 @@ clientgame.update = function(dt)
     ball.z = z
     -- if ball hits the ground, stop
     if ball.z <= 0 then
-      effects[#effects+1] = {img = "stuckarrow", x = ball.p.x, y = ball.p.y, z = 0, ox = 16, oy = 16}
       ball.thrown = false
     end
   end
