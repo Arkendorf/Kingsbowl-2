@@ -450,9 +450,9 @@ servergame.draw = function()
   love.graphics.print(tostring(down.num)..num_suffix[down.num].." and "..tostring(math.ceil(math.abs(down.goal - down.scrim)/field.w*120)), (win_width-160)/2+4, 52)
   love.graphics.setColor(0, 0, 0)
   if down.dead then
-    love.graphics.printf(math.ceil(down.t+grace_time), (win_width+160)/2-32, 52, 32, "center")
+    love.graphics.printf(math.ceil(down.t+grace_time), (win_width+160)/2-31, 52, 32, "center")
   else
-    love.graphics.printf(math.ceil(down.t), (win_width+160)/2-32, 52, 32, "center")
+    love.graphics.printf(math.ceil(down.t), (win_width+160)/2-31, 52, 32, "center")
   end
 
   -- draw alerts
@@ -475,6 +475,7 @@ servergame.mousepressed = function(x, y, button)
       players[id].sword.t = sword.t
       network.host:sendToAll("sword", {index = id, active = true, mouse = players[id].mouse})
     end
+    servergame.set_speed(id)
   end
 end
 
@@ -484,6 +485,7 @@ servergame.mousereleased = function(x, y, button)
       players[id].shield.active = false
       network.host:sendToAll("shieldstate", {index = id, info = false})
     end
+    servergame.set_speed(id)
   end
 end
 
