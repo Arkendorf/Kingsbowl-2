@@ -633,7 +633,6 @@ servergame.set_speed = function (i) -- based on player's state, set a speed
   else
     players[i].speed = speed_table.defense
   end
-  print('s', qb, ball.owner, i, players[i].team == players[qb].team, players[i].shield.active, players[i].speed)
 end
 
 servergame.collide = function (v)

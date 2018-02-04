@@ -440,7 +440,6 @@ clientgame.set_speed = function (i) -- based on player's state, set a speed
   if i == ball.owner then
     players[i].speed = speed_table.with_ball
   elseif players[i].shield.active then
-    print("oops")
     players[i].speed = speed_table.shield
   elseif players[i].sword.active then
     players[i].speed = speed_table.sword
@@ -449,7 +448,6 @@ clientgame.set_speed = function (i) -- based on player's state, set a speed
   else
     players[i].speed = speed_table.defense
   end
-  print(ball.owner, i, players[i].team == players[qb].team, players[i].shield.active, players[i].speed)
 end
 
 clientgame.collide = function (v)

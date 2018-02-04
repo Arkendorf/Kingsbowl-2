@@ -11,7 +11,6 @@ status = "Disconnected"
 client.init = function(t)
   network.mode = "client"
   state.gui = gui.new(menus[3])
-  print(state.gui)
   network.peer = sock.newClient(ip.ip, tonumber(ip.port))
 
   -- initial variables
