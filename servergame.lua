@@ -447,7 +447,11 @@ servergame.draw = function()
   love.graphics.print(score[1], math.floor((win_width-80-font:getWidth(tostring(score[1])))/2), 24)
   love.graphics.print(team_info[2].name, math.floor((win_width+80-font:getWidth(team_info[1].name))/2), 8)
   love.graphics.print(score[2], math.floor((win_width+80-font:getWidth(tostring(score[2])))/2), 24)
-  love.graphics.print(tostring(down.num)..num_suffix[down.num].." and "..tostring(math.ceil(math.abs(down.goal - down.scrim)/field.w*120)), (win_width-160)/2+4, 52)
+  if down.goal then
+    love.graphics.print(tostring(down.num)..num_suffix[down.num].." and "..tostring(math.ceil(math.abs(down.goal - down.scrim)/field.w*120)), (win_width-160)/2+4, 52)
+  else
+    love.graphics.print(tostring(down.num)..num_suffix[down.num].." and goal", (win_width-160)/2+4, 52)
+  end
   love.graphics.setColor(0, 0, 0)
   if down.dead then
     love.graphics.printf(math.ceil(down.t+grace_time), (win_width+160)/2-31, 52, 32, "center")
@@ -555,7 +559,6 @@ servergame.new_down = function()
   ball.owner = qb
   local team_pos = {0, 0}
   for i, v in pairs(players) do
-    servergame.set_speed(i)
     if v.team == 1 then
       v.p.x = down.scrim - 32
     else
@@ -570,6 +573,7 @@ servergame.new_down = function()
     v.dead = false
     -- send reset position
     network.host:sendToAll("pos", {info = v.p, index = i})
+    servergame.set_speed(i)
   end
   -- give ball to quarterback
   ball.thrown = false
@@ -615,6 +619,7 @@ servergame.kill = function(i)
   players[i].dead = true
   players[i].sword.active = false
   players[i].shield.active = false
+  servergame.set_speed(i)
   -- blood spurt
   for j = 1, 4 do
     effects[#effects+1] = {img = "blood", quad = "drop", x = players[i].p.x, y = players[i].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
@@ -622,7 +627,9 @@ servergame.kill = function(i)
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed
-  if i == ball.owner then
+  if players[i].dead then
+    players[i].speed = 0
+  elseif i == ball.owner then
     players[i].speed = speed_table.with_ball
   elseif players[i].shield.active then
     players[i].speed = speed_table.shield
@@ -695,6 +702,8 @@ servergame.animate = function(i, v, dt)
   -- make sure direction is in bounds (1-8)
   if v.art.dir > 8 then
     v.art.dir = 1
+  elseif v.art.dir < 1 then
+    v.art.dir = 8
   end
   -- get anim (run or idle)
   if vector.mag_sq(v.d) > 0.5 then

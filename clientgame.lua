@@ -45,10 +45,10 @@ local client_hooks = {
     ball.thrown = false
     -- reset players
     for i, v in pairs(players) do
-      clientgame.set_speed(i)
       v.sword.active = false
       v.shield.active = false
       v.dead = false
+      clientgame.set_speed(i)
     end
     -- reset target
     camera.x = players[id].p.x
@@ -94,6 +94,7 @@ local client_hooks = {
     -- add alert
     alerts[#alerts+1] = {txt = players[data.killer].name.." has tackled "..players[data.victim].name, team = players[data.killer].team}
     players[data.victim].dead = true
+    clientgame.set_speed(data.victim)
     -- blood spurt
     for j = 1, 4 do
       effects[#effects+1] = {img = "blood", quad = "drop", x = players[data.victim].p.x, y = players[data.victim].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
@@ -378,7 +379,11 @@ clientgame.draw = function()
   love.graphics.print(score[1], math.floor((win_width-80-font:getWidth(tostring(score[1])))/2), 24)
   love.graphics.print(team_info[2].name, math.floor((win_width+80-font:getWidth(team_info[1].name))/2), 8)
   love.graphics.print(score[2], math.floor((win_width+80-font:getWidth(tostring(score[2])))/2), 24)
-  love.graphics.print(tostring(down.num)..num_suffix[down.num].." and "..tostring(math.ceil(math.abs(down.goal - down.scrim)/field.w*120)), (win_width-160)/2+4, 52)
+  if down.goal then
+    love.graphics.print(tostring(down.num)..num_suffix[down.num].." and "..tostring(math.ceil(math.abs(down.goal - down.scrim)/field.w*120)), (win_width-160)/2+4, 52)
+  else
+    love.graphics.print(tostring(down.num)..num_suffix[down.num].." and goal", (win_width-160)/2+4, 52)
+  end
   love.graphics.setColor(51, 51, 51)
   if down.dead then
     love.graphics.printf(math.ceil(down.t+grace_time), (win_width+160)/2-31, 52, 32, "center")
@@ -437,7 +442,9 @@ clientgame.back_to_main = function()
 end
 
 clientgame.set_speed = function (i) -- based on player's state, set a speed
-  if i == ball.owner then
+  if players[i].dead then
+    players[i].speed = 0
+  elseif i == ball.owner then
     players[i].speed = speed_table.with_ball
   elseif players[i].shield.active then
     players[i].speed = speed_table.shield
@@ -510,6 +517,8 @@ clientgame.animate = function(i, v, dt)
   -- make sure direction is in bounds (1-8)
   if v.art.dir > 8 then
     v.art.dir = 1
+  elseif v.art.dir < 1 then
+    v.art.dir = 8
   end
   -- get anim (run or idle)
   if vector.mag_sq(v.d) > 0.5 then
