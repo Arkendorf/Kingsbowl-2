@@ -202,6 +202,10 @@ servergame.update = function(dt)
   if ball.z < 16 and ball.thrown then
     for i, v in pairs(players) do
       if i ~= qb and v.dead == false and collision.check_overlap(v, ball) then -- makes sure catcher isn't qb to prevent immediate catches after throwing, and not dead
+        -- reset reciever's sword and shields
+        v.shield.active = false
+        v.sword.active = false
+
         ball.thrown = false
         ball.owner = i
         for j,w in pairs(players) do

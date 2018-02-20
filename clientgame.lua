@@ -29,6 +29,10 @@ local client_hooks = {
     ball = data
   end,
   catch = function(data)
+    -- reset reciever's sword and shields
+    players[data].shield.active = false
+    players[data].sword.active = false
+
     ball.owner = data
     -- add alert
     if players[ball.owner].team ~= players[qb].team then
