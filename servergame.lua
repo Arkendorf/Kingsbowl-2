@@ -3,6 +3,7 @@ local state = require "state"
 local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
+local ai = require "ai"
 require "globals"
 local servergame = {}
 
@@ -83,7 +84,6 @@ servergame.init = function()
     v.dead = false
     v.mouse = {x = 0, y = 0}
     v.art = {state = "base", anim = "idle", dir = 1, frame = 1, canvas = love.graphics.newCanvas(32, 48)}
-    -- set the speed for players
   end
   -- set up initial down
   servergame.new_down()
@@ -561,16 +561,20 @@ servergame.new_down = function()
   down.t = grace_time
   -- reset player positions
   ball.owner = qb
-  local team_pos = {0, 0}
+  local team_pos = {0, 0, 0, 0}       -- set up players
   for i, v in pairs(players) do
-    if v.team == 1 then
-      v.p.x = down.scrim - 32
+    -- reset position
+    if v.bot then
+      v.p.y = (field.h-ai.num[v.team]*48)/2+team_pos[v.team+2]*48+32
+      team_pos[v.team+2] = team_pos[v.team+2] + 1
+      v.p.x = down.scrim + (v.team-1.5)*64
     else
-      v.p.x = down.scrim + 32
+      v.p.y = (field.h-#teams[v.team].members*48)/2+team_pos[v.team]*48+32
+      team_pos[v.team] = team_pos[v.team] + 1
+      v.p.x = down.scrim + (v.team-1.5)*128
     end
-    v.p.y = (field.h-#teams[v.team].members*48)/2+team_pos[v.team]*48+32
     v.d.x, v.d.y = 0, 0
-    team_pos[v.team] = team_pos[v.team] + 1
+
     -- reset players
     v.sword.active = false
     v.shield.active = false

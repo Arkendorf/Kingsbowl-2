@@ -14,7 +14,7 @@ love.load = function()
   font = love.graphics.newImageFont("font.png",
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
     "abcdefghijklmnopqrstuvwxyz" ..
-    "0123456789!?.:", 1)
+    "0123456789!?.,:", 1)
   love.graphics.setFont(font)
   love.graphics.setBackgroundColor(60, 152, 70)
   gui.new(menus[1])
@@ -38,8 +38,8 @@ love.update = function(dt)
     if quit <= 0 then
       love.event.quit()
     end
-  elseif quit < 2 then
-    quit = 2
+  elseif quit < 1 then
+    quit = 1
   end
 end
 

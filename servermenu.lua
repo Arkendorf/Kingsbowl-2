@@ -4,6 +4,7 @@ local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
 local servergame = require "servergame"
+local ai = require "ai"
 require "globals"
 local servermenu = {}
 
@@ -124,11 +125,17 @@ servermenu.draw = function()
       love.graphics.setColor(255, 255, 255)
       love.graphics.draw(img.menuicons, quad.icons2, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
 
-      --draw sliders
+      -- draw text
+      love.graphics.print("Color:", (win_width/2) - 302 + 160 * j, (win_height-256)/2+17)
+      love.graphics.print("Bot Number: "..tostring(math.floor(ai.num[j])), (win_width/2) - 302 + 160 * j, (win_height-256)/2+78)
+      --draw color sliders
       for i = 1, 3 do
-        love.graphics.draw(img.slider, quad.sliderbar, (win_width/2) - 302 + 160 * j, (win_height-256)/2+17*i)
-        love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(team_info[j].color[i]/255*120), (win_height-256)/2+17*i)
+        love.graphics.draw(img.slider, quad.sliderbar, (win_width/2) - 302 + 160 * j, (win_height-256)/2+10+17*i)
+        love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(team_info[j].color[i]/255*120), (win_height-256)/2+10+17*i)
       end
+      --draw bot slider
+      love.graphics.draw(img.slider, quad.sliderbar, (win_width/2) - 302 + 160 * j, (win_height-256)/2+88)
+      love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(ai.num[j]/6*120), (win_height-256)/2+88)
     end
   end
 
@@ -175,6 +182,9 @@ servermenu.start_game = function()
 
   if #teams[1].members > 0 and #teams[2].members > 0 then -- only start game if there is at least one person per team
     qb = teams[1].members[1]
+
+    ai.generate_bots() -- create "players" for bots
+
     network.host:sendToAll("startgame", {players = players, qb = qb})
 
     servergame.init()
@@ -192,9 +202,10 @@ servermenu.swap_menu = function(mode, menu)
         gui.remove(i+4)
       end
     end
-    gui.add({sliders = {{x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+34, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 1, numMin = 0, numMax = 255},
-            {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+66, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 2, numMin = 0, numMax = 255},
-            {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+98, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255}}}, 1+menu)
+    gui.add({sliders = {{x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+44, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 1, numMin = 0, numMax = 255},
+                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+76, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 2, numMin = 0, numMax = 255},
+                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+108, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255},
+                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+178, alignment = 1, w = 248, h = 24, barw = 8, table = ai.num, index = menu, numMin = 0, numMax = 6}}}, 1+menu)
   elseif mode == 0 then
     gui.remove(1+menu)
     servermenu.update_p_buttons()

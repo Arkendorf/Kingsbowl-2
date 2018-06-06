@@ -5,7 +5,7 @@ username = {"Sir Placeholder"}
 players = {}
 id = nil
 qb = 0
-love.window.setFullscreen(true)
+-- love.window.setFullscreen(true)
 true_win_width, true_win_height = love.graphics.getDimensions()
 win_width = math.floor(true_win_width/4)*2
 win_height = math.floor(true_win_height/4)*2
@@ -31,7 +31,21 @@ ball_speed = 4
 
 input = require("keyboard")
 
-
 local graphics = require "graphics"
 img, quad, char = graphics.init()
 win_canvas = love.graphics.newCanvas(win_width, win_height)
+
+bot_names = {
+  "Lancelot",
+  "Gawain",
+  "Geraint",
+  "Percival",
+  "Lamorak",
+  "Kay",
+  "Gareth",
+  "Bedivere",
+  "Gaheris",
+  "Galahad",
+  "Tristan",
+  "Palamedes"
+}
