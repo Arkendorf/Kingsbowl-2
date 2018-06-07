@@ -141,6 +141,8 @@ clientgame.init = function()
 end
 
 clientgame.update = function(dt)
+  input.center()
+
   -- update sock client
   network.peer:update()
 

@@ -16,7 +16,15 @@ local target = function()
   players[id].mouse.y = camera.y-players[id].p.y
 end
 
+local center = function()
+   if joystick:isGamepadDown("rightstick", "leftstick") then
+      camera.x = players[id].p.x
+      camera.y = players[id].p.y
+   end
+end
+
 return {
   direction = direction,
   target = target,
+  center = center
 }

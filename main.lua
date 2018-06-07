@@ -106,7 +106,7 @@ love.mousemoved = function(x, y, dx, dy, istouch)
 end
 
 love.gamepadpressed = function(j, button)
-  if joystick then
+  if joystick and button ~= "leftstick" or "rightstick" then
     if state.game == true and network.mode == "server" then
       servergame.mousepressed(0, 0, button)
     elseif state.game == true and network.mode == "client" then
@@ -116,7 +116,7 @@ love.gamepadpressed = function(j, button)
 end
 
 love.gamepadreleased = function(j, button)
-  if joystick then
+  if joystick and button ~= "leftstick" or "rightstick" then
     if network.mode == "server" then
       servergame.mousereleased(0, 0, button)
     elseif network.mode == "client" then
