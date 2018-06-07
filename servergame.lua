@@ -90,6 +90,8 @@ servergame.init = function()
 end
 
 servergame.update = function(dt)
+   input.center()
+   
   -- update sock server
   network.host:update()
 
