@@ -54,7 +54,7 @@ end
 
 local center = function()
    if love.keyboard.isDown("space") then
-      camera.x = players[id].p.x
+      camera.x = players[id].p.x+2 -- +2 to fix player jittering
       camera.y = players[id].p.y
    end
 end

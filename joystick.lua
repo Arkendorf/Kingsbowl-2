@@ -18,8 +18,8 @@ end
 
 local center = function()
    if joystick:isGamepadDown("rightstick", "leftstick") then
-      camera.x = players[id].p.x
-      camera.y = players[id].p.y
+     camera.x = players[id].p.x+2 -- +2 to fix player jittering
+     camera.y = players[id].p.y
    end
 end
 
