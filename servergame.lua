@@ -91,7 +91,7 @@ end
 
 servergame.update = function(dt)
    input.center()
-   
+
   -- update sock server
   network.host:update()
 
@@ -109,6 +109,7 @@ servergame.update = function(dt)
       if ai.run(i, v, dt) then
         servergame.set_speed(i)
       end
+      network.host:sendToAll("mousepos", {info = v.mouse, index = i})
       network.host:sendToAll("posdif", {info = v.d, index = i})
     end
     -- move player based on their diff
@@ -258,7 +259,7 @@ servergame.update = function(dt)
       -- do stuff
       score[team] = score[team] + 7
       down.dead = true
-      down.new_scrim = field.w/12*7
+      down.new_scrim = field.w/12*6
       down.t = grace_time
       td = true
       network.host:sendToAll("touchdown", team)

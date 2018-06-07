@@ -91,7 +91,12 @@ ai.run = function(i, v, dt)
         v.mouse.x = math.cos(angle)
         v.mouse.y = math.sin(angle)
       else -- go long!
+        -- move
         v.d.x = v.d.x - (v.team-1.5)*2
+
+        -- look
+        v.mouse.x = 1
+        v.mouse.y = 0
       end
       local active = false
       if not ball.owner or ball.owner ~= i then -- can't shield if with ball
