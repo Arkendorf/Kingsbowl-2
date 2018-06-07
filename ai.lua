@@ -3,7 +3,7 @@ local collision = require "collision"
 
 local ai = {}
 
-ai.num = {6, 6} -- table that keeps track of desired amount of bots in servermenu
+ai.num = {0, 0} -- table that keeps track of desired amount of bots in servermenu
 
 ai.generate_bots = function() -- function that creates AIs
   ai.num[1] = math.floor(ai.num[1])
