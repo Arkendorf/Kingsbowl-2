@@ -28,6 +28,8 @@ grace_time = 3
 camera = {x = 0, y = 0}
 global_dt = 0
 ball_speed = 4
+ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
+down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
 
 input = require("keyboard")
 

@@ -8,8 +8,6 @@ require "globals"
 local servergame = {}
 
 -- set up variables
-local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
-local down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
 local td = false
 local quit = false
 
@@ -105,6 +103,12 @@ servergame.update = function(dt)
   network.host:sendToAll("posdif", {info = players[id].d, index = id})
 
   for i, v in pairs(players) do
+    if v.bot then -- run AI for bots
+      if ai.run(i, v, dt) then
+        servergame.set_speed(i)
+      end
+      network.host:sendToAll("posdif", {info = v.d, index = i})
+    end
     -- move player based on their diff
     v.p = vector.sum(v.p, vector.scale(v.speed*dt*(v.sticky and 0.5 or 1), v.d))
     v.sticky = false
@@ -202,7 +206,7 @@ servergame.update = function(dt)
   if ball.z < 16 and ball.thrown then
     for i, v in pairs(players) do
       if i ~= qb and v.dead == false and collision.check_overlap(v, ball) then -- makes sure catcher isn't qb to prevent immediate catches after throwing, and not dead
-        -- reset reciever's sword and shields
+        -- reset receiver's sword and shields
         v.shield.active = false
         v.sword.active = false
 

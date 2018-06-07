@@ -12,9 +12,6 @@ difflog.p = {}
 difflog.tail = difflog.head
 
 -- set up variables
-local ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
-local down = {scrim = 0, goal = 0, num = 0, dead = false, t = 3}
-
 local effects = {}
 local alerts = {}
 
@@ -154,10 +151,9 @@ clientgame.update = function(dt)
   -- get client's direction
   input.direction()
   -- send client's difference in position
-
   network.peer:send("posdif", players[id].d)
   local oldp = players[id].p
-  for i, v in pairs(players) do
+  for i, v in pairs(players) do -- prediction
     -- move player based on their diff
     v.p = vector.sum(v.p, vector.scale(v.speed*dt, v.d))
     -- apply collision to player
