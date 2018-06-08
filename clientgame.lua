@@ -30,7 +30,10 @@ local client_hooks = {
     players[data].shield.active = false
     players[data].sword.active = false
 
+    -- adjust ball
+    ball.thrown = false
     ball.owner = data
+
     -- add alert
     if players[ball.owner].team ~= players[qb].team then
       alerts[#alerts+1] = {txt = players[ball.owner].name.." has intercepted the ball", team = players[ball.owner].team}

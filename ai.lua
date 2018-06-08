@@ -34,7 +34,7 @@ ai.run = function(i, v, dt)
   local set_speed = false
 
   v.d = vector.scale(0.9, v.d)
-  if down.t <= 0 then -- make sure down has started
+  if not v.dead and down.t <= 0 then -- make sure down has started
     if (ball.owner and players[ball.owner].team == v.team) or (not ball.owner and players[qb].team == v.team) then -- offense
       if ball.owner and ball.owner == i then -- try to score
         local d = {x = -(v.team-1.5)*2, y = 0}

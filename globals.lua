@@ -5,7 +5,7 @@ username = {"Sir Placeholder"}
 players = {}
 id = nil
 qb = 0
-love.window.setFullscreen(true)
+-- love.window.setFullscreen(true)
 true_win_width, true_win_height = love.graphics.getDimensions()
 win_width = math.floor(true_win_width/4)*2
 win_height = math.floor(true_win_height/4)*2
