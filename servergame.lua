@@ -568,16 +568,24 @@ servergame.new_down = function()
   down.t = grace_time
   -- reset player positions
   ball.owner = qb
-  local team_pos = {0, 0, 0, 0}       -- set up players
+  local team_pos = {{0, 0, 0}, {0, 0, 0}}       -- set up players
   for i, v in pairs(players) do
     -- reset position
-    if v.bot then
-      v.p.y = (field.h-ai.num[v.team]*48)/2+team_pos[v.team+2]*48+32
-      team_pos[v.team+2] = team_pos[v.team+2] + 1
+    if v.bot and v.type == "linesmen" then
+      v.p.y = (field.h-ai.num[v.team][1]*48)/2+team_pos[v.team][2]*48+32
+      team_pos[v.team][2] = team_pos[v.team][2] + 1
       v.p.x = down.scrim + (v.team-1.5)*64
+    elseif v.bot and v.type == "receiver" then
+      -- if team_pos[v.team][3] <= math.floor(ai.num[v.team][2]/2) then
+      --   v.p.y = (field.h-(#teams[v.team].members+math.floor(ai.num[v.team][2]/2))*48)/2+team_pos[v.team][3]*48+32
+      -- else
+      --   v.p.y = (field.h+#teams[v.team].members*48)/2+team_pos[v.team][3]*48+32
+      -- end
+      -- team_pos[v.team][3] = team_pos[v.team][3] + 1
+      -- v.p.x = down.scrim + (v.team-1.5)*128
     else
-      v.p.y = (field.h-#teams[v.team].members*48)/2+team_pos[v.team]*48+32
-      team_pos[v.team] = team_pos[v.team] + 1
+      v.p.y = (field.h-#teams[v.team].members*48)/2+team_pos[v.team][1]*48+32
+      team_pos[v.team][1] = team_pos[v.team][1] + 1
       v.p.x = down.scrim + (v.team-1.5)*128
     end
     v.d.x, v.d.y = 0, 0
