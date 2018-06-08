@@ -49,5 +49,9 @@ bot_names = {
   "Gaheris",
   "Galahad",
   "Tristan",
-  "Palamedes"
+  "Palamedes",
+  "Aban",
+  "Bruenor",
+  "Mordred",
+  "Yvain"
 }

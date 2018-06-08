@@ -127,15 +127,18 @@ servermenu.draw = function()
 
       -- draw text
       love.graphics.print("Color:", (win_width/2) - 302 + 160 * j, (win_height-256)/2+17)
-      love.graphics.print("Bot Number: "..tostring(math.floor(ai.num[j])), (win_width/2) - 302 + 160 * j, (win_height-256)/2+78)
+      love.graphics.print("Linesmen: "..tostring(math.floor(ai.num[j][1])), (win_width/2) - 302 + 160 * j, (win_height-256)/2+78)
+      love.graphics.print("Receivers: "..tostring(math.floor(ai.num[j][2])), (win_width/2) - 302 + 160 * j, (win_height-256)/2+105)
       --draw color sliders
       for i = 1, 3 do
         love.graphics.draw(img.slider, quad.sliderbar, (win_width/2) - 302 + 160 * j, (win_height-256)/2+10+17*i)
         love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(team_info[j].color[i]/255*120), (win_height-256)/2+10+17*i)
       end
-      --draw bot slider
-      love.graphics.draw(img.slider, quad.sliderbar, (win_width/2) - 302 + 160 * j, (win_height-256)/2+88)
-      love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(ai.num[j]/6*120), (win_height-256)/2+88)
+      --draw bot sliders
+      for i = 1, 2 do
+        love.graphics.draw(img.slider, quad.sliderbar, (win_width/2) - 302 + 160 * j, (win_height-256)/2+61+27*i)
+        love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(ai.num[j][i]/4*120), (win_height-256)/2+61+27*i)
+      end
     end
   end
 
@@ -205,7 +208,8 @@ servermenu.swap_menu = function(mode, menu)
     gui.add({sliders = {{x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+44, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 1, numMin = 0, numMax = 255},
                         {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+76, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 2, numMin = 0, numMax = 255},
                         {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+108, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255},
-                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+178, alignment = 1, w = 248, h = 24, barw = 8, table = ai.num, index = menu, numMin = 0, numMax = 6}}}, 1+menu)
+                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+178, alignment = 1, w = 248, h = 24, barw = 8, table = ai.num[menu], index = 1, numMin = 0, numMax = 4},
+                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+222, alignment = 1, w = 248, h = 24, barw = 8, table = ai.num[menu], index = 2, numMin = 0, numMax = 4}}}, 1+menu)
   elseif mode == 0 then
     gui.remove(1+menu)
     servermenu.update_p_buttons()
