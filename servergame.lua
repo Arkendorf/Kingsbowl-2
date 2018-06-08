@@ -106,7 +106,7 @@ servergame.update = function(dt)
 
   for i, v in pairs(players) do
     if v.bot then -- run AI for bots
-      if ai.run(i, v, dt) then
+      if ai.process(i, v, dt) then
         servergame.set_speed(i)
       end
       network.host:sendToAll("mousepos", {info = v.mouse, index = i})
