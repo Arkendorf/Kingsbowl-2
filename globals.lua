@@ -13,8 +13,8 @@ sword = {dist = 18, r = 6, t = .5}
 shield = {dist = 12, r = 12}
 speed_table = {
   with_ball = 6,
-  offense = 10,
-  defense = 9,
+  offense = 8,
+  defense = 8,
   shield = 6,
   sword = 2,
 }

@@ -113,7 +113,7 @@ servergame.update = function(dt)
       network.host:sendToAll("posdif", {info = v.d, index = i})
     end
     -- move player based on their diff
-    v.p = vector.sum(v.p, vector.scale(v.speed*dt*(v.sticky and 0.5 or 1), v.d))
+    v.p = vector.sum(v.p, vector.scale(v.speed*dt*(v.sticky and 0.8 or 1), v.d))
     v.sticky = false
     -- apply collision to player
     servergame.collide(v)

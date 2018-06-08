@@ -9,7 +9,7 @@ ai.num = {{0, 0}, {0, 0}} -- table that keeps track of desired amount of bots in
 ai.receiver = {own = "score",
                team_ball = "block",
                team_pass = "catch",
-               qb = "score",
+               qb = "run",
                enemy_qb = "block",
                enemy_ball = "sack",
                enemy_pass = "catch"}
@@ -54,7 +54,7 @@ ai.generate_bots = function() -- function that creates AIs
 
       v.type = "receiver"
       v.bot = true
-      
+
       v.team = i
       v.name = bot_names[total_ai]
 
