@@ -9,7 +9,7 @@ ai.num = {{0, 0}, {0, 0}} -- table that keeps track of desired amount of bots in
 ai.receiver = {own = "score",
                team_ball = "block",
                team_pass = "catch",
-               qb = "run",
+               qb = "score",
                enemy_qb = "block",
                enemy_ball = "sack",
                enemy_pass = "catch"}
