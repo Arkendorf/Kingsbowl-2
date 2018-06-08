@@ -138,7 +138,8 @@ ai.block = function(i, v, dt)
   local nearest = {dist = math.huge, i = 0}
   for j, w in pairs(players) do -- find closest enemy
     if v.team ~= w.team then -- make sure it is an enemy
-      local dist = math.sqrt(vector.mag_sq(collision.get_distance(v.p, w.p)))
+      local diff = vector.sub(v.p, w.p)
+      local dist = math.abs(diff.x)*diff.x + diff.y*diff.y
       if dist < nearest.dist then -- find smallest distance
         nearest.dist = dist
         nearest.i = j
