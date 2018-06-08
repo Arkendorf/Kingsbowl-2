@@ -615,7 +615,7 @@ end
 servergame.turnover = function()
   -- team that just got the ball
   local team = 1
-  if (ball.owner and players[ball.owner].team == 1) or (not ball.owner and players[qb].team == 1) then
+  if (ball.owner and players[ball.owner].team == 1 and td) or (ball.owner and players[ball.owner].team == 2 and not td) or (not ball.owner and players[qb].team == 1) then
     team = 2
   end
 

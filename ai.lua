@@ -106,9 +106,9 @@ ai.process = function(i, v, dt)
         set_speed = true
       end
     else -- defense
-      if ball.owner and ball.owner == qb then -- enemy has ball
+      if ball.owner and ball.owner == qb then -- enemy qb has ball
         ai[ai[v.type].enemy_qb](i, v, dt)
-      elseif ball.owner then
+      elseif ball.owner then -- enemy has ball
         ai[ai[v.type].enemy_ball](i, v, dt)
       elseif not ball.owner then -- enemy throw
         ai[ai[v.type].enemy_pass](i, v, dt)
@@ -143,6 +143,17 @@ ai.block = function(i, v, dt)
       if dist < nearest.dist then -- find smallest distance
         nearest.dist = dist
         nearest.i = j
+      end
+
+      if j == ball.owner then
+        -- attack
+        if math.sqrt(vector.mag_sq(collision.get_distance(v.p, players[ball.owner].p))) < sword.dist+sword.r then
+          v.sword.active = true
+          v.sword.d = vector.scale(sword.dist, vector.norm(v.mouse))
+          v.sword.t = sword.t
+          network.host:sendToAll("sword", {index = i, active = true, mouse = v.mouse})
+          set_speed = true
+        end
       end
     end
   end
