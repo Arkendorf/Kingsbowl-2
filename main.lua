@@ -58,7 +58,7 @@ love.draw = function()
     mainmenu.draw()
   end
   love.graphics.setCanvas()
-  love.graphics.setColor(255, 255, 255)
+  love.graphics.setColor(1, 1, 1)
   love.graphics.draw(win_canvas, 0, 0, 0, 2, 2)
 end
 

@@ -36,7 +36,7 @@ gui.draw = function (gui) -- love.draw()
       for i, v in ipairs(gui.buttons) do
         love.graphics.setColor(100, 100, 100)
         love.graphics.rectangle("fill", v.x, v.y, v.w, v.h)
-        love.graphics.setColor(255, 255, 255)
+        love.graphics.setColor(1, 1, 1)
         love.graphics.print(v.txt, math.floor(v.x+(v.w-font:getWidth(v.txt))/2), math.floor(v.y+(v.h-font:getHeight())/2))
       end
     end
@@ -45,7 +45,7 @@ gui.draw = function (gui) -- love.draw()
       for i, v in ipairs(gui.textboxes) do
         love.graphics.setColor(100, 100, 100)
         love.graphics.rectangle("fill", v.x, v.y, v.w, v.h)
-        love.graphics.setColor(255, 255, 255)
+        love.graphics.setColor(1, 1, 1)
         if string.len(v.table[v.index]) > 0 then
           love.graphics.print(v.table[v.index], v.x, math.floor(v.y+(v.h-font:getHeight())/2))
         else
@@ -59,12 +59,12 @@ gui.draw = function (gui) -- love.draw()
         if v.alignment == 2 then
           love.graphics.setColor(100, 100, 100)
           love.graphics.rectangle("fill", v.x, v.y, v.h, v.w)
-          love.graphics.setColor(255, 255, 255)
+          love.graphics.setColor(1, 1, 1)
           love.graphics.rectangle("fill", v.x, v.y+v.table[v.index]/v.numMax*(v.w-v.barw), v.h, v.barw)
         else
           love.graphics.setColor(100, 100, 100)
           love.graphics.rectangle("fill", v.x, v.y, v.w, v.h)
-          love.graphics.setColor(255, 255, 255)
+          love.graphics.setColor(1, 1, 1)
           love.graphics.rectangle("fill", v.x+v.table[v.index]/v.numMax*(v.w-v.barw), v.y, v.barw, v.h)
         end
       end
@@ -74,7 +74,7 @@ gui.draw = function (gui) -- love.draw()
       for i, v in ipairs(gui.dropdowns) do
         love.graphics.setColor(100, 100, 100)
         love.graphics.rectangle("fill", v.x, v.y, v.w-v.h, v.h)
-        love.graphics.setColor(255, 255, 255)
+        love.graphics.setColor(1, 1, 1)
         love.graphics.rectangle("fill", v.x+v.w-v.h, v.y, v.h, v.h)
         love.graphics.print(tostring(v.table[v.index]), v.x, math.floor(v.y+(v.h-font:getHeight())/2))
         love.graphics.setColor(100, 100, 100)
@@ -83,7 +83,7 @@ gui.draw = function (gui) -- love.draw()
           for j, k in ipairs(v.options) do
             love.graphics.setColor(100, 100, 100)
             love.graphics.rectangle("fill", v.x, v.y+j*v.h, v.w, v.h)
-            love.graphics.setColor(255, 255, 255)
+            love.graphics.setColor(1, 1, 1)
             love.graphics.print(tostring(k), v.x, math.floor(v.y+j*v.h+(v.h-font:getHeight())/2))
           end
         end

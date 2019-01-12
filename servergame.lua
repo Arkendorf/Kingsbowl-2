@@ -314,7 +314,7 @@ servergame.draw = function()
   for i, v in pairs(players) do
     love.graphics.setCanvas(v.art.canvas)
     love.graphics.clear()
-    love.graphics.setColor(255, 255, 255)
+    love.graphics.setColor(1, 1, 1)
     --draw base sprite
     love.graphics.draw(char[v.art.state][v.art.anim].img, char[v.art.state][v.art.anim].quad[v.art.dir][math.floor(v.art.frame)])
 
@@ -330,7 +330,7 @@ servergame.draw = function()
       love.graphics.setCanvas(v.shield.canvas)
       love.graphics.clear()
 
-      love.graphics.setColor(255,  255, 255)
+      love.graphics.setColor(1, 1, 1)
       love.graphics.draw(img.shield, quad.shield[v.art.dir])
       love.graphics.setColor(team_info[v.team].color)
       love.graphics.draw(img.shield_overlay, quad.shield[v.art.dir])
@@ -344,7 +344,7 @@ servergame.draw = function()
       love.graphics.setCanvas(v.sword.canvas)
       love.graphics.clear()
 
-      love.graphics.setColor(255, 255, 255)
+      love.graphics.setColor(1, 1, 1)
       love.graphics.draw(img.sword)
       love.graphics.setColor(team_info[v.team].color)
       love.graphics.draw(img.sword_overlay)
@@ -360,21 +360,21 @@ servergame.draw = function()
   -- set up camera
   love.graphics.push()
   love.graphics.translate(win_width/2-math.floor(camera.x), win_height/2-math.floor(camera.y))
-  love.graphics.setColor(255, 255, 255)
+  love.graphics.setColor(1, 1, 1)
   love.graphics.draw(img.field)
   -- draw line of scrimmage
-  love.graphics.setColor(255, 0, 0)
+  love.graphics.setColor(1, 0, 0)
   love.graphics.rectangle("fill", down.scrim-2, 0, 4, field.h)
   -- draw first down line
   if down.goal then
-    love.graphics.setColor(255, 225, 0)
+    love.graphics.setColor(1, 1, 0)
     love.graphics.rectangle("fill", down.goal-2, 0, 4, field.h)
   end
 
   -- draw flat player things (e.g. shadows)
   for i, v in pairs(players) do
     -- draw shadow
-    love.graphics.setColor(255, 255, 255)
+    love.graphics.setColor(1, 1, 1)
     love.graphics.draw(img.shadow, math.floor(v.p.x), math.floor(v.p.y), 0, 1, 1, 8, 10)
     -- draw target prediction
     if id == qb and ball.owner == id and v.team == players[qb].team and i ~= qb then
@@ -388,7 +388,7 @@ servergame.draw = function()
   end
 
   -- draw effects (blood, etc.)
-  love.graphics.setColor(255, 255, 255)
+  love.graphics.setColor(1, 1, 1)
   for i, v in ipairs(effects) do
     if not v.ox then v.ox = 0 end
     if not v.oy then v.oy = 0 end
@@ -417,7 +417,7 @@ servergame.draw = function()
 
   -- draw ball
   if ball.thrown then
-    love.graphics.setColor(255, 255, 255)
+    love.graphics.setColor(1, 1, 1)
     -- shadow
     love.graphics.draw(img.smallshadow, math.floor(ball.p.x), math.floor(ball.p.y), 0, 1, 1, 8, 8)
     -- ball
@@ -446,14 +446,14 @@ servergame.draw = function()
   end
 
   love.graphics.pop()
-  love.graphics.setColor(255, 255, 255)
+  love.graphics.setColor(1, 1, 1)
   -- draw scoreboard
   love.graphics.draw(img.scoreboard, (win_width-160)/2, 0)
   love.graphics.setColor(team_info[1].color)
   love.graphics.draw(img.scoreboard_overlay, (win_width-160)/2, 0)
   love.graphics.setColor(team_info[2].color)
   love.graphics.draw(img.scoreboard_overlay, (win_width)/2, 0)
-  love.graphics.setColor(255, 255, 255)
+  love.graphics.setColor(1, 1, 1)
   love.graphics.print(team_info[1].name, math.floor((win_width-80-font:getWidth(team_info[1].name))/2), 8)
   love.graphics.print(score[1], math.floor((win_width-80-font:getWidth(tostring(score[1])))/2), 24)
   love.graphics.print(team_info[2].name, math.floor((win_width+80-font:getWidth(team_info[1].name))/2), 8)

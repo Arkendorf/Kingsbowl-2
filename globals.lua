@@ -5,7 +5,7 @@ username = {"Sir Placeholder"}
 players = {}
 id = nil
 qb = 0
-love.window.setFullscreen(true)
+-- love.window.setFullscreen(true)
 true_win_width, true_win_height = love.graphics.getDimensions()
 win_width = math.floor(true_win_width/4)*2
 win_height = math.floor(true_win_height/4)*2
@@ -23,7 +23,7 @@ field = {w = 3600, h = 1600}
 mouse = {x = 0, y = 0}
 score = {0, 0}
 num_suffix = {"st", "nd", "rd", "th"}
-team_info = {{name = "Team 1", color = {255, 0, 0}}, {name = "Team 2", color = {0, 0, 255}}}
+team_info = {{name = "Team 1", color = {1, 0, 0}}, {name = "Team 2", color = {0, 0, 1}}}
 grace_time = 3
 camera = {x = 0, y = 0}
 global_dt = 0

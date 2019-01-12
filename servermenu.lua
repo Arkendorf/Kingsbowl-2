@@ -88,22 +88,22 @@ end
 
 servermenu.draw = function()
   -- base
-  love.graphics.setColor(255, 255, 255)
+  love.graphics.setColor(1, 1, 1)
   love.graphics.draw(img.field, (win_width-field.w)/2, (win_height-field.h)/2)
 
   -- leave button
   love.graphics.draw(img.button, 2, 2)
   love.graphics.setColor(team_info[1].color)
   love.graphics.draw(img.button_overlay, 2, 2)
-  love.graphics.setColor(229, 229, 229)
+  love.graphics.setColor(229/255, 229/255, 229/255)
   love.graphics.print("Leave", 13, 14)
 
   -- start button
-  love.graphics.setColor(255, 255, 255)
+  love.graphics.setColor(1, 1, 1)
   love.graphics.draw(img.button, 52, 2)
   love.graphics.setColor(team_info[2].color)
   love.graphics.draw(img.button_overlay, 52, 2)
-  love.graphics.setColor(229, 229, 229)
+  love.graphics.setColor(229/255, 229/255, 229/255)
   love.graphics.print("Start", 63, 14)
 
   -- draw team menus
@@ -114,7 +114,7 @@ servermenu.draw = function()
       love.graphics.draw(img.teamlist, quad.teamlist1, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
 
       -- draw icons
-      love.graphics.setColor(255, 255, 255)
+      love.graphics.setColor(1, 1, 1)
       love.graphics.draw(img.menuicons, quad.icons1, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
     else
       -- draw banner
@@ -122,7 +122,7 @@ servermenu.draw = function()
       love.graphics.draw(img.teamlist, quad.teamlist2, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
 
       -- draw icons
-      love.graphics.setColor(255, 255, 255)
+      love.graphics.setColor(1, 1, 1)
       love.graphics.draw(img.menuicons, quad.icons2, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
 
       -- draw text
@@ -132,7 +132,7 @@ servermenu.draw = function()
       --draw color sliders
       for i = 1, 3 do
         love.graphics.draw(img.slider, quad.sliderbar, (win_width/2) - 302 + 160 * j, (win_height-256)/2+10+17*i)
-        love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(team_info[j].color[i]/255*120), (win_height-256)/2+10+17*i)
+        love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(team_info[j].color[i]*120), (win_height-256)/2+10+17*i)
       end
       --draw bot sliders
       for i = 1, 2 do
@@ -143,12 +143,12 @@ servermenu.draw = function()
   end
 
   -- draw team names
-  love.graphics.setColor(51, 51, 51)
+  love.graphics.setColor(51/255, 51/255, 51/255)
   love.graphics.print(team_info[1].name, (win_width/2) - 138, (win_height-256)/2+2)
   love.graphics.print(team_info[2].name, (win_width/2) + 22, (win_height-256)/2+2)
 
   -- draw player names
-  love.graphics.setColor(229, 229, 229)
+  love.graphics.setColor(229/255, 229/255, 229/255)
   local team_size = {0, 0}
   for i, v in pairs(players) do
     if menu_mode[v.team] == 0 then
@@ -205,9 +205,9 @@ servermenu.swap_menu = function(mode, menu)
         gui.remove(i+4)
       end
     end
-    gui.add({sliders = {{x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+44, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 1, numMin = 0, numMax = 255},
-                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+76, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 2, numMin = 0, numMax = 255},
-                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+108, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 3, numMin = 0, numMax = 255},
+    gui.add({sliders = {{x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+44, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 1, numMin = 0, numMax = 1},
+                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+76, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 2, numMin = 0, numMax = 1},
+                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+108, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 3, numMin = 0, numMax = 1},
                         {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+178, alignment = 1, w = 248, h = 24, barw = 8, table = ai.num[menu], index = 1, numMin = 0, numMax = 4},
                         {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+222, alignment = 1, w = 248, h = 24, barw = 8, table = ai.num[menu], index = 2, numMin = 0, numMax = 4}}}, 1+menu)
   elseif mode == 0 then
