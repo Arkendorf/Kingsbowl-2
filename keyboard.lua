@@ -43,7 +43,7 @@ local direction = function()
     facing = facing + 1
   end
   if not players[id].dead then
-      facing_to_dp[facing]()
+    facing_to_dp[facing]()
   end
 end
 

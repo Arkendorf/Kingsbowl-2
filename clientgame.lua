@@ -155,6 +155,9 @@ clientgame.update = function(dt)
   network.peer:send("mousepos", players[id].mouse)
   -- get client's direction
   input.direction()
+  if vector.mag_sq(players[id].d) > max_run_speed*max_run_speed then
+    players[id].d = vector.scale(max_run_speed, vector.norm(players[id].d))
+  end
   -- send client's difference in position
   network.peer:send("posdif", players[id].d)
   local oldp = players[id].p
@@ -177,7 +180,7 @@ clientgame.update = function(dt)
     clientgame.animate(i, v, dt)
   end
   -- reduce client's velocity
-  players[id].d = vector.scale(0.9, players[id].d)
+  players[id].d = vector.scale(friction, players[id].d)
   -- predict ball position
   if ball.thrown then
     -- move the ball
@@ -279,7 +282,7 @@ clientgame.draw = function()
     end
 
     --queue username
-    queue[#queue+1] = {txt = v.name, x = math.floor(v.p.x)-math.floor(font:getWidth(v.name)/2), y = math.floor(v.p.y), z = math.floor(48+font:getHeight()), color = team_info[v.team].color}
+    queue[#queue+1] = {txt = v.name, x = math.floor(v.p.x)-math.floor(fontcontrast:getWidth(v.name)/2), y = math.floor(v.p.y), z = math.floor(48+fontcontrast:getHeight()), color = team_info[v.team].color}
   end
 
   -- set up camera
@@ -367,6 +370,7 @@ clientgame.draw = function()
       end
     elseif v.txt then
       love.graphics.setColor(v.color)
+      love.graphics.setFont(fontcontrast)
       love.graphics.print(v.txt, v.x, v.y-v.z)
     end
   end
@@ -380,6 +384,7 @@ clientgame.draw = function()
   love.graphics.setColor(team_info[2].color)
   love.graphics.draw(img.scoreboard_overlay, (win_width)/2, 0)
   love.graphics.setColor(229/255, 229/255, 229/255)
+  love.graphics.setFont(font)
   love.graphics.print(team_info[1].name, math.floor((win_width-80-font:getWidth(team_info[1].name))/2), 8)
   love.graphics.print(score[1], math.floor((win_width-80-font:getWidth(tostring(score[1])))/2), 24)
   love.graphics.print(team_info[2].name, math.floor((win_width+80-font:getWidth(team_info[1].name))/2), 8)
@@ -398,8 +403,9 @@ clientgame.draw = function()
 
   -- draw alerts
   if #alerts > 0 then
+    love.graphics.setFont(fontcontrast)
     love.graphics.setColor(team_info[alerts[1].team].color)
-    love.graphics.print(alerts[1].txt, math.floor((win_width-font:getWidth(alerts[1].txt))/2), win_height/2+32)
+    love.graphics.print(alerts[1].txt, math.floor((win_width-fontcontrast:getWidth(alerts[1].txt))/2), win_height/2+32)
   end
 end
 

@@ -19,7 +19,7 @@ speed_table = {
   sword = 2,
 }
 grace_time = 3
-field = {w = 3600, h = 1600}
+field = {w = 1800, h = 800}
 mouse = {x = 0, y = 0}
 score = {0, 0}
 num_suffix = {"st", "nd", "rd", "th"}
@@ -30,6 +30,8 @@ global_dt = 0
 ball_speed = 4
 ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
 down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
+max_run_speed = 12
+friction = .95
 
 input = require("keyboard")
 

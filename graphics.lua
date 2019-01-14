@@ -27,6 +27,17 @@ graphics.spritesheet = function(tw, th, img)
 end
 
 graphics.init = function()
+  font = love.graphics.newImageFont("font.png",
+    " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
+    "abcdefghijklmnopqrstuvwxyz" ..
+    "0123456789!?.,:", 1)
+  fontcontrast = love.graphics.newImageFont("fontcontrast.png",
+    " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
+    "abcdefghijklmnopqrstuvwxyz" ..
+    "0123456789!?.,:", 0)
+  love.graphics.setFont(font)
+  love.graphics.setBackgroundColor(60/255, 152/255, 70/255)
+
   local img = {}
   local files = love.filesystem.getDirectoryItems("images")
   for i, v in ipairs(files) do

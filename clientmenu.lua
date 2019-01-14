@@ -73,6 +73,7 @@ clientmenu.update = function(dt)
 end
 
 clientmenu.draw = function()
+  love.graphics.setFont(font)
   -- base
   love.graphics.setColor(1, 1, 1)
   love.graphics.draw(img.field, (win_width-field.w)/2, (win_height-field.h)/2)

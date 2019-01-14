@@ -11,12 +11,6 @@ local state = require "state"
 local quit = 2
 
 love.load = function()
-  font = love.graphics.newImageFont("font.png",
-    " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
-    "abcdefghijklmnopqrstuvwxyz" ..
-    "0123456789!?.,:", 1)
-  love.graphics.setFont(font)
-  love.graphics.setBackgroundColor(60, 152, 70)
   gui.new(menus[1])
   math.randomseed(os.time())
 end

@@ -1,6 +1,7 @@
 local mainmenu = {}
 
 function mainmenu.draw()
+  love.graphics.setFont(font)
   -- draw base
   love.graphics.setColor(1, 1, 1)
   love.graphics.draw(img.field, (win_width-field.w)/2, (win_height-field.h)/2)
