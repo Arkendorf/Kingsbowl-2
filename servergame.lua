@@ -23,6 +23,11 @@ local server_hooks = {
     players[index].d = data
     network.host:sendToAllBut(client, "posdif", {index = index, info = data})
   end,
+  accel = function(data, client)
+    local index = client:getIndex()
+    players[index].a = data
+    network.host:sendToAllBut(client, "accel", {index = index, info = data})
+  end,
   -- if a ball is thrown by client, do this
   throw = function(data, client)
     local index = client:getIndex()
@@ -76,6 +81,7 @@ servergame.init = function()
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
+    v.a = {x = 0, y = 0}
     v.r = 10
     v.shield = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
@@ -99,16 +105,13 @@ servergame.update = function(dt)
   input.target()
   -- send server mouse position to clients
   network.host:sendToAll("mousepos", {info = players[id].mouse, index = id})
-  -- get servers direction, add acceleration, cap speed
+  -- get servers direction
   local x, y = input.direction()
-  local speed = players[id].speed
-  players[id].d.x = players[id].d.x + x*acceleration
-  players[id].d.y = players[id].d.y + y*acceleration
-  if vector.mag_sq(players[id].d) > speed*speed then
-    players[id].d = vector.scale(speed, vector.norm(players[id].d))
-  end
-  -- send players position difference to all
-  network.host:sendToAll("posdif", {info = players[id].d, index = id})
+  players[id].a.x = x
+  players[id].a.y = y
+
+  -- send players acceleration
+  network.host:sendToAll("accel", {info = players[id].a, index = id})
 
   for i, v in pairs(players) do
     if v.bot then -- run AI for bots
@@ -118,8 +121,22 @@ servergame.update = function(dt)
       network.host:sendToAll("mousepos", {info = v.mouse, index = i})
       network.host:sendToAll("posdif", {info = v.d, index = i})
     end
-    -- move player based on their diff
-    v.p = vector.sum(v.p, vector.scale(dt*(v.sticky and shield_slow or 1), v.d))
+    -- get servers direction, add acceleration, cap speed
+    -- if hitting shield, reduce acceleration
+    if v.sticky then
+      v.a = vector.scale(shield_slow, v.a)
+    end
+    -- add acceleration to velocity
+    if vector.mag_sq(v.d) < v.speed*v.speed then -- dont allow user to input acceleration if velocity is greater than max
+      v.d = vector.sum(v.d, vector.scale(acceleration, v.a))
+      -- cap velocity due to user input
+      if vector.mag_sq(v.d) > v.speed*v.speed then
+        v.d = vector.scale(v.speed, vector.norm(v.d))
+      end
+    end
+    -- move player based on their velocity
+    v.p = vector.sum(v.p, vector.scale(dt, v.d))
+    --reset sticky
     v.sticky = false
     -- apply collision to player
     servergame.collide(v)
@@ -133,8 +150,9 @@ servergame.update = function(dt)
         end
       end
     end
-    -- send player's position to all
+    -- send player's position and velocity to all
     network.host:sendToAll("pos", {info = v.p, index = i})
+    network.host:sendToAll("posdif", {info = v.d, index = i})
     -- do combat stuff
     if v.sword.active then
       --update player's attack (if at all)
@@ -184,15 +202,15 @@ servergame.update = function(dt)
         v.sticky = true
       end
     end
+    -- friction / linear deceleration, for a more "tagpro-y" feel
+    if vector.mag_sq(v.d) > friction*friction then
+      v.d = vector.sub(v.d, vector.scale(friction, vector.norm(v.d)))
+    else
+      v.d.x = 0
+      v.d.y = 0
+    end
     -- do art stuff
     servergame.animate(i, v, dt)
-  end
-  -- friction / linear deceleration, for a more "tagpro-y" feel
-  if vector.mag_sq(players[id].d) > friction*friction then
-    players[id].d = vector.sub(players[id].d, vector.scale(friction, vector.norm(players[id].d)))
-  else
-    players[id].d.x = 0
-    players[id].d.y = 0
   end
 
   -- move the ball

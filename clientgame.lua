@@ -22,6 +22,9 @@ local client_hooks = {
   posdif = function(data)
     players[data.index].d = data.info
   end,
+  accel = function(data)
+    players[data.index].a = data.info
+  end,
   throw = function(data)
     ball = data
   end,
@@ -130,6 +133,7 @@ clientgame.init = function()
   for i, v in pairs(players) do
     v.p = {x = i*32, y = i*32}
     v.d = {x = 0, y = 0}
+    v.a = {x = 0, y = 0}
     v.r = 10
     v.shield = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
@@ -155,16 +159,21 @@ clientgame.update = function(dt)
   network.peer:send("mousepos", players[id].mouse)
   -- get servers direction, add acceleration, cap speed
   local x, y = input.direction()
-  local speed = players[id].speed
-  players[id].d.x = players[id].d.x + x*acceleration
-  players[id].d.y = players[id].d.y + y*acceleration
-  if vector.mag_sq(players[id].d) > speed*speed then
-    players[id].d = vector.scale(speed, vector.norm(players[id].d))
-  end
-  -- send client's difference in position
-  network.peer:send("posdif", players[id].d)
+  players[id].a.x = x
+  players[id].a.y = y
+  -- send client's acceleration
+  network.peer:send("accel", players[id].a)
+
   local oldp = players[id].p
   for i, v in pairs(players) do -- prediction
+    -- add acceleration to velocity
+    if vector.mag_sq(v.d) < v.speed*v.speed then -- dont allow user to input acceleration if velocity is greater than max
+      v.d = vector.sum(v.d, vector.scale(acceleration, v.a))
+      -- cap velocity due to user input
+      if vector.mag_sq(v.d) > v.speed*v.speed then
+        v.d = vector.scale(v.speed, vector.norm(v.d))
+      end
+    end
     -- move player based on their diff
     v.p = vector.sum(v.p, vector.scale(dt, v.d))
     -- apply collision to player
@@ -179,15 +188,15 @@ clientgame.update = function(dt)
         end
       end
     end
+    -- friction / linear deceleration, for a more "tagpro-y" feel
+    if vector.mag_sq(v.d) > friction*friction then
+      v.d = vector.sub(v.d, vector.scale(friction, vector.norm(v.d)))
+    else
+      v.d.x = 0
+      v.d.y = 0
+    end
     -- do art stuff
     clientgame.animate(i, v, dt)
-  end
-  -- friction / linear deceleration, for a more "tagpro-y" feel
-  if vector.mag_sq(players[id].d) > friction*friction then
-    players[id].d = vector.sub(players[id].d, vector.scale(friction, vector.norm(players[id].d)))
-  else
-    players[id].d.x = 0
-    players[id].d.y = 0
   end
 
   -- predict ball position
