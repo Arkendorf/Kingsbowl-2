@@ -99,10 +99,13 @@ servergame.update = function(dt)
   input.target()
   -- send server mouse position to clients
   network.host:sendToAll("mousepos", {info = players[id].mouse, index = id})
-  -- get servers direction
-  input.direction()
-  if vector.mag_sq(players[id].d) > max_run_speed*max_run_speed then
-    players[id].d = vector.scale(max_run_speed, vector.norm(players[id].d))
+  -- get servers direction, add acceleration, cap speed
+  local x, y = input.direction()
+  local speed = players[id].speed
+  players[id].d.x = players[id].d.x + x*acceleration
+  players[id].d.y = players[id].d.y + y*acceleration
+  if vector.mag_sq(players[id].d) > speed*speed then
+    players[id].d = vector.scale(speed, vector.norm(players[id].d))
   end
   -- send players position difference to all
   network.host:sendToAll("posdif", {info = players[id].d, index = id})
@@ -116,7 +119,7 @@ servergame.update = function(dt)
       network.host:sendToAll("posdif", {info = v.d, index = i})
     end
     -- move player based on their diff
-    v.p = vector.sum(v.p, vector.scale(v.speed*dt*(v.sticky and 0.8 or 1), v.d))
+    v.p = vector.sum(v.p, vector.scale(dt*(v.sticky and shield_slow or 1), v.d))
     v.sticky = false
     -- apply collision to player
     servergame.collide(v)
@@ -184,8 +187,13 @@ servergame.update = function(dt)
     -- do art stuff
     servergame.animate(i, v, dt)
   end
-  -- reduce server's velocity
-  players[id].d = vector.scale(friction, players[id].d)
+  -- friction / linear deceleration, for a more "tagpro-y" feel
+  if vector.mag_sq(players[id].d) > friction*friction then
+    players[id].d = vector.sub(players[id].d, vector.scale(friction, vector.norm(players[id].d)))
+  else
+    players[id].d.x = 0
+    players[id].d.y = 0
+  end
 
   -- move the ball
   if ball.thrown then

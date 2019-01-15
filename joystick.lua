@@ -1,8 +1,13 @@
 local direction = function()
   local x = joystick:getGamepadAxis("leftx")
   local y = joystick:getGamepadAxis("lefty")
-  if math.abs(x) > 0.1 then players[id].d.x = players[id].d.x + x end
-  if math.abs(y) > 0.1 then players[id].d.y = players[id].d.y + y end
+  if math.abs(x) <= 0.1 then
+    x = 0
+  end
+  if math.abs(y) > 0.1 then
+    y = 0
+  end
+  return x, y
 end
 
 local target = function()

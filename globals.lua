@@ -12,12 +12,15 @@ win_height = math.floor(true_win_height/4)*2
 sword = {dist = 18, r = 6, t = .5}
 shield = {dist = 12, r = 12}
 speed_table = {
-  with_ball = 6,
-  offense = 8,
-  defense = 8,
-  shield = 6,
-  sword = 2,
+  with_ball = 60,
+  offense = 80,
+  defense = 80,
+  shield = 60,
+  sword = 20,
 }
+acceleration = 4
+friction = .5
+shield_slow = 0.8
 grace_time = 3
 field = {w = 1800, h = 800}
 mouse = {x = 0, y = 0}
@@ -30,8 +33,6 @@ global_dt = 0
 ball_speed = 4
 ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
 down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
-max_run_speed = 12
-friction = .95
 
 input = require("keyboard")
 
