@@ -65,8 +65,6 @@ end
 
 ai.process = function(i, v, dt)
   local set_speed = false
-
-  v.d = vector.scale(0.9, v.d)
   if not v.dead and down.t <= 0 then -- make sure down has started
     if (ball.owner and players[ball.owner].team == v.team) or (not ball.owner and players[qb].team == v.team) then -- offense
       if ball.owner and ball.owner == i then -- has ball
@@ -114,32 +112,33 @@ ai.process = function(i, v, dt)
         ai[ai[v.type].enemy_pass](i, v, dt)
       end
     end
+  else
+    v.a.x = 0
+    v.a.y = 0
   end
 
   return set_speed
 end
 
 ai.score = function(i, v, dt)
-  local d = {x = -(v.team-1.5)*2, y = 0}
+  local a = {x = -(v.team-1.5)*2, y = 0}
   for j, w in pairs(players) do -- influence bot direction
     if v.team ~= w.team then
-      d.y = d.y + ai.avoid(v.p, w.p, 64).y
+      a.y = a.y + ai.avoid(v.p, w.p, 64).y
     end
   end
   -- move
-  d = vector.norm(d)
-  v.d = vector.sum(v.d, d)
+  v.a = vector.norm(a)
 
   -- look
-  v.mouse = d
+  v.mouse = a
 end
 
 ai.block = function(i, v, dt)
   local nearest = {dist = math.huge, i = 0}
   for j, w in pairs(players) do -- find closest enemy
     if v.team ~= w.team then -- make sure it is an enemy
-      local diff = vector.sub(v.p, w.p)
-      local dist = math.abs(diff.x)*diff.x + diff.y*diff.y
+      local dist = vector.mag_sq(vector.sub(v.p, w.p))
       if dist < nearest.dist then -- find smallest distance
         nearest.dist = dist
         nearest.i = j
@@ -147,7 +146,7 @@ ai.block = function(i, v, dt)
 
       if j == ball.owner then
         -- attack
-        if math.sqrt(vector.mag_sq(collision.get_distance(v.p, players[ball.owner].p))) < sword.dist+sword.r then
+        if math.sqrt(dist) < sword.dist+sword.r then
           v.sword.active = true
           v.sword.d = vector.scale(sword.dist, vector.norm(v.mouse))
           v.sword.t = sword.t
@@ -157,23 +156,23 @@ ai.block = function(i, v, dt)
       end
     end
   end
-  local d = ai.follow(v.p, players[nearest.i].p) -- find direction to nearest enemy
+  local a = ai.follow(v.p, players[nearest.i].p) -- find direction to nearest enemy
   if ball.owner then -- dodge around ball carrier
     local avoid = ai.avoid(v.p, players[ball.owner].p, 20)
-    d = vector.norm(vector.sum(d, avoid))
+    a = vector.norm(vector.sum(a, avoid))
   end
 
   -- move
-  v.d = vector.sum(v.d, d)
+  v.a = a
 
   -- look
-  v.mouse = d
+  v.mouse = a
 end
 
 ai.sack = function(i, v, dt)
   local follow = ai.follow(v.p, players[ball.owner].p)
   -- move
-  v.d = vector.sum(v.d, follow)
+  v.a = follow
 
   -- look
   v.mouse = follow
@@ -190,23 +189,23 @@ end
 
 ai.run = function(i, v, dt)
   -- move
-  local d = 0
+  local a = 0
   if ball.owner then
-    d = -(players[ball.owner].team-1.5)*2
+    a = -(players[ball.owner].team-1.5)*2
   else
-    d = -(players[qb].team-1.5)*2
+    a = -(players[qb].team-1.5)*2
   end
-  v.d.x = v.d.x + d
+  v.a.x = a
 
   -- look
-  v.mouse.x = d
+  v.mouse.x = a
   v.mouse.y = 0
 end
 
 ai.catch = function(i, v, dt)
   local follow = ai.follow(v.p, ball.goal)
   -- move
-  v.d = vector.sum(v.d, follow)
+  v.a = follow
 
   -- look
   v.mouse = follow

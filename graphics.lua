@@ -1,6 +1,7 @@
 local graphics = {}
 
 love.graphics.setDefaultFilter("nearest", "nearest")
+love.graphics.setLineStyle("rough")
 
 graphics.charsheet = function(img)
   local quad = {}
