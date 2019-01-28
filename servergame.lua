@@ -122,10 +122,6 @@ servergame.update = function(dt)
       network.host:sendToAll("accel", {info = v.a, index = i})
     end
     -- get servers direction, add acceleration, cap speed
-    -- if hitting shield, reduce acceleration
-    if v.sticky then
-      v.a = vector.scale(shield_slow, v.a)
-    end
     -- add acceleration to velocity
     if vector.mag_sq(v.d) < v.speed*v.speed then -- dont allow user to input acceleration if velocity is greater than max
       v.d = vector.sum(v.d, vector.scale(acceleration, v.a))
@@ -135,7 +131,11 @@ servergame.update = function(dt)
       end
     end
     -- move player based on their velocity
-    v.p = vector.sum(v.p, vector.scale(dt, v.d))
+    if v.sticky then -- if hitting shield, reduce velocity
+      v.p = vector.sum(v.p, vector.scale(dt*shield_slow, v.d))
+    else
+      v.p = vector.sum(v.p, vector.scale(dt, v.d))
+    end
     --reset sticky
     v.sticky = false
     -- apply collision to player
