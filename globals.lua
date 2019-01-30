@@ -5,7 +5,7 @@ username = {"Sir Placeholder"}
 players = {}
 id = nil
 qb = 0
-love.window.setFullscreen(true)
+-- love.window.setFullscreen(true)
 true_win_width, true_win_height = love.graphics.getDimensions()
 win_width = math.floor(true_win_width/4)*2
 win_height = math.floor(true_win_height/4)*2
@@ -27,12 +27,14 @@ mouse = {x = 0, y = 0}
 score = {0, 0}
 num_suffix = {"st", "nd", "rd", "th"}
 team_info = {{name = "Team 1", color = {1, 0, 0}}, {name = "Team 2", color = {0, 0, 1}}}
-grace_time = 3
 camera = {x = 0, y = 0}
 global_dt = 0
 ball_speed = 4
 ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
 down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
+alert_time = 3
+turn_speed = 2.5
+mag_speed = 3
 
 input = require("keyboard")
 

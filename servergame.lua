@@ -4,6 +4,7 @@ local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
 local ai = require "ai"
+local commonfunc = require "commonfunc"
 require "globals"
 local servergame = {}
 
@@ -87,6 +88,8 @@ servergame.init = function()
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
     v.dead = false
     v.mouse = {x = 0, y = 0}
+    v.mouse_goal = {x = 0, y = 0}
+    v.polar = {mag = 0, angle = 0}
     v.art = {state = "base", anim = "idle", dir = 1, frame = 1, canvas = love.graphics.newCanvas(32, 48)}
   end
   -- set up initial down
@@ -103,6 +106,8 @@ servergame.update = function(dt)
 
   --get server mouse positions
   input.target()
+  commonfunc.adjust_target(id, dt)
+
   -- send server mouse position to clients
   network.host:sendToAll("mousepos", {info = players[id].mouse, index = id})
   -- get servers direction
@@ -224,6 +229,7 @@ servergame.update = function(dt)
     ball.z = z
     -- if ball hits the ground, reset
     if ball.z <= 0 then
+      alerts[#alerts+1] = {txt = players[qb].name.." has thrown an incomplete pass", team = players[qb].team}
       effects[#effects+1] = {img = "stuckarrow", x = ball.p.x, y = ball.p.y, z = 0, ox = 16, oy = 16}
       down.dead = true
       down.t = grace_time
@@ -321,14 +327,14 @@ servergame.update = function(dt)
     end
   end
   --update alerts
-  if #alerts > 0 then
-    if alerts[1].t then
-      alerts[1].t = alerts[1].t - dt
-      if alerts[1].t <= 0 then
-        table.remove(alerts, 1)
+  for i, v in ipairs(alerts) do
+    if v.t then
+      v.t = v.t - dt
+      if v.t <= 0 then
+        table.remove(alerts, i)
       end
     else
-      alerts[1].t = 2
+      v.t = alert_time
     end
   end
   -- quit if necessary
@@ -432,17 +438,15 @@ servergame.draw = function()
   love.graphics.setColor(team_info[players[qb].team].color)
   if ball.thrown and not ball.owner then
     love.graphics.draw(img.balltarget, math.floor(ball.goal.x), math.floor(ball.goal.y), 0, 1, 1, 16, 16)
-  elseif id ~= qb and ball.owner and ball.owner == qb then
-    love.graphics.draw(img.qbtarget, math.floor(players[qb].p.x+players[qb].mouse.x), math.floor(players[qb].p.y+players[qb].mouse.y), 0, 1, 1, 16, 16)
+  elseif ball.owner and ball.owner == qb then
+    love.graphics.draw(img.balltarget, math.floor(players[qb].p.x+players[qb].mouse.x), math.floor(players[qb].p.y+players[qb].mouse.y), 0, 1, 1, 16, 16)
   end
 
   -- draw personal cursor
   love.graphics.setColor(team_info[players[id].team].color)
-  if id ~= qb or id ~= ball.owner then
-    love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
-  elseif id == qb and ball.owner and ball.owner == qb then
-    love.graphics.draw(img.qbtarget, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
-  end
+  love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
+  -- draw direction arrow
+  love.graphics.draw(img.pointer, players[id].p.x, players[id].p.y, players[id].polar.angle, 1, 1, 16, 16)
 
   -- draw ball
   if ball.thrown then
@@ -502,10 +506,14 @@ servergame.draw = function()
   end
 
   -- draw alerts
-  if #alerts > 0 then
-    love.graphics.setFont(fontcontrast)
-    love.graphics.setColor(team_info[alerts[1].team].color)
-    love.graphics.print(alerts[1].txt, math.floor((win_width-fontcontrast:getWidth(alerts[1].txt))/2), win_height/2+32)
+  love.graphics.setFont(fontcontrast)
+  for i, v in ipairs(alerts) do
+    if v.t then
+      love.graphics.setColor(team_info[v.team].color[1], team_info[v.team].color[2], team_info[v.team].color[3], v.t/alert_time)
+    else
+      love.graphics.setColor(team_info[v.team].color)
+    end
+    love.graphics.print(v.txt, 2, win_height-(#alerts-i+1)*12)
   end
 end
 
@@ -575,8 +583,14 @@ end
 servergame.new_down = function()
   -- progress down number
   down.num = down.num + 1
-  -- adjust line of scrimmage / goal
+  --adjust line of scrimmage
   down.scrim = down.new_scrim
+  if down.scrim < field.w/12 then
+    down.scrim = field.w/12
+  elseif down.scrim > field.w/12*11 then
+    down.scrim = field.w/12*11
+  end
+  -- adjust goal line
   if down.goal then -- if goal isn't end zone
     if players[qb].team == 1 and down.scrim >= down.goal then
       down.goal = down.scrim + field.w/12
@@ -637,6 +651,8 @@ servergame.new_down = function()
   -- reset target
   camera.x = players[id].p.x
   camera.y = players[id].p.y
+  players[id].polar.mag = 0
+  players[id].polar.angle = 0
 
   -- clear effects
   effects = {}
@@ -647,7 +663,7 @@ end
 servergame.turnover = function()
   -- team that just got the ball
   local team = 1
-  if (ball.owner and players[ball.owner].team == 1 and td) or (ball.owner and players[ball.owner].team == 2 and not td) or (not ball.owner and players[qb].team == 1) then
+  if players[qb].team == 1 then
     team = 2
   end
 

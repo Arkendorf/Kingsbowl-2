@@ -1,5 +1,6 @@
 local vector = require "vector"
 local collision = require "collision"
+local commonfunc = require "commonfunc"
 
 local ai = {}
 
@@ -66,6 +67,7 @@ end
 ai.process = function(i, v, dt)
   local set_speed = false
   if not v.dead and down.t <= 0 then -- make sure down has started
+    commonfunc.adjust_target(i, dt)
     if (ball.owner and players[ball.owner].team == v.team) or (not ball.owner and players[qb].team == v.team) then -- offense
       if ball.owner and ball.owner == i then -- has ball
         ai[ai[v.type].own](i, v, dt)
@@ -89,7 +91,7 @@ ai.process = function(i, v, dt)
               else
                 -- face blockee
                 local follow = ai.follow(v.p, w.p)
-                v.mouse = follow
+                v.mouse_goal = follow
 
                 v.shield.d = vector.scale(shield.dist, v.mouse)
                 network.host:sendToAll("shieldpos", {info = v.shield.d, index = i})
@@ -131,7 +133,7 @@ ai.score = function(i, v, dt)
   v.a = vector.norm(a)
 
   -- look
-  v.mouse = a
+  v.mouse_goal = a
 end
 
 ai.block = function(i, v, dt)
@@ -166,7 +168,7 @@ ai.block = function(i, v, dt)
   v.a = a
 
   -- look
-  v.mouse = a
+  v.mouse_goal = a
 end
 
 ai.sack = function(i, v, dt)
@@ -175,7 +177,7 @@ ai.sack = function(i, v, dt)
   v.a = follow
 
   -- look
-  v.mouse = follow
+  v.mouse_goal = follow
 
   -- attack
   if math.sqrt(vector.mag_sq(collision.get_distance(v.p, players[ball.owner].p))) < sword.dist+sword.r then
@@ -198,8 +200,8 @@ ai.run = function(i, v, dt)
   v.a.x = a
 
   -- look
-  v.mouse.x = a
-  v.mouse.y = 0
+  v.mouse_goal.x = a
+  v.mouse_goal.y = 0
 end
 
 ai.catch = function(i, v, dt)
@@ -208,7 +210,7 @@ ai.catch = function(i, v, dt)
   v.a = follow
 
   -- look
-  v.mouse = follow
+  v.mouse_goal = follow
 end
 
 ai.follow = function(p1, p2)

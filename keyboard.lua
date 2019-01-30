@@ -47,8 +47,8 @@ local direction = function()
 end
 
 local target = function()
-  players[id].mouse.x = camera.x-players[id].p.x
-  players[id].mouse.y = camera.y-players[id].p.y
+  players[id].mouse_goal.x = camera.x-players[id].p.x
+  players[id].mouse_goal.y = camera.y-players[id].p.y
 end
 
 local center = function()

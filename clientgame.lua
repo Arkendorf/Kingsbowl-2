@@ -3,7 +3,7 @@ local state = require "state"
 local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
-local q = require "queue"
+local commonfunc = require "commonfunc"
 require "globals"
 local clientgame = {}
 
@@ -60,6 +60,8 @@ local client_hooks = {
     -- reset target
     camera.x = players[id].p.x
     camera.y = players[id].p.y
+    players[id].polar.mag = 0
+    players[id].polar.angle = 0
     -- clear effects
     effects = {}
   end,
@@ -139,6 +141,8 @@ clientgame.init = function()
     v.sword = {active = false, d = {x = 0, y = 0}, t = 0, canvas = love.graphics.newCanvas(32, 32)}
     v.dead = false
     v.mouse = {x = 0, y = 0}
+    v.mouse_goal = {x = 0, y = 0}
+    v.polar = {mag = 0, angle = 0}
     v.art = {state = "base", anim = "idle", dir = 1, frame = 1, canvas = love.graphics.newCanvas(32, 48)}
     -- set the speed for players
     clientgame.set_speed(i)
@@ -155,6 +159,8 @@ clientgame.update = function(dt)
 
   -- get server mouse positions
   input.target()
+  commonfunc.adjust_target(id, dt)
+
   -- send client mouse position to server
   network.peer:send("mousepos", players[id].mouse)
   -- get servers direction, add acceleration, cap speed
@@ -210,6 +216,7 @@ clientgame.update = function(dt)
     ball.z = z
     -- if ball hits the ground, stop
     if ball.z <= 0 then
+      alerts[#alerts+1] = {txt = players[qb].name.." has thrown an incomplete pass", team = players[qb].team}
       ball.thrown = false
     end
   end
@@ -242,14 +249,14 @@ clientgame.update = function(dt)
     end
   end
   --update alerts
-  if #alerts > 0 then
-    if alerts[1].t then
-      alerts[1].t = alerts[1].t - dt
-      if alerts[1].t <= 0 then
-        table.remove(alerts, 1)
+  for i, v in ipairs(alerts) do
+    if v.t then
+      v.t = v.t - dt
+      if v.t <= 0 then
+        table.remove(alerts, i)
       end
     else
-      alerts[1].t = 2
+      v.t = alert_time
     end
   end
 end
@@ -349,17 +356,15 @@ clientgame.draw = function()
   love.graphics.setColor(team_info[players[qb].team].color)
   if ball.thrown and not ball.owner then
     love.graphics.draw(img.balltarget, math.floor(ball.goal.x), math.floor(ball.goal.y), 0, 1, 1, 16, 16)
-  elseif id ~= qb and ball.owner and ball.owner == qb then
-    love.graphics.draw(img.qbtarget, math.floor(players[qb].p.x+players[qb].mouse.x), math.floor(players[qb].p.y+players[qb].mouse.y), 0, 1, 1, 16, 16)
+  elseif ball.owner and ball.owner == qb then
+    love.graphics.draw(img.balltarget, math.floor(players[qb].p.x+players[qb].mouse.x), math.floor(players[qb].p.y+players[qb].mouse.y), 0, 1, 1, 16, 16)
   end
 
   -- draw personal cursor
   love.graphics.setColor(team_info[players[id].team].color)
-  if id ~= qb or id ~= ball.owner then
-    love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
-  elseif id == qb and ball.owner and ball.owner == qb then
-    love.graphics.draw(img.qbtarget, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
-  end
+  love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
+  -- draw direction arrow
+  love.graphics.draw(img.pointer, players[id].p.x, players[id].p.y, players[id].polar.angle, 1, 1, 16, 16)
 
 
   -- draw ball
@@ -420,10 +425,14 @@ clientgame.draw = function()
   end
 
   -- draw alerts
-  if #alerts > 0 then
-    love.graphics.setFont(fontcontrast)
-    love.graphics.setColor(team_info[alerts[1].team].color)
-    love.graphics.print(alerts[1].txt, math.floor((win_width-fontcontrast:getWidth(alerts[1].txt))/2), win_height/2+32)
+  love.graphics.setFont(fontcontrast)
+  for i, v in ipairs(alerts) do
+    if v.t then
+      love.graphics.setColor(team_info[v.team].color[1], team_info[v.team].color[2], team_info[v.team].color[3], v.t/alert_time)
+    else
+      love.graphics.setColor(team_info[v.team].color)
+    end
+    love.graphics.print(v.txt, 2, win_height-(#alerts-i+1)*12)
   end
 end
 

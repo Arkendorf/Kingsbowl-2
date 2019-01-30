@@ -14,11 +14,11 @@ local target = function()
   -- find camera values
   local x = joystick:getGamepadAxis("rightx")
   local y = joystick:getGamepadAxis("righty")
-  if math.abs(x) > 0.1 then camera.x = camera.x + x*global_dt*60*4 end
-  if math.abs(y) > 0.1 then camera.y = camera.y + y*global_dt*60*4 end
+  if math.abs(x) > 0.1 then camera.x = camera.x + x*global_dt*60*mag_speed end
+  if math.abs(y) > 0.1 then camera.y = camera.y + y*global_dt*60*mag_speed end
 
-  players[id].mouse.x = camera.x-players[id].p.x
-  players[id].mouse.y = camera.y-players[id].p.y
+  players[id].mouse_goal.x = camera.x-players[id].p.x
+  players[id].mouse_goal.y = camera.y-players[id].p.y
 end
 
 local center = function()
