@@ -18,8 +18,8 @@ speed_table = {
   shield = 60,
   sword = 20,
 }
-acceleration = 4
-friction = .5
+acceleration = 2
+friction = 0
 shield_slow = 0.8
 grace_time = 3
 field = {w = 1800, h = 800}
@@ -34,7 +34,7 @@ ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, throw
 down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
 alert_time = 3
 turn_speed = 2.5
-mag_speed = 3
+mag_speed = 2.5
 
 input = require("keyboard")
 

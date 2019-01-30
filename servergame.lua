@@ -128,12 +128,10 @@ servergame.update = function(dt)
     end
     -- get servers direction, add acceleration, cap speed
     -- add acceleration to velocity
-    if vector.mag_sq(v.d) < v.speed*v.speed then -- dont allow user to input acceleration if velocity is greater than max
-      v.d = vector.sum(v.d, vector.scale(acceleration, v.a))
-      -- cap velocity due to user input
-      if vector.mag_sq(v.d) > v.speed*v.speed then
-        v.d = vector.scale(v.speed, vector.norm(v.d))
-      end
+    v.d = vector.sum(v.d, vector.scale(acceleration, v.a))
+    -- cap velocity due to user input
+    if vector.mag_sq(v.d) > v.speed*v.speed then
+      v.d = vector.scale(v.speed, vector.norm(v.d))
     end
     -- move player based on their velocity
     if v.sticky then -- if hitting shield, reduce velocity
