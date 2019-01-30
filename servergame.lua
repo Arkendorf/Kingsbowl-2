@@ -446,7 +446,7 @@ servergame.draw = function()
   love.graphics.setColor(team_info[players[id].team].color)
   love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
   -- draw direction arrow
-  love.graphics.draw(img.pointer, players[id].p.x, players[id].p.y, players[id].polar.angle, 1, 1, 16, 16)
+  love.graphics.draw(img.pointer, math.floor(players[id].p.x), math.floor(players[id].p.y), players[id].polar.angle, 1, 1, 16, 16)
 
   -- draw ball
   if ball.thrown then
@@ -482,28 +482,7 @@ servergame.draw = function()
   love.graphics.pop()
   love.graphics.setColor(1, 1, 1)
   -- draw scoreboard
-  love.graphics.draw(img.scoreboard, (win_width-160)/2, 0)
-  love.graphics.setColor(team_info[1].color)
-  love.graphics.draw(img.scoreboard_overlay, (win_width-160)/2, 0)
-  love.graphics.setColor(team_info[2].color)
-  love.graphics.draw(img.scoreboard_overlay, (win_width)/2, 0)
-  love.graphics.setColor(1, 1, 1)
-  love.graphics.setFont(font)
-  love.graphics.print(team_info[1].name, math.floor((win_width-80-font:getWidth(team_info[1].name))/2), 8)
-  love.graphics.print(score[1], math.floor((win_width-80-font:getWidth(tostring(score[1])))/2), 24)
-  love.graphics.print(team_info[2].name, math.floor((win_width+80-font:getWidth(team_info[1].name))/2), 8)
-  love.graphics.print(score[2], math.floor((win_width+80-font:getWidth(tostring(score[2])))/2), 24)
-  if down.goal then
-    love.graphics.print(tostring(down.num)..num_suffix[down.num].." and "..tostring(math.ceil(math.abs(down.goal - down.scrim)/field.w*120)), (win_width-160)/2+4, 52)
-  else
-    love.graphics.print(tostring(down.num)..num_suffix[down.num].." and goal", (win_width-160)/2+4, 52)
-  end
-  love.graphics.setColor(0, 0, 0)
-  if down.dead then
-    love.graphics.printf(math.ceil(down.t+grace_time), (win_width+160)/2-31, 52, 32, "center")
-  else
-    love.graphics.printf(math.ceil(down.t), (win_width+160)/2-31, 52, 32, "center")
-  end
+  commonfunc.draw_scoreboard((win_width-126)/2, 2)
 
   -- draw alerts
   love.graphics.setFont(fontcontrast)

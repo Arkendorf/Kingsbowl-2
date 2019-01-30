@@ -42,4 +42,31 @@ commonfunc.adjust_target = function(id, dt)
   players[id].mouse.y = players[id].polar.mag*math.sin(players[id].polar.angle)
 end
 
+commonfunc.draw_scoreboard = function(x, y)
+  -- draw scoreboard
+  love.graphics.draw(img.scoreboard, x, y)
+  love.graphics.setColor(team_info[1].color)
+  love.graphics.draw(img.scoreboard_overlay, x+10, y)
+  love.graphics.setColor(team_info[2].color)
+  love.graphics.draw(img.scoreboard_overlay, x+38, y)
+  love.graphics.setColor(1, 1, 1)
+  love.graphics.setFont(font)
+  for team = 1, 2 do
+    for i = string.len(tostring(score[team])), 1, -1 do
+      love.graphics.print(string.sub(tostring(score[team]), i, i), x+team*28-8+i*7, y+3)
+    end
+  end
+  love.graphics.setColor(51/255, 51/255, 51/255)
+  if down.goal then
+    love.graphics.print(tostring(down.num)..num_suffix[down.num].." and "..tostring(math.ceil(math.abs(down.goal - down.scrim)/field.w*120)), x+66, y+3)
+  else
+    love.graphics.print(tostring(down.num)..num_suffix[down.num].." and goal", x+66, y+3)
+  end
+  if down.dead then
+    love.graphics.print(math.ceil(down.t+grace_time), x+2, y+3)
+  else
+    love.graphics.print(math.ceil(down.t), x+2, y+3)
+  end
+end
+
 return commonfunc
