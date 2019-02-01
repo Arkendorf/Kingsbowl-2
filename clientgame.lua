@@ -5,6 +5,7 @@ local vector = require "vector"
 local network = require "network"
 local commonfunc = require "commonfunc"
 local particle = require "particle"
+local audio = require "audio"
 require "globals"
 local clientgame = {}
 
@@ -44,6 +45,7 @@ local client_hooks = {
     if players[ball.owner].team ~= players[qb].team then
       effects[#effects+1] = {img = "intercept", quad = 1, x = players[ball.owner].p.x, y = players[ball.owner].p.y, z = 18, ox = 16, oy = 16, parent = ball.owner, t = -1/3, top = true, color = team_info[players[ball.owner].team].color} -- intercept particle
       alerts[#alerts+1] = {txt = players[ball.owner].name.." has intercepted the ball", team = players[ball.owner].team}
+      audio.play_sfx("cheer")
     else
       alerts[#alerts+1] = {txt = players[ball.owner].name.." has caught the ball", team = players[ball.owner].team}
     end
@@ -91,6 +93,7 @@ local client_hooks = {
     players[data.index].sword.t = sword.t
     if commonfunc.block(data.index, players[data.index]) then
       effects[#effects+1] = {img = "shield_spark", quad = 1, x = players[data.index].p.x, y = players[data.index].p.y, z = 18, ox = 16-players[data.index].sword.d.x, oy = 16-players[data.index].sword.d.y, parent = data.index, t = 0, top = true}
+      audio.play_sfx("clang")
     end
     -- adjust speed
     clientgame.set_speed(data.index)
@@ -116,6 +119,7 @@ local client_hooks = {
     for j = 1, 4 do
       effects[#effects+1] = {img = "blood", quad = "drop", x = players[data.victim].p.x, y = players[data.victim].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-200, 200)/100, dy = math.random(-200, 200)/100, dz = 2}
     end
+    audio.play_sfx("squish")
   end,
   touchdown = function(data)
     -- add alert
@@ -125,6 +129,7 @@ local client_hooks = {
     down.dead = true
     down.t = 3
     ball.thrown = false
+    audio.play_sfx("longcheer")
   end,
   disconnect = function(data)
     love.event.quit()
@@ -157,9 +162,13 @@ clientgame.init = function()
   end
   -- set game state
   state.game = true
+  -- start music
+  audio.start_background_music()
 end
 
 clientgame.update = function(dt)
+  audio.update_music()
+
   input.center()
 
   -- update sock client

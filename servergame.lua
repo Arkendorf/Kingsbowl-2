@@ -6,6 +6,7 @@ local network = require "network"
 local ai = require "ai"
 local commonfunc = require "commonfunc"
 local particle = require "particle"
+local audio = require "audio"
 require "globals"
 local servergame = {}
 
@@ -98,9 +99,13 @@ servergame.init = function()
   servergame.new_down()
   -- set game state
   state.game = true
+  -- start music
+  audio.start_background_music()
 end
 
 servergame.update = function(dt)
+  audio.update_music()
+
   input.center()
 
   -- update sock server
@@ -249,7 +254,7 @@ servergame.update = function(dt)
           servergame.set_speed(j)
         end
         effects[#effects+1] = {img = "catch", quad = 1, x = v.p.x, y = v.p.y, z = 18, ox = 16, oy = 16, parent = i, t = 0, top = true} -- catch particle
-                -- interception
+        -- interception
         if players[ball.owner].team ~= players[qb].team then
           effects[#effects+1] = {img = "intercept", quad = 1, x = v.p.x, y = v.p.y, z = 18, ox = 16, oy = 16, parent = i, t = -1/3, top = true, color = team_info[players[ball.owner].team].color} -- intercept particle
           -- add alert
@@ -268,6 +273,7 @@ servergame.update = function(dt)
             -- set the speed for players
             servergame.set_speed(i)
           end
+          audio.play_sfx("cheer")
         else
           -- add alert
           alerts[#alerts+1] = {txt = players[ball.owner].name.." has caught the ball", team = players[ball.owner].team}
@@ -298,6 +304,7 @@ servergame.update = function(dt)
       for j = 1, 8 do
         effects[#effects+1] = {img = "confetti", quad = 1, x =  players[ball.owner].p.x, y =  players[ball.owner].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-200, 200)/100, dy = math.random(-200, 200)/100, dz = 1, t = math.random(0, 7), color = team_info[team].color}
       end
+      audio.play_sfx("longcheer")
     end
   end
   -- advance play clock
@@ -661,11 +668,13 @@ servergame.kill = function(i)
   for j = 1, 4 do
     effects[#effects+1] = {img = "blood", quad = "drop", x = players[i].p.x, y = players[i].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-200, 200)/100, dy = math.random(-200, 200)/100, dz = 2}
   end
+  audio.play_sfx("squish")
 end
 
 servergame.check_for_block = function(i, v)
   if commonfunc.block(i, v) then
     effects[#effects+1] = {img = "shield_spark", quad = 1, x = v.p.x, y = v.p.y, z = 18, ox = 16-v.sword.d.x, oy = 16-v.sword.d.y, parent = i, t = 0, top = true}
+    audio.play_sfx("clang")
   end
 end
 

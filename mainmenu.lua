@@ -1,4 +1,10 @@
+local audio = require "audio"
+
 local mainmenu = {}
+
+mainmenu.init = function()
+  audio.play_music("menu")
+end
 
 function mainmenu.draw()
   love.graphics.setFont(font)

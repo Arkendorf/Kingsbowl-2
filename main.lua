@@ -13,6 +13,7 @@ local quit = 2
 love.load = function()
   gui.new(menus[1])
   math.randomseed(os.time())
+  mainmenu.init()
 end
 
 love.update = function(dt)

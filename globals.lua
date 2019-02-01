@@ -40,6 +40,8 @@ input = require("keyboard")
 
 local graphics = require "graphics"
 img, quad, char = graphics.init()
+local audio = require "audio"
+sfx, music = audio.init()
 win_canvas = love.graphics.newCanvas(win_width, win_height)
 
 bot_names = {
