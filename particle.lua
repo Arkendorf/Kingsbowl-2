@@ -40,6 +40,57 @@ particle.bloodspurt = function(k, v, dt)
   end
 end
 
+particle.catch = function(k, v, dt)
+  v.x = players[v.parent].p.x
+  v.y = players[v.parent].p.y
+  if v.t < 8 then
+    v.t = v.t + dt*24
+    v.quad = math.floor(v.t)+1
+    if v.quad > 8 then
+      v.quad = 8
+    end
+    return true
+  else
+    return false
+  end
+end
+
+particle.intercept = function(k, v, dt)
+  v.x = players[v.parent].p.x
+  v.y = players[v.parent].p.y
+  if v.t < 8 then
+    if v.t >= 0 then
+      v.t = v.t + dt*24
+      v.quad = math.floor(v.t)+1
+      if v.quad > 8 then
+        v.quad = 8
+      end
+    else
+      v.t = v.t + dt
+      v.quad = 1
+    end
+    return true
+  else
+    return false
+  end
+end
+
+particle.confetti = function(k, v, dt)
+  v.x = v.x + v.dx
+  v.dx = v.dx * 0.95
+  v.y = v.y + v.dy
+  v.dy = v.dy * 0.95
+  if v.z > 0 then
+    v.z = v.z + v.dz
+    v.dz = v.dz - dt * 2
+    v.t = v.t + dt*24
+    v.quad = math.floor(v.t % 8)+1
+  else
+    v.z = 0
+  end
+  return true
+end
+
 particle.blood = function(k, v, dt)
   v.x = v.x + v.dx
   v.dx = v.dx * 0.9

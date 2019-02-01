@@ -19,7 +19,7 @@ speed_table = {
   sword = 20,
 }
 acceleration = 2
-friction = 0
+friction = 1
 shield_slow = 0.8
 grace_time = 3
 field = {w = 1800, h = 800}

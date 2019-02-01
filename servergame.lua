@@ -245,11 +245,13 @@ servergame.update = function(dt)
 
         ball.thrown = false
         ball.owner = i
-        for j,w in pairs(players) do
+        for j, w in pairs(players) do
           servergame.set_speed(j)
         end
+        effects[#effects+1] = {img = "catch", quad = 1, x = v.p.x, y = v.p.y, z = 18, ox = 16, oy = 16, parent = i, t = 0, top = true} -- catch particle
                 -- interception
         if players[ball.owner].team ~= players[qb].team then
+          effects[#effects+1] = {img = "intercept", quad = 1, x = v.p.x, y = v.p.y, z = 18, ox = 16, oy = 16, parent = i, t = -1/3, top = true, color = team_info[players[ball.owner].team].color} -- intercept particle
           -- add alert
           alerts[#alerts+1] = {txt = players[ball.owner].name.." has intercepted the ball", team = players[ball.owner].team}
           -- reset swords and shields
@@ -293,6 +295,9 @@ servergame.update = function(dt)
       down.t = grace_time
       td = true
       network.host:sendToAll("touchdown", team)
+      for j = 1, 8 do
+        effects[#effects+1] = {img = "confetti", quad = 1, x =  players[ball.owner].p.x, y =  players[ball.owner].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-200, 200)/100, dy = math.random(-200, 200)/100, dz = 1, t = math.random(0, 7), color = team_info[team].color}
+      end
     end
   end
   -- advance play clock
@@ -415,7 +420,11 @@ servergame.draw = function()
   end
 
   -- draw personal cursor
-  love.graphics.setColor(team_info[players[id].team].color)
+  if players[id].dead then -- make cursor transparent if player is dead
+    love.graphics.setColor(team_info[players[id].team].color[1], team_info[players[id].team].color[2], team_info[players[id].team].color[3], .5)
+  else
+    love.graphics.setColor(team_info[players[id].team].color)
+  end
   love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
   -- draw direction arrow
   love.graphics.draw(img.pointer, math.floor(players[id].p.x), math.floor(players[id].p.y), players[id].polar.angle, 1, 1, 16, 16)
@@ -650,7 +659,7 @@ servergame.kill = function(i)
   -- blood spurt
   effects[#effects+1] = {img = "bloodspurt", quad = 1, x = players[i].p.x, y = players[i].p.y, z = 18, ox = 16, oy = 16, parent = i, t = 0, top = true}
   for j = 1, 4 do
-    effects[#effects+1] = {img = "blood", quad = "drop", x = players[i].p.x, y = players[i].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
+    effects[#effects+1] = {img = "blood", quad = "drop", x = players[i].p.x, y = players[i].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-200, 200)/100, dy = math.random(-200, 200)/100, dz = 2}
   end
 end
 

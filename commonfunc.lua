@@ -88,8 +88,12 @@ end
 
 commonfunc.draw_effects = function(effects, top)
   -- draw effects (blood, etc.)
-  love.graphics.setColor(1, 1, 1)
   for i, v in ipairs(effects) do
+    if v.color then
+      love.graphics.setColor(v.color)
+    else
+      love.graphics.setColor(1, 1, 1)
+    end
     if v.top == top then
       if not v.ox then v.ox = 0 end
       if not v.oy then v.oy = 0 end
@@ -100,6 +104,7 @@ commonfunc.draw_effects = function(effects, top)
       end
     end
   end
+  love.graphics.setColor(1, 1, 1)
 end
 
 return commonfunc

@@ -38,8 +38,11 @@ local client_hooks = {
     ball.thrown = false
     ball.owner = data
 
+    effects[#effects+1] = {img = "catch", quad = 1, x = players[data].p.x, y = players[data].p.y, z = 18, ox = 16, oy = 16, parent = data, t = 0, top = true} -- catch particle
+
     -- add alert
     if players[ball.owner].team ~= players[qb].team then
+      effects[#effects+1] = {img = "intercept", quad = 1, x = players[ball.owner].p.x, y = players[ball.owner].p.y, z = 18, ox = 16, oy = 16, parent = ball.owner, t = -1/3, top = true, color = team_info[players[ball.owner].team].color} -- intercept particle
       alerts[#alerts+1] = {txt = players[ball.owner].name.." has intercepted the ball", team = players[ball.owner].team}
     else
       alerts[#alerts+1] = {txt = players[ball.owner].name.." has caught the ball", team = players[ball.owner].team}
@@ -111,7 +114,7 @@ local client_hooks = {
     -- blood spurt
     effects[#effects+1] = {img = "bloodspurt", quad = 1, x = players[data.victim].p.x, y = players[data.victim].p.y, z = 18, ox = 16, oy = 16, parent = data.victim, t = 0, top = true}
     for j = 1, 4 do
-      effects[#effects+1] = {img = "blood", quad = "drop", x = players[data.victim].p.x, y = players[data.victim].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
+      effects[#effects+1] = {img = "blood", quad = "drop", x = players[data.victim].p.x, y = players[data.victim].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-200, 200)/100, dy = math.random(-200, 200)/100, dz = 2}
     end
   end,
   touchdown = function(data)
@@ -343,7 +346,11 @@ clientgame.draw = function()
   end
 
   -- draw personal cursor
-  love.graphics.setColor(team_info[players[id].team].color)
+  if players[id].dead then -- make cursor transparent if player is dead
+    love.graphics.setColor(team_info[players[id].team].color[1], team_info[players[id].team].color[2], team_info[players[id].team].color[3], .5)
+  else
+    love.graphics.setColor(team_info[players[id].team].color)
+  end
   love.graphics.draw(img.target, math.floor(camera.x), math.floor(camera.y), 0, 1, 1, 16, 16)
   -- draw direction arrow
   love.graphics.draw(img.pointer, players[id].p.x, players[id].p.y, players[id].polar.angle, 1, 1, 16, 16)
