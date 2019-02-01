@@ -70,6 +70,9 @@ graphics.init = function()
   quad.shield = graphics.spritesheet(32, 32, img.shield)
   quad.drop = love.graphics.newQuad(0, 0, 16, 16, img.blood:getDimensions())
   quad.puddle = love.graphics.newQuad(16, 0, 16, 16, img.blood:getDimensions())
+  for i = 1, 8 do
+    quad[i] = love.graphics.newQuad((i-1)*32, 0, 32, 32, img.shield_spark:getDimensions())
+  end
 
   return img, quad, char
 end

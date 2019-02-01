@@ -5,6 +5,7 @@ local vector = require "vector"
 local network = require "network"
 local ai = require "ai"
 local commonfunc = require "commonfunc"
+local particle = require "particle"
 require "globals"
 local servergame = {}
 
@@ -41,6 +42,7 @@ local server_hooks = {
     players[index].sword.d = vector.scale(sword.dist, vector.norm(data))
     players[index].sword.t = sword.t
     network.host:sendToAll("sword", {index = index, active = true, mouse = data})
+    servergame.check_for_block(index, players[index])
     -- adjust speed
     servergame.set_speed(index)
   end,
@@ -173,13 +175,8 @@ servergame.update = function(dt)
       local strike = true
       local sword_pos = vector.sum(v.p, v.sword.d)
        -- check if sword hits shield
-      for j, w in pairs(players) do
-        if j ~= i and w.dead == false and w.shield.active == true then
-          local shield_pos = vector.sum(w.p, w.shield.d)
-          if vector.mag_sq(vector.sub(v.p, w.p)) > vector.mag_sq(vector.sub(v.p, shield_pos)) and collision.check_overlap({r = shield.r, p = shield_pos}, {r = sword.r, p = sword_pos}) then -- prevents blocks through body
-            strike = false
-          end
-        end
+      if commonfunc.block(i, v) then
+        strike = false
       end
        -- if sword didn't hit shield, check if it hit people
       if strike == true then
@@ -230,7 +227,7 @@ servergame.update = function(dt)
     -- if ball hits the ground, reset
     if ball.z <= 0 then
       alerts[#alerts+1] = {txt = players[qb].name.." has thrown an incomplete pass", team = players[qb].team}
-      effects[#effects+1] = {img = "stuckarrow", x = ball.p.x, y = ball.p.y, z = 0, ox = 16, oy = 16}
+      effects[#effects+1] = {img = "stuckarrow", x = ball.p.x, y = ball.p.y, z = 0, ox = 16, oy = 16, t = 0}
       down.dead = true
       down.t = grace_time
       ball.thrown = false
@@ -307,23 +304,9 @@ servergame.update = function(dt)
     servergame.new_down()
   end
   -- update effects
-  for i, v in pairs(effects) do
-    if v.dx then
-      v.x = v.x + v.dx
-      v.dx = v.dx * 0.9
-    end
-    if v.dy then
-      v.y = v.y + v.dy
-      v.dy = v.dy * 0.9
-    end
-    if v.dz then
-      if v.z > 0 then
-        v.z = v.z + v.dz
-        v.dz = v.dz - dt * 12
-      else
-        v.z = 0
-        v.quad = "puddle"
-      end
+  for k, v in pairs(effects) do
+    if not particle[v.img](k, v, dt) then
+      table.remove(effects, k)
     end
   end
   --update alerts
@@ -422,17 +405,8 @@ servergame.draw = function()
     end
   end
 
-  -- draw effects (blood, etc.)
-  love.graphics.setColor(1, 1, 1)
-  for i, v in ipairs(effects) do
-    if not v.ox then v.ox = 0 end
-    if not v.oy then v.oy = 0 end
-    if v.quad then
-      love.graphics.draw(img[v.img], quad[v.quad], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
-    else
-      love.graphics.draw(img[v.img], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
-    end
-  end
+  -- draw bottom effects (blood, etc.)
+  commonfunc.draw_effects(effects)
 
   --draw qb cursor
   love.graphics.setColor(team_info[players[qb].team].color)
@@ -479,6 +453,9 @@ servergame.draw = function()
     end
   end
 
+  -- draw top effects (shield spark, etc.)
+  commonfunc.draw_effects(effects, true)
+
   love.graphics.pop()
   love.graphics.setColor(1, 1, 1)
   -- draw scoreboard
@@ -508,6 +485,7 @@ servergame.mousepressed = function(x, y, button)
       players[id].sword.d = vector.scale(sword.dist, vector.norm(players[id].mouse))
       players[id].sword.t = sword.t
       network.host:sendToAll("sword", {index = id, active = true, mouse = players[id].mouse})
+      servergame.check_for_block(id, players[id])
     end
     servergame.set_speed(id)
   end
@@ -672,8 +650,15 @@ servergame.kill = function(i)
   players[i].shield.active = false
   servergame.set_speed(i)
   -- blood spurt
+  effects[#effects+1] = {img = "bloodspurt", quad = 1, x = players[i].p.x, y = players[i].p.y, z = 18, ox = 16, oy = 16, parent = i, t = 0, top = true}
   for j = 1, 4 do
     effects[#effects+1] = {img = "blood", quad = "drop", x = players[i].p.x, y = players[i].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
+  end
+end
+
+servergame.check_for_block = function(i, v)
+  if commonfunc.block(i, v) then
+    effects[#effects+1] = {img = "shield_spark", quad = 1, x = v.p.x, y = v.p.y, z = 18, ox = 16-v.sword.d.x, oy = 16-v.sword.d.y, parent = i, t = 0, top = true}
   end
 end
 
@@ -739,11 +724,7 @@ servergame.animate = function(i, v, dt)
   end
   -- get what determines direction
   local dir = v.mouse
-  if v.sword.active then
-    dir = v.sword.d
-  elseif v.shield.active then
-    dir = v.shield.d
-  end
+
   -- get direction
   if dir.y < 0 then
     v.art.dir = 8+math.floor(math.atan2(dir.y, dir.x)/math.pi*4+1.5)

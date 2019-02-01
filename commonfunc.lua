@@ -1,3 +1,6 @@
+local collision = require "collision"
+local vector = require "vector"
+
 local commonfunc = {}
 
 commonfunc.adjust_target = function(id, dt)
@@ -66,6 +69,36 @@ commonfunc.draw_scoreboard = function(x, y)
     love.graphics.print(math.ceil(down.t+grace_time), x+2, y+3)
   else
     love.graphics.print(math.ceil(down.t), x+2, y+3)
+  end
+end
+
+commonfunc.block = function(i, v)
+  local sword_pos = vector.sum(v.p, v.sword.d)
+   -- check if sword hits shield
+  for j, w in pairs(players) do
+    if j ~= i and w.dead == false and w.shield.active == true then
+      local shield_pos = vector.sum(w.p, w.shield.d)
+      if vector.mag_sq(vector.sub(v.p, w.p)) > vector.mag_sq(vector.sub(v.p, shield_pos)) and collision.check_overlap({r = shield.r, p = shield_pos}, {r = sword.r, p = sword_pos}) then -- prevents blocks through body
+        return true
+      end
+    end
+  end
+  return false
+end
+
+commonfunc.draw_effects = function(effects, top)
+  -- draw effects (blood, etc.)
+  love.graphics.setColor(1, 1, 1)
+  for i, v in ipairs(effects) do
+    if v.top == top then
+      if not v.ox then v.ox = 0 end
+      if not v.oy then v.oy = 0 end
+      if v.quad then
+        love.graphics.draw(img[v.img], quad[v.quad], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
+      else
+        love.graphics.draw(img[v.img], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
+      end
+    end
   end
 end
 

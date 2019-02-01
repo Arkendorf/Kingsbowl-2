@@ -4,6 +4,7 @@ local collision = require "collision"
 local vector = require "vector"
 local network = require "network"
 local commonfunc = require "commonfunc"
+local particle = require "particle"
 require "globals"
 local clientgame = {}
 
@@ -73,7 +74,7 @@ local client_hooks = {
     ball.angle = math.atan2(ball.d.y+z-ball.z, ball.d.x)
     ball.z = z
     if ball.z <= 0 then
-      effects[#effects+1] = {img = "stuckarrow", x = ball.p.x, y = ball.p.y, z = 0, ox = 16, oy = 16}
+      effects[#effects+1] = {img = "stuckarrow", x = ball.p.x, y = ball.p.y, z = 0, ox = 16, oy = 16, t = 0}
     end
   end,
   downdead = function(data)
@@ -85,6 +86,9 @@ local client_hooks = {
     players[data.index].sword.active = data.active
     players[data.index].sword.d = vector.scale(sword.dist, vector.norm(data.mouse))
     players[data.index].sword.t = sword.t
+    if commonfunc.block(data.index, players[data.index]) then
+      effects[#effects+1] = {img = "shield_spark", quad = 1, x = players[data.index].p.x, y = players[data.index].p.y, z = 18, ox = 16-players[data.index].sword.d.x, oy = 16-players[data.index].sword.d.y, parent = data.index, t = 0, top = true}
+    end
     -- adjust speed
     clientgame.set_speed(data.index)
   end,
@@ -105,6 +109,7 @@ local client_hooks = {
     players[data.victim].dead = true
     clientgame.set_speed(data.victim)
     -- blood spurt
+    effects[#effects+1] = {img = "bloodspurt", quad = 1, x = players[data.victim].p.x, y = players[data.victim].p.y, z = 18, ox = 16, oy = 16, parent = data.victim, t = 0, top = true}
     for j = 1, 4 do
       effects[#effects+1] = {img = "blood", quad = "drop", x = players[data.victim].p.x, y = players[data.victim].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-2, 2), dy = math.random(-2, 2), dz = 2}
     end
@@ -229,23 +234,9 @@ clientgame.update = function(dt)
     down.t = down.t - dt
   end
   -- update effects
-  for i, v in pairs(effects) do
-    if v.dx then
-      v.x = v.x + v.dx
-      v.dx = v.dx * 0.9
-    end
-    if v.dy then
-      v.y = v.y + v.dy
-      v.dy = v.dy * 0.9
-    end
-    if v.dz then
-      if v.z > 0 then
-        v.z = v.z + v.dz
-        v.dz = v.dz - dt * 12
-      else
-        v.z = 0
-        v.quad = "puddle"
-      end
+  for k, v in pairs(effects) do
+    if not particle[v.img](k, v, dt) then
+      table.remove(effects, k)
     end
   end
   --update alerts
@@ -340,17 +331,8 @@ clientgame.draw = function()
     end
   end
 
-  -- draw effects (blood, etc.)
-  love.graphics.setColor(1, 1, 1)
-  for i, v in ipairs(effects) do
-    if not v.ox then v.ox = 0 end
-    if not v.oy then v.oy = 0 end
-    if v.quad then
-      love.graphics.draw(img[v.img], quad[v.quad], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
-    else
-      love.graphics.draw(img[v.img], math.floor(v.x), math.floor(v.y-v.z), 0, 1, 1, v.ox, v.oy)
-    end
-  end
+  -- draw bottom effects (blood, etc.)
+  commonfunc.draw_effects(effects)
 
   --draw qb cursor
   love.graphics.setColor(team_info[players[qb].team].color)
@@ -397,6 +379,9 @@ clientgame.draw = function()
       love.graphics.print(v.txt, v.x, v.y-v.z)
     end
   end
+
+  -- draw top effects (shield spark, etc.)
+  commonfunc.draw_effects(effects, true)
 
   love.graphics.pop()
   love.graphics.setColor(1, 1, 1)
@@ -520,11 +505,7 @@ clientgame.animate = function(i, v, dt)
   end
   -- get what determines direction
   local dir = v.mouse
-  if v.sword.active then
-    dir = v.sword.d
-  elseif v.shield.active then
-    dir = v.shield.d
-  end
+
   -- get direction
   if dir.y < 0 then
     v.art.dir = 8+math.floor(math.atan2(dir.y, dir.x)/math.pi*4+1.5)
