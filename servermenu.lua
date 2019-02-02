@@ -15,6 +15,8 @@ id = 0
 local old_team_info = {{name = team_info[1].name, color = {team_info[1].color[1], team_info[1].color[2], team_info[1].color[3]}}, {name = team_info[2].name, color = {team_info[2].color[1], team_info[2].color[2], team_info[2].color[3]}}}
 -- create variable for team's menu state
 local menu_mode = {0, 0}
+-- store positions of banners
+local banner_pos = {{x = 0, y = 0}, {x = 0, y = 0}}
 
 
 local server_hooks = {
@@ -57,8 +59,18 @@ servermenu.init = function()
   id = 0
   players[0] = {name = username[1], team = 1}
 
+  -- set positions of banners
+  banner_pos[1] = {x = (win_width/2)-186, y = (win_height-270)/2}
+  banner_pos[2] = {x = (win_width/2)+16, y = (win_height-270)/2}
+
   -- set the base gui for the server menu
-  state.gui = gui.new(menus[2])
+  local menu = {buttons = {{x = 2*2, y = 2*2, w = 48*2, h = 32*2, txt = "Leave", func = servermenu.back_to_main, args = {}}, {x = 52*2, y = 2*2, w = 48*2, h = 32*2, txt = "Start", func = servermenu.start_game, args = {}},
+  {x = (banner_pos[1].x+114)*2, y = (banner_pos[1].y)*2, w = 14*2, h = 14*2, txt = "P", func = servermenu.swap_menu, args = {0, 1}}, {x = (banner_pos[1].x+130)*2, y = (banner_pos[1].y)*2, w = 12*2, h = 12*2, txt = "S", func = servermenu.swap_menu, args = {1, 1}},
+  {x = (banner_pos[2].x+114)*2, y = (banner_pos[2].y)*2, w = 14*2, h = 14*2, txt = "P", func = servermenu.swap_menu, args = {0, 2}}, {x = (banner_pos[2].x+130)*2, y = (banner_pos[2].y)*2, w = 12*2, h = 12*2, txt = "S", func = servermenu.swap_menu, args = {1, 2}}}, textboxes = {
+  {x = (banner_pos[1].x+16)*2, y = (banner_pos[1].y+1)*2, w = 96*2, h = 12*2, table = team_info[1], index = "name", sampletxt = ""},
+  {x = (banner_pos[2].x+16)*2, y = (banner_pos[2].y+1)*2, w = 96*2, h = 12*2, table = team_info[2], index = "name", sampletxt = ""}}}
+
+  state.gui = gui.new(menu)
 
   -- make first player buttons
   servermenu.update_p_buttons()
@@ -108,56 +120,55 @@ servermenu.draw = function()
   love.graphics.print("Start", 63, 14)
 
   -- draw team menus
-  for j = 1, 2 do
-    if menu_mode[j] == 0 then
-      -- draw banner
-      love.graphics.setColor(team_info[j].color)
-      love.graphics.draw(img.teamlist, quad.teamlist1, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
+  for team = 1, 2 do
+    servermenu.draw_banner(banner_pos[team].x, banner_pos[team].y, team)
+  end
+end
 
-      -- draw icons
-      love.graphics.setColor(1, 1, 1)
-      love.graphics.draw(img.menuicons, quad.icons1, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
-    else
-      -- draw banner
-      love.graphics.setColor(team_info[j].color)
-      love.graphics.draw(img.teamlist, quad.teamlist2, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
-
-      -- draw icons
-      love.graphics.setColor(1, 1, 1)
-      love.graphics.draw(img.menuicons, quad.icons2, (win_width/2) - 304 + 160 * j, (win_height-256)/2)
-
-      -- draw text
-      love.graphics.print("Color:", (win_width/2) - 302 + 160 * j, (win_height-256)/2+17)
-      love.graphics.print("Linesmen: "..tostring(math.floor(ai.num[j][1])), (win_width/2) - 302 + 160 * j, (win_height-256)/2+78)
-      love.graphics.print("Receivers: "..tostring(math.floor(ai.num[j][2])), (win_width/2) - 302 + 160 * j, (win_height-256)/2+105)
-      --draw color sliders
-      for i = 1, 3 do
-        love.graphics.draw(img.slider, quad.sliderbar, (win_width/2) - 302 + 160 * j, (win_height-256)/2+10+17*i)
-        love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(team_info[j].color[i]*120), (win_height-256)/2+10+17*i)
-      end
-      --draw bot sliders
-      for i = 1, 2 do
-        love.graphics.draw(img.slider, quad.sliderbar, (win_width/2) - 302 + 160 * j, (win_height-256)/2+61+27*i)
-        love.graphics.draw(img.slider, quad.slidernode, (win_width/2) - 302 + 160 * j + math.floor(ai.num[j][i]/4*120), (win_height-256)/2+61+27*i)
-      end
-    end
+servermenu.draw_banner = function(x, y, team)
+  love.graphics.setColor(team_info[team].color)
+  love.graphics.draw(img.teamlist_overlay, x, y)
+  if menu_mode[team] == 0 then
+    love.graphics.draw(img.menuicons_overlay, quad.icons1, x, y)
+  else
+    love.graphics.draw(img.menuicons_overlay, quad.icons2, x, y)
   end
 
-  -- draw team names
+  love.graphics.setColor(1, 1, 1)
+  love.graphics.draw(img.teamlist, x, y)
+  if menu_mode[team] == 0 then
+    love.graphics.draw(img.menuicons, quad.icons1, x, y)
+    -- draw names
+    love.graphics.setColor(229/255, 229/255, 229/255)
+    local team_size = 0
+    for i, v in pairs(players) do
+      if v.team == team then
+        love.graphics.print(v.name, x+22, y+32+team_size*16)
+        love.graphics.draw(img.playerbuttons, x+114, y+32+team_size*16)
+        team_size = team_size + 1
+      end
+    end
+  else
+    love.graphics.draw(img.menuicons, quad.icons2, x, y)
+    --draw color sliders
+    for i = 1, 3 do
+      love.graphics.draw(img.slider, quad.sliderbar, x+22, y+25+17*i)
+      love.graphics.draw(img.slider, quad.slidernode, x+22 + math.floor(team_info[team].color[i]*112), y+25+17*i)
+    end
+    --draw bot sliders
+    for i = 1, 2 do
+      love.graphics.draw(img.slider, quad.sliderbar, x+22, y+76+27*i)
+      love.graphics.draw(img.slider, quad.slidernode, x+22 + math.floor(ai.num[team][i]/4*112), y+76+27*i)
+    end
+    -- draw text
+    love.graphics.setColor(229/255, 229/255, 229/255)
+    love.graphics.print("Color:", x+22, y+32)
+    love.graphics.print("Linesmen: "..tostring(math.floor(ai.num[team][1])), x+22, y+93)
+    love.graphics.print("Receivers: "..tostring(math.floor(ai.num[team][2])), x+22, y+120)
+  end
+  -- draw team name
   love.graphics.setColor(51/255, 51/255, 51/255)
-  love.graphics.print(team_info[1].name, (win_width/2) - 138, (win_height-256)/2+2)
-  love.graphics.print(team_info[2].name, (win_width/2) + 22, (win_height-256)/2+2)
-
-  -- draw player names
-  love.graphics.setColor(229/255, 229/255, 229/255)
-  local team_size = {0, 0}
-  for i, v in pairs(players) do
-    if menu_mode[v.team] == 0 then
-      love.graphics.print(v.name, (win_width/2) - 302 + 160 * v.team, (win_height-256)/2+16+team_size[v.team]*16)
-      love.graphics.draw(img.playerbuttons, (win_width/2) - 202 + 160 * v.team, (win_height-256)/2+16+team_size[v.team]*16)
-      team_size[v.team] = team_size[v.team] + 1
-    end
-  end
+  love.graphics.print(team_info[team].name, x+19, y+3)
 end
 
 servermenu.quit = function()
@@ -206,11 +217,11 @@ servermenu.swap_menu = function(mode, menu)
         gui.remove(i+4)
       end
     end
-    gui.add({sliders = {{x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+44, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 1, numMin = 0, numMax = 1},
-                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+76, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 2, numMin = 0, numMax = 1},
-                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+108, alignment = 1, w = 248, h = 24, barw = 8, table = team_info[menu].color, index = 3, numMin = 0, numMax = 1},
-                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+178, alignment = 1, w = 248, h = 24, barw = 8, table = ai.num[menu], index = 1, numMin = 0, numMax = 4},
-                        {x = (true_win_width/2) - 604 + 320 * menu, y = (true_win_height-512)/2+222, alignment = 1, w = 248, h = 24, barw = 8, table = ai.num[menu], index = 2, numMin = 0, numMax = 4}}}, 1+menu)
+    gui.add({sliders = {{x = (banner_pos[menu].x+22)*2, y = (banner_pos[menu].y+25+17)*2, alignment = 1, w = 116*2, h = 12*2, barw = 4*2, table = team_info[menu].color, index = 1, numMin = 0, numMax = 1},
+                        {x = (banner_pos[menu].x+22)*2, y = (banner_pos[menu].y+25+34)*2, alignment = 1, w = 116*2, h = 12*2, barw = 4*2, table = team_info[menu].color, index = 2, numMin = 0, numMax = 1},
+                        {x = (banner_pos[menu].x+22)*2, y = (banner_pos[menu].y+25+51)*2, alignment = 1, w = 116*2, h = 12*2, barw = 4*2, table = team_info[menu].color, index = 3, numMin = 0, numMax = 1},
+                        {x = (banner_pos[menu].x+22)*2, y = (banner_pos[menu].y+76+27)*2, alignment = 1, w = 116*2, h = 12*2, barw = 4*2, table = ai.num[menu], index = 1, numMin = 0, numMax = 4},
+                        {x = (banner_pos[menu].x+22)*2, y = (banner_pos[menu].y+76+54)*2, alignment = 1, w = 116*2, h = 12*2, barw = 4*2, table = ai.num[menu], index = 2, numMin = 0, numMax = 4}}}, 1+menu)
   elseif mode == 0 then
     gui.remove(1+menu)
     servermenu.update_p_buttons()
@@ -223,7 +234,8 @@ servermenu.update_p_buttons = function ()
   for i, v in pairs(players) do
     gui.remove(i+4)
     if menu_mode[v.team] == 0 then
-      gui.add({buttons = {{x = (true_win_width/2) - 404 + 320 * v.team, y = (true_win_height-512)/2+32+team_size[v.team]*32, w = 24, h = 24, txt = "s", func = servermenu.teamswap, args = {i}}, {x = (true_win_width/2) - 380 + 320 * v.team, y = (true_win_height-512)/2+32+team_size[v.team]*32, w = 24, h = 24, txt = "r", func = servermenu.kick, args = {i}}}}, i+4)
+      gui.add({buttons = {{x = (banner_pos[v.team].x+114)*2, y = (banner_pos[v.team].y+32+team_size[v.team]*16)*2, w = 12*2, h = 12*2, txt = "s", func = servermenu.teamswap, args = {i}},
+                          {x = (banner_pos[v.team].x+126)*2, y = (banner_pos[v.team].y+32+team_size[v.team]*16)*2, w = 24, h = 24, txt = "r", func = servermenu.kick, args = {i}}}}, i+4)
       team_size[v.team] = team_size[v.team] + 1
     end
   end

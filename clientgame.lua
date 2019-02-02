@@ -14,7 +14,7 @@ difflog.p = {}
 difflog.tail = difflog.head
 
 -- set up variables
-local effects = {}
+effects = {}
 local alerts = {}
 
 local client_hooks = {
@@ -40,6 +40,7 @@ local client_hooks = {
     ball.owner = data
 
     effects[#effects+1] = {img = "catch", quad = 1, x = players[data].p.x, y = players[data].p.y, z = 18, ox = 16, oy = 16, parent = data, t = 0, top = true} -- catch particle
+    audio.play_sfx("thud") -- catch sound
 
     -- add alert
     if players[ball.owner].team ~= players[qb].team then
@@ -91,10 +92,7 @@ local client_hooks = {
     players[data.index].sword.active = data.active
     players[data.index].sword.d = vector.scale(sword.dist, vector.norm(data.mouse))
     players[data.index].sword.t = sword.t
-    if commonfunc.block(data.index, players[data.index]) then
-      effects[#effects+1] = {img = "shield_spark", quad = 1, x = players[data.index].p.x, y = players[data.index].p.y, z = 18, ox = 16-players[data.index].sword.d.x, oy = 16-players[data.index].sword.d.y, parent = data.index, t = 0, top = true}
-      audio.play_sfx("clang")
-    end
+    commonfunc.check_for_block(data.index, players[data.index])
     -- adjust speed
     clientgame.set_speed(data.index)
   end,
@@ -111,7 +109,12 @@ local client_hooks = {
   end,
   dead = function(data)
     -- add alert
-    alerts[#alerts+1] = {txt = players[data.killer].name.." has tackled "..players[data.victim].name, team = players[data.killer].team}
+    if data.victim == qb then
+      audio.play_sfx("cheer")
+      alerts[#alerts+1] = {txt = players[data.killer].name.." has sacked "..players[data.victim].name, team = players[data.killer].team}
+    else
+      alerts[#alerts+1] = {txt = players[data.killer].name.." has tackled "..players[data.victim].name, team = players[data.killer].team}
+    end
     players[data.victim].dead = true
     clientgame.set_speed(data.victim)
     -- blood spurt

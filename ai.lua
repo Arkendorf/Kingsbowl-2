@@ -148,17 +148,18 @@ ai.block = function(i, v, dt)
 
       if j == ball.owner then
         -- attack
-        if math.sqrt(dist) < sword.dist+sword.r then
+        if not v.sword.active and math.sqrt(dist) < sword.dist+sword.r then
           v.sword.active = true
           v.sword.d = vector.scale(sword.dist, vector.norm(v.mouse))
           v.sword.t = sword.t
+          commonfunc.check_for_block(i, v)
           network.host:sendToAll("sword", {index = i, active = true, mouse = v.mouse})
           set_speed = true
         end
       end
     end
   end
-  local a = ai.follow(v.p, players[nearest.i].p) -- find direction to nearest enemy
+  local a = ai.follow(v.p, vector.sum(players[nearest.i].p, players[nearest.i].d)) -- find direction to nearest enemy
   if ball.owner then -- dodge around ball carrier
     local avoid = ai.avoid(v.p, players[ball.owner].p, 20)
     a = vector.norm(vector.sum(a, avoid))
@@ -180,10 +181,11 @@ ai.sack = function(i, v, dt)
   v.mouse_goal = follow
 
   -- attack
-  if math.sqrt(vector.mag_sq(collision.get_distance(v.p, players[ball.owner].p))) < sword.dist+sword.r then
+  if not v.sword.active and math.sqrt(vector.mag_sq(collision.get_distance(v.p, players[ball.owner].p))) < sword.dist+sword.r then
     v.sword.active = true
     v.sword.d = vector.scale(sword.dist, vector.norm(v.mouse))
     v.sword.t = sword.t
+    commonfunc.check_for_block(i, v)
     network.host:sendToAll("sword", {index = i, active = true, mouse = v.mouse})
     set_speed = true
   end

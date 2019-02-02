@@ -60,13 +60,11 @@ graphics.init = function()
   end
 
   local quad = {}
-  quad.teamlist1 = love.graphics.newQuad(0, 0, 128, 256, img.teamlist:getDimensions())
-  quad.teamlist2 = love.graphics.newQuad(128, 0, 128, 256, img.teamlist:getDimensions())
-  quad.teamlist3 = love.graphics.newQuad(256, 0, 128, 256, img.teamlist:getDimensions())
-  quad.icons1 = love.graphics.newQuad(0, 0, 128, 12, img.menuicons:getDimensions())
-  quad.icons2 = love.graphics.newQuad(0, 12, 128, 12, img.menuicons:getDimensions())
-  quad.sliderbar = love.graphics.newQuad(0, 0, 124, 12, img.slider:getDimensions())
-  quad.slidernode = love.graphics.newQuad(124, 0, 4, 12, img.slider:getDimensions())
+  quad.icons1 = love.graphics.newQuad(0, 0, 160, 14, img.menuicons:getDimensions())
+  quad.icons2 = love.graphics.newQuad(0, 14, 160, 14, img.menuicons:getDimensions())
+  quad.icons3 = love.graphics.newQuad(0, 28, 160, 14, img.menuicons:getDimensions())
+  quad.sliderbar = love.graphics.newQuad(0, 0, 116, 12, img.slider:getDimensions())
+  quad.slidernode = love.graphics.newQuad(116, 0, 4, 12, img.slider:getDimensions())
   quad.shield = graphics.spritesheet(32, 32, img.shield)
   quad.drop = love.graphics.newQuad(0, 0, 16, 16, img.blood:getDimensions())
   quad.puddle = love.graphics.newQuad(16, 0, 16, 16, img.blood:getDimensions())

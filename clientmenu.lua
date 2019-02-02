@@ -8,7 +8,8 @@ local clientmenu = {}
 
 -- creat important variables
 id = 0
---players = {}
+-- store positions of banners
+local banner_pos = {{x = 0, y = 0}, {x = 0, y = 0}}
 
 local client_hooks = {
   -- when client connects to a server, do this:
@@ -63,8 +64,13 @@ clientmenu.init = function(t)
     network.peer:on(k, v)
   end
 
+  -- set positions of banners
+  banner_pos[1] = {x = (win_width/2)-186, y = (win_height-270)/2}
+  banner_pos[2] = {x = (win_width/2)+16, y = (win_height-270)/2}
+
   -- set up base gui
-  state.gui = gui.new(menus[3])
+  local menu = {buttons = {{x = 2*2, y = 2*2, w = 48*2, h = 32*2, txt = "Leave", func = clientmenu.back_to_main, args = {}}}}
+  state.gui = gui.new(menu)
 end
 
 clientmenu.update = function(dt)
@@ -85,23 +91,32 @@ clientmenu.draw = function()
   love.graphics.setColor(229/255, 229/255, 229/255)
   love.graphics.print("Leave", 13, 14)
 
-  -- draw team backgrounds
-  love.graphics.setColor(team_info[1].color)
-  love.graphics.draw(img.teamlist, quad.teamlist3, (win_width/2) - 144, (win_height-256)/2)
-  love.graphics.setColor(team_info[2].color)
-  love.graphics.draw(img.teamlist, quad.teamlist3, (win_width/2) + 16, (win_height-256)/2)
-
-  -- draw team names
-  love.graphics.setColor(229/255, 229/255, 229/255)
-  love.graphics.print(team_info[1].name, (win_width/2) - 138, (win_height-256)/2+2)
-  love.graphics.print(team_info[2].name, (win_width/2) + 22, (win_height-256)/2+2)
-
-  -- draw player names
-  local team_size = {0, 0}
-  for i, v in pairs(players) do
-    love.graphics.print(v.name, (win_width/2) - 302 + 160 * v.team, (win_height-256)/2+16+team_size[v.team]*16)
-    team_size[v.team] = team_size[v.team] + 1
+  -- draw team menus
+  for team = 1, 2 do
+    clientmenu.draw_banner(banner_pos[team].x, banner_pos[team].y, team)
   end
+end
+
+clientmenu.draw_banner = function(x, y, team)
+  love.graphics.setColor(team_info[team].color)
+  love.graphics.draw(img.teamlist_overlay, x, y)
+  love.graphics.draw(img.menuicons_overlay, quad.icons3, x, y)
+
+  love.graphics.setColor(1, 1, 1)
+  love.graphics.draw(img.teamlist, x, y)
+  love.graphics.draw(img.menuicons, quad.icons3, x, y)
+  -- draw names
+  love.graphics.setColor(229/255, 229/255, 229/255)
+  local team_size = 0
+  for i, v in pairs(players) do
+    if v.team == team then
+      love.graphics.print(v.name, x+22, y+32+team_size*16)
+      team_size = team_size + 1
+    end
+  end
+  -- draw team name
+  love.graphics.setColor(51/255, 51/255, 51/255)
+  love.graphics.print(team_info[team].name, x+19, y+3)
 end
 
 clientmenu.quit = function()

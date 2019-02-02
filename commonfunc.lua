@@ -1,5 +1,6 @@
 local collision = require "collision"
 local vector = require "vector"
+local audio = require "audio"
 
 local commonfunc = {}
 
@@ -84,6 +85,13 @@ commonfunc.block = function(i, v)
     end
   end
   return false
+end
+
+commonfunc.check_for_block = function(i, v)
+  if commonfunc.block(i, v) then
+    effects[#effects+1] = {img = "shield_spark", quad = 1, x = v.p.x, y = v.p.y, z = 18, ox = 16-v.sword.d.x, oy = 16-v.sword.d.y, parent = i, t = 0, top = true}
+    audio.play_sfx("clang")
+  end
 end
 
 commonfunc.draw_effects = function(effects, top)

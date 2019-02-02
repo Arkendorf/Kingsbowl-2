@@ -14,7 +14,7 @@ local servergame = {}
 local td = false
 local quit = false
 
-local effects = {}
+effects = {}
 local alerts = {}
 
 local server_hooks = {
@@ -43,7 +43,7 @@ local server_hooks = {
     players[index].sword.d = vector.scale(sword.dist, vector.norm(data))
     players[index].sword.t = sword.t
     network.host:sendToAll("sword", {index = index, active = true, mouse = data})
-    servergame.check_for_block(index, players[index])
+    commonfunc.check_for_block(index, players[index])
     -- adjust speed
     servergame.set_speed(index)
   end,
@@ -186,7 +186,12 @@ servergame.update = function(dt)
         for j, w in pairs(players) do
           if j ~= i and w.team ~= v.team and w.dead == false and collision.check_overlap({r = sword.r, p = sword_pos}, w) then
             -- add alert
-            alerts[#alerts+1] = {txt = v.name.." has tackled "..w.name, team = v.team}
+            if j == qb then
+              audio.play_sfx("cheer")
+              alerts[#alerts+1] = {txt = v.name.." has sacked "..w.name, team = v.team}
+            else
+              alerts[#alerts+1] = {txt = v.name.." has tackled "..w.name, team = v.team}
+            end
             -- kill player
             servergame.kill(j)
             network.host:sendToAll("dead", {killer = i, victim = j})
@@ -254,6 +259,7 @@ servergame.update = function(dt)
           servergame.set_speed(j)
         end
         effects[#effects+1] = {img = "catch", quad = 1, x = v.p.x, y = v.p.y, z = 18, ox = 16, oy = 16, parent = i, t = 0, top = true} -- catch particle
+        audio.play_sfx("thud") -- catch sound
         -- interception
         if players[ball.owner].team ~= players[qb].team then
           effects[#effects+1] = {img = "intercept", quad = 1, x = v.p.x, y = v.p.y, z = 18, ox = 16, oy = 16, parent = i, t = -1/3, top = true, color = team_info[players[ball.owner].team].color} -- intercept particle
@@ -499,7 +505,7 @@ servergame.mousepressed = function(x, y, button)
       players[id].sword.d = vector.scale(sword.dist, vector.norm(players[id].mouse))
       players[id].sword.t = sword.t
       network.host:sendToAll("sword", {index = id, active = true, mouse = players[id].mouse})
-      servergame.check_for_block(id, players[id])
+      commonfunc.check_for_block(id, players[id])
     end
     servergame.set_speed(id)
   end
@@ -669,13 +675,6 @@ servergame.kill = function(i)
     effects[#effects+1] = {img = "blood", quad = "drop", x = players[i].p.x, y = players[i].p.y, z = 18, ox = 8, oy = 8, dx = math.random(-200, 200)/100, dy = math.random(-200, 200)/100, dz = 2}
   end
   audio.play_sfx("squish")
-end
-
-servergame.check_for_block = function(i, v)
-  if commonfunc.block(i, v) then
-    effects[#effects+1] = {img = "shield_spark", quad = 1, x = v.p.x, y = v.p.y, z = 18, ox = 16-v.sword.d.x, oy = 16-v.sword.d.y, parent = i, t = 0, top = true}
-    audio.play_sfx("clang")
-  end
 end
 
 servergame.set_speed = function (i) -- based on player's state, set a speed
