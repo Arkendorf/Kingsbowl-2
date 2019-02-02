@@ -1,11 +1,11 @@
 sock = require "sock"
 ip = {ip = "127.0.0.1", port = "25565"}
 joystick = nil
-username = {"Sir Placeholder"}
+username = {"Username"}
 players = {}
 id = nil
 qb = 0
--- love.window.setFullscreen(true)
+love.window.setFullscreen(true)
 true_win_width, true_win_height = love.graphics.getDimensions()
 win_width = math.floor(true_win_width/4)*2
 win_height = math.floor(true_win_height/4)*2
@@ -33,7 +33,7 @@ ball_speed = 4
 ball = {p = {x = 0, y = 0}, z = 0, d = {x = 0, y = 0}, r = 8, owner = nil, thrown = false}
 down = {scrim = 0, new_scrim = field.w/2, goal = field.w/12*7, num = 0, dead = false, t = 3}
 alert_time = 3
-turn_speed = 2.5
+turn_speed = 3
 mag_speed = 2.5
 
 input = require("keyboard")
